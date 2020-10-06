@@ -20,9 +20,15 @@ class Particle(abc.ABC):
                  pos: torch.Tensor,
                  velocity: torch.Tensor,
                  acceleration: torch.Tensor):
+                 
+        self.__check_input_dims(pos, velocity, acceleration)
         self.__pos = pos
         self.__vel = velocity
         self.__acc = acceleration
+
+    def __check_input_dims(self, pos, vel, acc):
+        if (pos.shape != vel.shape) or (pos.shape != acc.shape):
+            raise ValueError("Input values have mismatching dimensions")
 
     @property
     def pos():
