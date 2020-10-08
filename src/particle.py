@@ -7,7 +7,7 @@ Author: Lulof Pirée
 Most fundamental pieces for building Nenwin-networks.
 """
 import abc
-import torch
+import numpy as np
 
 
 class Particle(abc.ABC):
@@ -17,10 +17,10 @@ class Particle(abc.ABC):
     """
 
     def __init__(self,
-                 pos: torch.Tensor,
-                 velocity: torch.Tensor,
-                 acceleration: torch.Tensor):
-                 
+                 pos: np.ndarray,
+                 velocity: np.ndarray,
+                 acceleration: np.ndarray):
+
         self.__check_input_dims(pos, velocity, acceleration)
         self.__pos = pos
         self.__vel = velocity
@@ -28,39 +28,40 @@ class Particle(abc.ABC):
 
     def __check_input_dims(self, pos, vel, acc):
         if (pos.shape != vel.shape) or (pos.shape != acc.shape):
-            raise ValueError("Input values have mismatching dimensions")
+            raise ValueError("Input values have mismatching dimensions: "
+                             + f"{pos.shape}, {vel.shape}, {acc.shape}")
 
     @property
-    def pos():
+    def pos(self):
         return self.__pos
 
     @property
-    def vel():
+    def vel(self):
         return self.__vel
 
     @property
-    def acc():
+    def acc(self):
         return self.__acc
 
     @pos.setter
-    def pos(new_pos: torch.Tensor):
+    def pos(self, new_pos: np.ndarray):
         if (new_pos.shape != self.__pos.shape):
             raise RuntimeError("New position particle has different dimension")
         self.__pos = new_pos
 
     @acc.setter
-    def acc(new_acc: torch.Tensor):
+    def acc(self, new_acc: np.ndarray):
         if (new_acc.shape != self.__acc.shape):
             raise RuntimeError(
                 "New acceleration particle has different dimension")
         self.__acc = new_acc
 
     @vel.setter
-    def vel(new_vel: torch.Tensor):
+    def vel(self, new_vel: np.ndarray):
         if (new_vel.shape != self.__vel.shape):
             raise RuntimeError("New velocity particle has different dimension")
         self.__vel = new_vel
 
     @abc.abstractmethod
-    def update(time_passed: float):
+    def update(self, time_passed: float):
         pass
