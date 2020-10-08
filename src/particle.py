@@ -32,15 +32,15 @@ class Particle(abc.ABC):
                              + f"{pos.shape}, {vel.shape}, {acc.shape}")
 
     @property
-    def pos(self):
+    def pos(self) -> np.ndarray:
         return self.__pos
 
     @property
-    def vel(self):
+    def vel(self) -> np.ndarray:
         return self.__vel
 
     @property
-    def acc(self):
+    def acc(self) -> np.ndarray:
         return self.__acc
 
     @pos.setter
@@ -65,3 +65,21 @@ class Particle(abc.ABC):
     @abc.abstractmethod
     def update(self, time_passed: float):
         pass
+
+
+class PhysicalParticle(Particle):
+    """
+    Particle with mass (negative mass allowed).
+    Has a gravity field defines around it, that can locally be inferred.
+    """
+
+    def __init__(self,
+                 pos: np.ndarray,
+                 vel: np.ndarray,
+                 acc: np.ndarray,
+                 mass: np.ndarray):
+        super().__init__(pos, vel, acc)
+
+    def update(self, time_passed: float):
+        self.vel += time_passed*self.acc
+        self.pos += time_passed*self.pos
