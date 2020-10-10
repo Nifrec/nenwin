@@ -6,8 +6,10 @@ Author: Lulof Pirée
 
 Most fundamental pieces for building Nenwin-networks.
 """
+from __future__ import annotations
 import abc
 import numpy as np
+
 
 
 class Particle(abc.ABC):
@@ -83,3 +85,15 @@ class PhysicalParticle(Particle):
     def update(self, time_passed: float):
         self.vel += time_passed*self.acc
         self.pos += time_passed*self.pos
+
+    def compute_gravity_force_to_other_particle(
+            self, other: PhysicalParticle) -> np.ndarray:
+        """
+        Computes the Newtonian gravity force vector induced 
+        by this particle to the
+        [other] paricle at the position of the other particle.
+        Note that no gravity constant is included in this computed force.
+        """
+        direction = (other.pos - self.pos)
+        direction = direction / np.linalg.norm(direction)
+        force = direction*other.mass*self.mass

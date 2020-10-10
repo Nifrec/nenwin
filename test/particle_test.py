@@ -9,6 +9,7 @@ Unit-tests for particle.py.
 import unittest
 import numpy as np
 from src.particle import Particle
+from src.particle import PhysicalParticle
 
 class ConcreteTestParicle(Particle):
     """
@@ -78,6 +79,13 @@ class ParticleTestCase(unittest.TestCase):
         self.assertRaises(ValueError, ConcreteTestParicle, ok1, nok, ok2)
         self.assertRaises(ValueError, ConcreteTestParicle, nok, ok1, ok2)
         self.assertRaises(ValueError, ConcreteTestParicle, ok2, ok1, nok)
+
+class PhysicalParticleTestCase(unittest.TestCase):
+    def test_gravity_1(self):
+        assert False, "TODO"
+
+    def test_update_1(self):
+        assert False, "TODO"
 
 if __name__ == '__main__':
     unittest.main()
