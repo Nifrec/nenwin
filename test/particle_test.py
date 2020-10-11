@@ -3,13 +3,14 @@ Nenwin-project (NEural Networks WIthout Neurons) for
 the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 
 Author: Lulof Pirée
+October 2020
 
 Unit-tests for particle.py.
 """
 import unittest
 import numpy as np
-from src.particle import Particle
-from src.particle import PhysicalParticle
+from experiment_1.particle import Particle
+from experiment_1.particle import PhysicalParticle
 
 class ConcreteTestParicle(Particle):
     """
