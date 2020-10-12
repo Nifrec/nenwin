@@ -80,21 +80,25 @@ class PhysicalParticle(Particle):
                  pos: np.ndarray,
                  vel: np.ndarray,
                  acc: np.ndarray,
-                 mass: np.ndarray):
+                 mass: np.ndarray,
+                 attraction_function: callable):
         super().__init__(pos, vel, acc)
+        self._attraction_function = attraction_function
 
     def update(self, time_passed: float):
         self.vel += time_passed*self.acc
         self.pos += time_passed*self.pos
 
-    def compute_gravity_force_to_other_particle(
+    def compute_attraction_force_to(
             self, other: PhysicalParticle) -> np.ndarray:
         """
-        Computes the Newtonian gravity force vector induced 
+        Computes the Newtonian gravity force vector induced
         by this particle to the
         [other] paricle at the position of the other particle.
         Note that no gravity constant is included in this computed force.
         """
-        direction = (other.pos - self.pos)
-        direction = direction / np.linalg.norm(direction)
-        force = direction*other.mass*self.mass
+        difference_vector = (other.pos - self.pos)
+        radius =  np.linalg.norm(difference_vector)
+        direction = difference_vector /radius
+        
+        return direction * self._attraction_function(self, other)
