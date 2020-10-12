@@ -5,7 +5,8 @@ the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 Author: Lulof Pirée
 October 2020
 
-Plot of Newton's gravity formula, without constant factor.
+Plot of Newton's gravity formula, simplified to 1/r, and a similar-shaped
+non-polynomial function that has a finite limit at r -> 0.
 """
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D, axes3d
