@@ -92,7 +92,7 @@ class ParticleTestCase(unittest.TestCase):
         acc = np.array([1, 1])
         p = Particle(pos, vel, acc)
         for _ in range(100):
-            p.update(0.01)
+            p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
         self.assertTrue(check_close(p.acc, acc)) # Should not have changed
@@ -108,7 +108,7 @@ class ParticleTestCase(unittest.TestCase):
         acc = np.array([0, -91])
         p = Particle(pos, vel, acc)
         for _ in range(100):
-            p.update(0.01)
+            p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
         self.assertTrue(check_close(acc, p.acc)) # Should not have changed
@@ -124,7 +124,7 @@ class ParticleTestCase(unittest.TestCase):
         acc = np.array([0, 0])
         p = Particle(pos, vel, acc)
         for _ in range(100):
-            p.update(0.01)
+            p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
         self.assertTrue(check_close(acc, p.acc))

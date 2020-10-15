@@ -68,23 +68,16 @@ class Particle(abc.ABC):
             raise RuntimeError("New velocity particle has different dimension")
         np.copyto(self.__vel, new_vel)
 
-    def update(self, time_passed: float):
+    def update_movement(self, time_passed: float):
         """
         Update the movement of the current particle according
         to Newtonian mechanics, for a period of time [time_passed].
         Uses constant acceleration.
 
-        Uses the Verlet-algorithm to make the numerical integration
+        Uses the Beeman-algorithm to make the numerical integration
         of the laws of motion.
-        (sources: 
-            https://www.compadre.org/PICUP/resources/Numerical-Integration/
-            https://www.algorithm-archive.org/contents/verlet_integration/verlet_integration.html
-            )
+        https://en.wikipedia.org/wiki/Beeman%27s_algorithm#cite_note-beeman76-2
         """
-        # current_pos = self.pos # Position *before* the update is applied
-        # self.pos = 2*current_pos - self.__prev_pos + self.acc*time_passed**2
-        # self.__prev_pos = current_pos
-        # self.vel += self.acc * time_passed
 
         self.pos = self.pos + time_passed * self.vel + (1/6)*(time_passed**2)*(
             4*self.__prev_acc - self.__prev_prev_acc)
@@ -109,14 +102,7 @@ class PhysicalParticle(Particle):
         self._attraction_function = attraction_function
         self.__forces = set(np.zeros_like(acc))
 
-    # @property
-    # def forces(self) -> Set[np.ndarray]:
-    #     return self.__forces
-
-    # @forces.setter
-    # def forces
-
-    def update(self, time_passed: float, 
+    def update_movement(self, time_passed: float, 
                 forces: Optional[np.ndarray]=None):
         """
         Update movement of particle according to Newtonian mechanics
