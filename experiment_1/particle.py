@@ -12,7 +12,6 @@ import abc
 import numpy as np
 
 
-
 class Particle(abc.ABC):
     """
     Abstract Base Class for all particles of the simulation,
@@ -29,8 +28,10 @@ class Particle(abc.ABC):
         self.__prev_pos = self.__pos
         self.__vel = velocity.astype(np.float)
         self.__acc = acceleration.astype(np.float)
-        self.__prev_acc = self.__acc
-        self.__prev_prev_acc = self.__acc
+        # Previous value of self.acc (updated when self.acc changes)
+        self._prev_acc = self.__acc
+         # The value of self.acc that came *before* prev_acc 
+        self._prev_prev_acc = self.__acc
 
     def __check_input_dims(self, pos, vel, acc):
         if (pos.shape != vel.shape) or (pos.shape != acc.shape):
@@ -60,7 +61,16 @@ class Particle(abc.ABC):
         if (new_acc.shape != self.__acc.shape):
             raise RuntimeError(
                 "New acceleration particle has different dimension")
+        self._set_prev_accs()
         np.copyto(self.__acc, new_acc)
+
+    def _set_prev_accs(self):
+        """
+        Sets current value of self.acc as the previous value,
+        and updates self._prev_acc and self._prev_prev_acc accordingly.
+        """
+        self._prev_prev_acc = self._prev_acc
+        self._prev_acc = self.acc
 
     @vel.setter
     def vel(self, new_vel: np.ndarray):
@@ -78,12 +88,10 @@ class Particle(abc.ABC):
         of the laws of motion.
         https://en.wikipedia.org/wiki/Beeman%27s_algorithm#cite_note-beeman76-2
         """
-
         self.pos = self.pos + time_passed * self.vel + (1/6)*(time_passed**2)*(
-            4*self.__prev_acc - self.__prev_prev_acc)
+            4*self._prev_acc - self._prev_prev_acc)
         self.vel = self.vel + (1/12)*time_passed*(
-            5*self.acc + 8*self.__prev_acc - self.__prev_prev_acc)
-        
+            5*self.acc + 8*self._prev_acc - self._prev_prev_acc)
 
 
 class PhysicalParticle(Particle):
@@ -96,14 +104,22 @@ class PhysicalParticle(Particle):
                  pos: np.ndarray,
                  vel: np.ndarray,
                  acc: np.ndarray,
-                 mass: np.ndarray,
+                 mass: float,
                  attraction_function: callable):
         super().__init__(pos, vel, acc)
         self._attraction_function = attraction_function
-        self.__forces = set(np.zeros_like(acc))
+        self.__mass = mass
 
-    def update_movement(self, time_passed: float, 
-                forces: Optional[np.ndarray]=None):
+    @property
+    def mass(self) -> float:
+        return self.__mass
+
+    @mass.setter
+    def mass(self, new_mass: float):
+        self.__mass = new_mass
+
+    def update_movement(self, time_passed: float,
+                        forces: Optional[np.ndarray] = None):
         """
         Update movement of particle according to Newtonian mechanics
         for a period of [time_passed]. Can take a set of forces that influence
@@ -113,6 +129,25 @@ class PhysicalParticle(Particle):
             # Newton's second law
             self.acc = np.sum(forces, axis=0) / self.mass
         super.update(time_passed)
+
+    def update_acceleration(self, forces: np.ndarray):
+        """
+        Updates the acceleration of this particle according to Newton's
+        Second Law (F_res = mass * acc).
+
+        Expected format of forces:
+        A 2-dimensional array, the first dimension indexing the individual
+        forces, and the second dimension indexing the values of force vectors
+        themselves.
+        """
+        if forces.size == 0:
+            self.acc = np.zeros_like(self.acc, dtype=float)
+            return
+        if (len(forces.shape) != 2) or (forces[0].shape != self.acc.shape):
+            raise ValueError(
+                "Unexpected shape of forces-array, expected 2 dims")
+        self._set_prev_accs()
+        self.acc = np.sum(forces, axis=0) / self.mass
         
 
     def compute_attraction_force_to(
@@ -124,7 +159,7 @@ class PhysicalParticle(Particle):
         Note that no gravity constant is included in this computed force.
         """
         difference_vector = (other.pos - self.pos)
-        radius =  np.linalg.norm(difference_vector)
-        direction = difference_vector /radius
-        
+        radius = np.linalg.norm(difference_vector)
+        direction = difference_vector / radius
+
         return direction * self._attraction_function(self, other)

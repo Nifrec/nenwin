@@ -9,17 +9,12 @@ Unit-tests for particle.py.
 """
 import unittest
 import numpy as np
-from experiment_1.particle import Particle
-from experiment_1.particle import PhysicalParticle
 from typing import Tuple
 
-
-# class ConcreteTestParicle(Particle):
-#     """
-#     Clone of particle, but not abstract.
-#     Hence just a dummy to test.
-#     """
-
+from experiment_1.particle import Particle
+from experiment_1.particle import PhysicalParticle
+from experiment_1.attraction_functions.attraction_functions import Gratan
+from test_settings import NUMERICAL_ABS_ACCURACY_REQUIRED
 
 class ParticleTestCase(unittest.TestCase):
 
@@ -95,7 +90,7 @@ class ParticleTestCase(unittest.TestCase):
             p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
-        self.assertTrue(check_close(p.acc, acc)) # Should not have changed
+        self.assertTrue(check_close(p.acc, acc))  # Should not have changed
         self.assertTrue(check_close(p.pos, expected[0]))
         self.assertTrue(check_close(p.vel, expected[1]))
 
@@ -111,7 +106,7 @@ class ParticleTestCase(unittest.TestCase):
             p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
-        self.assertTrue(check_close(acc, p.acc)) # Should not have changed
+        self.assertTrue(check_close(acc, p.acc))  # Should not have changed
         self.assertTrue(check_close(expected[1], p.vel))
         self.assertTrue(check_close(expected[0], p.pos))
 
@@ -132,22 +127,128 @@ class ParticleTestCase(unittest.TestCase):
         self.assertTrue(check_close(pos, p.pos))
 
 
-# class PhysicalParticleTestCase(unittest.TestCase):
-#     def test_gravity_1(self):
-#         assert False, "TODO"
+class PhysicalParticleTestCase(unittest.TestCase):
 
-#     def test_update_1(self):
-#         assert False, "TODO"
+    def test_mass_setter_getter(self):
+        pos = np.array([1, 3, 2])
+        vel = np.array([1, 1, 1])
+        acc = np.array([0, 0, 0])
+        mass = 0
+        particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
 
-#     def test_orbit_1(self):
-#         assert False
+        self.assertEqual(particle.mass, mass)
 
-#     def test_forces_1(self):
-#         assert False
+        mass2 = 10
+        particle.mass = mass2
+
+        self.assertEqual(particle.mass, mass2)
+
+    def test_update_acceleration_1(self):
+        """
+        Base case: apply two forces in different directions.
+        """
+        pos = np.array([1, 3, 2])
+        vel = np.array([1, 1, 1])
+        acc = np.array([10, 9, 0])
+        mass = 2
+        particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
+
+        forces = np.array([[1, 2, 3], [-4, -5, -7]])
+        expected_net_force = np.array([-3, -3, -4])
+        expected_acc = expected_net_force / mass
+
+        particle.update_acceleration(forces)
+
+        self.assertTrue(check_close(particle.acc, expected_acc))
+
+    def test_update_acceleration_2(self):
+        """
+        Corner case: empty force set (that is allowed!)
+        """
+        pos = np.array([1, 3, 2])
+        vel = np.array([1, 1, 1])
+        acc = np.array([10, 9, 0])
+        mass = 2
+        particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
+
+        forces = np.array([])
+        expected_acc = np.zeros(3)
+
+        particle.update_acceleration(forces)
+
+        self.assertTrue(check_close(particle.acc, expected_acc))
+
+    def test_update_acceleration_force_vector_dim_error(self):
+        """
+        Input [forces] does not have 2 dimensions.
+        """
+        pos = np.array([1, 3, 2])
+        vel = np.array([1, 1, 1])
+        acc = np.array([0, 0, 0])
+        mass = 2
+        particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
+
+        forces = np.array([1, 2, 3])
+        self.assertRaises(ValueError,
+                          particle.update_acceleration,
+                          forces)
+
+    def test_update_acceleration_force_vector_dim_error_1(self):
+        """
+        Input [forces] has 2 dimensions but wrong length force vector 
+        (too long).
+        """
+        pos = np.array([1, 3, 2])
+        vel = np.array([1, 1, 1])
+        acc = np.array([0, 0, 0])
+        mass = 2
+        particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
+
+        forces = np.array([[1, 2, 3, 4]])
+        self.assertRaises(ValueError,
+                          particle.update_acceleration,
+                          forces)
+
+    def test_update_acceleration_force_vector_dim_error_2(self):
+        """
+        Input [forces] has 2 dimensions but wrong length force vector 
+        (too short).
+        """
+        pos = np.array([1, 3, 2])
+        vel = np.array([1, 1, 1])
+        acc = np.array([0, 0, 0])
+        mass = 2
+        particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
+
+        forces = np.array([[1, 2]])
+        self.assertRaises(ValueError,
+                          particle.update_acceleration,
+                          forces)
+
+    def test_compute_attraction_force_to(self):
+        attraction_funct = Gratan()
+        pos1 = np.array([1, 0, 0])
+        vel1 = np.array([0, 0, 0])
+        acc1 = np.array([0, 0, 0])
+        mass1 = 2
+        p1 = PhysicalParticle(pos1, vel1, acc1, mass1, attraction_funct)
+
+        pos2 = np.array([10, 0, 0])
+        vel2 = np.array([0, 0, 0])
+        acc2 = np.array([0, 0, 0])
+        mass2 = 3
+        p2 = PhysicalParticle(pos2, vel2, acc2, mass2, attraction_funct)
+
+        # -1 is for the direction, p2 is pulled towards negative x-direction
+        expected = np.array([-1, 0, 0]) \
+            * attraction_funct.compute_attraction(p1, p2)
+        result = p1.compute_attraction_force_to(p2)
+        self.assertTrue(check_close(result, expected))
 
 
-def check_close(result:np.ndarray, expected:np.ndarray) -> bool:
-    if not np.allclose(result, expected):
+
+def check_close(result: np.ndarray, expected: np.ndarray) -> bool:
+    if not np.allclose(result, expected, atol=NUMERICAL_ABS_ACCURACY_REQUIRED):
         print(f"expected:{expected}, result:{result}")
         return False
     else:
@@ -179,11 +280,12 @@ def high_accuracy_forward_euler_step(pos: np.ndarray,
         t += step_size
     return pos, vel
 
+
 def runge_kutta_4_step(pos: np.ndarray,
-                        vel: np.ndarray,
-                        acc: np.ndarray,
-                        step_size=0.001,
-                        duration=1) -> Tuple[np.ndarray]:
+                       vel: np.ndarray,
+                       acc: np.ndarray,
+                       step_size=0.001,
+                       duration=1) -> Tuple[np.ndarray]:
     """
     High order of accuracy approximation of new position and velocity
     after [duration] of time, given constant acceleration.
@@ -204,6 +306,7 @@ def runge_kutta_4_step(pos: np.ndarray,
         pos = pos + (1/6)*(k1_x + 2*k2_x + 2*k3_x + k4_x)
         vel = vel + (1/6)*(k1_v + 2*k2_v + 2*k3_v + k4_v)
     return pos, vel
+
 
 if __name__ == '__main__':
     unittest.main()
