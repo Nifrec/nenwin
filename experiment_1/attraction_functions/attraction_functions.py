@@ -46,7 +46,7 @@ class Gratan(AttractionFunction):
                  second_particle: PhysicalParticle
                  ) -> float:
         radius = np.linalg.norm(first_particle.pos - second_particle.pos)
-        return first_particle.mass * second_particle *(1-abs(np.tanh(radius)))
+        return first_particle.mass * second_particle.mass *(1-abs(np.tanh(radius)))
         
 class NewtonianGravity(AttractionFunction):
     """
