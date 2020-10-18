@@ -37,5 +37,5 @@ class Marble(PhysicalParticle):
         self.__datum = datum
 
     @property
-    def datum(self:
+    def datum(self):
         return self.__datum
