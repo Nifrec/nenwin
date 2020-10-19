@@ -13,6 +13,7 @@ import numpy as np
 from experiment_1.particle import PhysicalParticle
 import warnings
 
+
 class AttractionFunction(abc.ABC):
     """
     Abstract class providing interface for all AttractionFunctions.
@@ -30,10 +31,11 @@ class AttractionFunction(abc.ABC):
 
     @abc.abstractmethod
     def compute_attraction(self,
-                 first_particle: PhysicalParticle,
-                 second_particle: PhysicalParticle
-                 ) -> float:
+                           first_particle: PhysicalParticle,
+                           second_particle: PhysicalParticle
+                           ) -> float:
         pass
+
 
 class Gratan(AttractionFunction):
     """
@@ -42,24 +44,26 @@ class Gratan(AttractionFunction):
     """
 
     def compute_attraction(self,
-                 first_particle: PhysicalParticle,
-                 second_particle: PhysicalParticle
-                 ) -> float:
+                           first_particle: PhysicalParticle,
+                           second_particle: PhysicalParticle
+                           ) -> float:
         radius = np.linalg.norm(first_particle.pos - second_particle.pos)
-        return first_particle.mass * second_particle.mass *(1-abs(np.tanh(radius)))
-        
+        return first_particle.mass * second_particle.mass \
+            * (1-abs(np.tanh(radius)))
+
+
 class NewtonianGravity(AttractionFunction):
     """
     Newton's non-relativistic gravity formula:
         p1, p2 -> p1.mass * p2.mass / radius
-    
+
     Note that radius should not equal 0 (division by 0).
     """
 
     def compute_attraction(self,
-                 first_particle: PhysicalParticle,
-                 second_particle: PhysicalParticle
-                 ) -> float:
+                           first_particle: PhysicalParticle,
+                           second_particle: PhysicalParticle
+                           ) -> float:
         warnings.warn("NewtonianGravity not yet unit-tested!")
         radius = np.linalg.norm(first_particle.pos - second_particle.pos)
         return first_particle.mass * second_particle / radius
