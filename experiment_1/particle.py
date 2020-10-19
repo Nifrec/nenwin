@@ -30,7 +30,7 @@ class Particle(abc.ABC):
         self.__acc = acceleration.astype(np.float)
         # Previous value of self.acc (updated when self.acc changes)
         self._prev_acc = self.__acc
-         # The value of self.acc that came *before* prev_acc 
+        # The value of self.acc that came *before* prev_acc
         self._prev_prev_acc = self.__acc
 
     def __check_input_dims(self, pos, vel, acc):
@@ -118,18 +118,6 @@ class PhysicalParticle(Particle):
     def mass(self, new_mass: float):
         self.__mass = new_mass
 
-    def update_movement(self, time_passed: float,
-                        forces: Optional[np.ndarray] = None):
-        """
-        Update movement of particle according to Newtonian mechanics
-        for a period of [time_passed]. Can take a set of forces that influence
-        the current acceleration of the particle.
-        """
-        if forces is not None:
-            # Newton's second law
-            self.acc = np.sum(forces, axis=0) / self.mass
-        super.update(time_passed)
-
     def update_acceleration(self, forces: np.ndarray):
         """
         Updates the acceleration of this particle according to Newton's
@@ -148,7 +136,6 @@ class PhysicalParticle(Particle):
                 "Unexpected shape of forces-array, expected 2 dims")
         self._set_prev_accs()
         self.acc = np.sum(forces, axis=0) / self.mass
-        
 
     def compute_attraction_force_to(
             self, other: PhysicalParticle) -> np.ndarray:
