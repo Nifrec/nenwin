@@ -226,7 +226,34 @@ class PhysicalParticleTestCase(unittest.TestCase):
                           particle.update_acceleration,
                           forces)
 
-    def test_compute_attraction_force_to(self):
+    def test_compute_attraction_force_to_1(self):
+        """
+        Positive attraction direction.
+        """
+        attraction_funct = Gratan()
+        pos1 = np.array([1, 1, 1])
+        vel1 = np.array([0, 0, 0])
+        acc1 = np.array([0, 0, 0])
+        mass1 = 2
+        p1 = PhysicalParticle(pos1, vel1, acc1, mass1, attraction_funct)
+
+        pos2 = np.array([0, 0, 0])
+        vel2 = np.array([0, 0, 0])
+        acc2 = np.array([0, 0, 0])
+        mass2 = 3
+        p2 = PhysicalParticle(pos2, vel2, acc2, mass2, attraction_funct)
+
+        # p2 is pulled towards positive all directions
+        expected = np.array([np.sqrt(3)/3, np.sqrt(3)/3, np.sqrt(3)/3]) \
+            * attraction_funct.compute_attraction(p1, p2)
+        result = p1.compute_attraction_force_to(p2)
+        self.assertTrue(check_close(result, expected))
+
+
+    def test_compute_attraction_force_to_2(self):
+        """
+        Negative attraction direction.
+        """
         attraction_funct = Gratan()
         pos1 = np.array([1, 0, 0])
         vel1 = np.array([0, 0, 0])

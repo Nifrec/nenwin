@@ -145,7 +145,7 @@ class PhysicalParticle(Particle):
         [other] paricle at the position of the other particle.
         Note that no gravity constant is included in this computed force.
         """
-        difference_vector = (other.pos - self.pos)
+        difference_vector = (self.pos - other.pos)
         radius = np.linalg.norm(difference_vector)
         direction = difference_vector / radius
 
