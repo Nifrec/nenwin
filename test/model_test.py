@@ -41,16 +41,13 @@ class ModelTestCase(unittest.TestCase):
     def test_model_run_1(self):
         """
         Base case: single marble and single node.
-
-        WARNING: this testcase might be broken... 
-            The expected result seems wrong.
         """
         attract_funct = TestAttractionFunction()
         zero_vector = np.array([0, 0])
 
         node = Node(pos=zero_vector, vel=zero_vector, acc=zero_vector,
                     mass=2, attraction_function=attract_funct, stiffness=1)
-        marble = Marble(pos=np.array([1, 0]), vel=zero_vector, acc=zero_vector,
+        marble = Marble(pos=np.array([10, 0]), vel=zero_vector, acc=zero_vector,
                         mass=1, attraction_function=attract_funct, datum=None)
 
         model = NenwinModel([node],
@@ -68,9 +65,9 @@ class ModelTestCase(unittest.TestCase):
         # The marble should have been pulled towards the node
         difference = node.pos - marble.pos
         direction = difference / np.linalg.norm(difference)
-        expected_acc = difference * attract_funct(node, marble) / marble.mass
+        expected_acc = direction * attract_funct(node, marble) / marble.mass
         expected_pos, expected_vel = runge_kutta_4_step(
-            pos=np.array([1, 0]), vel=zero_vector, acc=zero_vector,
+            pos=np.array([10, 0]), vel=zero_vector, acc=expected_acc,
             duration=1)
         self.assertTrue(check_close(marble.acc, expected_acc))
         self.assertTrue(check_close(marble.vel, expected_vel))
@@ -188,8 +185,8 @@ class ModelTestCase(unittest.TestCase):
         difference2 = node2.pos - marble.pos
         direction2 = difference2 / np.linalg.norm(difference2)
         # Newton's Second Law:
-        expected_acc = (difference1 * attract_funct(node1, marble) \
-            + difference2 * attract_funct(node2, marble))/marble.mass
+        expected_acc = (direction1 * attract_funct(node1, marble) \
+            + direction2 * attract_funct(node2, marble))/marble.mass
         expected_pos, expected_vel = runge_kutta_4_step(
             pos=np.array([1, 0]), vel=zero_vector, acc=expected_acc,
             duration=TEST_SIMULATION_STEP_SIZE)

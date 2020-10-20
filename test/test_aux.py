@@ -12,7 +12,7 @@ import numpy as np
 from typing import Tuple
 
 NUMERICAL_ABS_ACCURACY_REQUIRED = 10e-5
-TEST_SIMULATION_STEP_SIZE = 0.0001
+TEST_SIMULATION_STEP_SIZE = 0.001
 
 def check_close(result: np.ndarray, expected: np.ndarray) -> bool:
     if not np.allclose(result, expected, atol=NUMERICAL_ABS_ACCURACY_REQUIRED):
