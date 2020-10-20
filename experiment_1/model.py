@@ -11,11 +11,32 @@ around the simulation.
 import numpy as np
 from typing import Set, Iterable, Optional
 import multiprocessing
+import multiprocessing.connection
+import enum
 from numbers import Number
 
 from experiment_1.particle import PhysicalParticle
 from experiment_1.node import Node
 from experiment_1.marble import Marble
+
+
+class UICommands(enum.Enum):
+    """
+    Commands that the UI can give to a running NenwinModel.
+    """
+    # Stop/pause the simulation.
+    stop = "stop"
+    # Add a new input to the simulation
+    # (should come together with new input values).
+    read_input = "input"
+    # Write current output values to the pipe.
+    write_output = "output"
+
+
+class UIMessage():
+    def __init__(self, command: UICommands, data: Optional[object] = None):
+        self.command = command
+        self.data = data
 
 
 class NenwinModel():
@@ -35,9 +56,13 @@ class NenwinModel():
         which will move as soon as NenwinModel.run() is called.
         """
         self.__nodes = set(nodes)
-        self.__marbles = set()
+        if initial_marbles is not Node:
+            self.__marbles = set(initial_marbles)
+        else:
+            initial_marbles = set()
+        self.__all_particles = self.__nodes.union(self.__marbles)
         self.__step_size = step_size
-        self.__queue = multiprocessing.Queue()
+        self.__pipe_end, self.__other_pipe_end = multiprocessing.Pipe(True)
 
     @property
     def nodes(self) -> Set[Node]:
@@ -56,19 +81,14 @@ class NenwinModel():
         return self.__marbles.copy()
 
     @property
-    def queue(self):
+    def pipe(self) -> multiprocessing.connection.Connection:
         """
-        Return reference to input/output multiprocessing.Queue
+        Return reference to the UI's side of the input/output pipe,
+        i.e. a multiprocessing.connection.Connection instance.
         """
-        return self.__queue
+        return self.__other_pipe_end
 
-    def __handle_inputs(self):
-        pass
-
-    def __produce_outputs(self):
-        pass
-
-    def run(self, max_num_steps:Number=float("inf")):
+    def run(self, max_num_steps: Number = float("inf")):
         """
         Start simulation and imput processing until stop signal is received.
         While running, will accept inputs, and produce outputs when requested.
@@ -82,3 +102,49 @@ class NenwinModel():
         while num_remaining_steps > 0:
             num_remaining_steps -= 1
 
+            self.__handle_commands()
+
+            for particle in self.__all_particles:
+                net_force = self.__compute_net_force_for(particle)
+                particle.update_acceleration(net_force)
+
+            for particle in self.__all_particles:
+                particle.update_movement(self.__step_size)
+
+    def __compute_net_force_for(self, particle: PhysicalParticle) -> np.ndarray:
+        """
+        Compute net force for [particle] as excerted on it by 
+        all other particles in the simulation.
+        The result is a 2D matrix with a single row.
+        """
+        forces = np.zeros_like(particle.acc)
+        other_particles = self.__all_particles.difference((particle,))
+        for other_particle in other_particles:
+            forces += other_particle.compute_attraction_force_to(particle)
+        return np.array([forces])
+
+    def __handle_commands(self):
+        """
+        Reads command given through the pipe and
+        executes it. 
+        Does nothing if no command exists in the queue.
+        """
+        if self.__pipe_end.poll():
+            message = self.__pipe_end.recv()
+            assert isinstance(message, UIMessage)
+
+            command = message.command
+            if command == UICommands.stop:
+                assert False, "TODO"
+            elif command == UICommands.write_output:
+                self.__produce_outputs()
+            elif command == UICommands.read_input:
+                self.__handle_inputs(message.data)
+
+    def __handle_inputs(self, inputs):
+        assert False, "TODO"
+        pass
+
+    def __produce_outputs(self):
+        assert False, "TODO"
+        pass

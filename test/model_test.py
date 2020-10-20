@@ -24,15 +24,16 @@ from test_aux import runge_kutta_4_step
 
 class TestAttractionFunction(AttractionFunction):
     """
-    Simplistic linear function to ease testing numerically.
+    Simplistic constant function to ease testing numerically.
+    (For constant forces => constant acceleration,
+    and I can find a precise value for this)
     """
 
     def compute_attraction(self,
                            first_particle: PhysicalParticle,
                            second_particle: PhysicalParticle
                            ) -> float:
-        radius = np.linalg.norm(first_particle.pos - second_particle.pos)
-        return first_particle.mass * second_particle.mass * radius
+        return 0.01
 
 
 class ModelTestCase(unittest.TestCase):
@@ -40,6 +41,9 @@ class ModelTestCase(unittest.TestCase):
     def test_model_run_1(self):
         """
         Base case: single marble and single node.
+
+        WARNING: this testcase might be broken... 
+            The expected result seems wrong.
         """
         attract_funct = TestAttractionFunction()
         zero_vector = np.array([0, 0])
@@ -52,7 +56,9 @@ class ModelTestCase(unittest.TestCase):
         model = NenwinModel([node],
                             TEST_SIMULATION_STEP_SIZE,
                             [marble])
-        model.run(max_num_steps=1)
+        # Simulate 1 unit time
+        num_steps = (1/TEST_SIMULATION_STEP_SIZE)
+        model.run(max_num_steps=num_steps)
 
         # The node should not have changed at all
         self.assertTrue(check_close(node.acc, zero_vector))
@@ -60,13 +66,15 @@ class ModelTestCase(unittest.TestCase):
         self.assertTrue(check_close(node.pos, zero_vector))
 
         # The marble should have been pulled towards the node
-        expected_acc = -attract_funct(node, marble)
+        difference = node.pos - marble.pos
+        direction = difference / np.linalg.norm(difference)
+        expected_acc = difference * attract_funct(node, marble) / marble.mass
         expected_pos, expected_vel = runge_kutta_4_step(
             pos=np.array([1, 0]), vel=zero_vector, acc=zero_vector,
-            duration=TEST_SIMULATION_STEP_SIZE)
+            duration=1)
         self.assertTrue(check_close(marble.acc, expected_acc))
         self.assertTrue(check_close(marble.vel, expected_vel))
-        self.assertTrue(check_close(node.pos, expected_pos))
+        self.assertTrue(check_close(marble.pos, expected_pos))
 
     def test_model_run_2(self):
         """
@@ -128,7 +136,7 @@ class ModelTestCase(unittest.TestCase):
 
         self.assertTrue(check_close(node2.acc, zero_vector))
         self.assertTrue(check_close(node2.vel, zero_vector))
-        self.assertTrue(check_close(node2.pos, np.array([2, 2])))
+        self.assertTrue(check_close(node2.pos, np.array([2, 0])))
 
         expected_pos = np.array([1, 0]) \
             + TEST_SIMULATION_STEP_SIZE*np.array([1, 0])
@@ -175,8 +183,13 @@ class ModelTestCase(unittest.TestCase):
         self.assertTrue(check_close(node2.vel, zero_vector))
         self.assertTrue(check_close(node2.pos, np.array([0, -1])))
 
-        expected_acc = -attract_funct(node1, marble) \
-            - attract_funct(node2, marble)
+        difference1 = node1.pos - marble.pos
+        direction1 = difference1 / np.linalg.norm(difference1)
+        difference2 = node2.pos - marble.pos
+        direction2 = difference2 / np.linalg.norm(difference2)
+        # Newton's Second Law:
+        expected_acc = (difference1 * attract_funct(node1, marble) \
+            + difference2 * attract_funct(node2, marble))/marble.mass
         expected_pos, expected_vel = runge_kutta_4_step(
             pos=np.array([1, 0]), vel=zero_vector, acc=expected_acc,
             duration=TEST_SIMULATION_STEP_SIZE)
@@ -209,24 +222,32 @@ class ModelTestCase(unittest.TestCase):
         model = NenwinModel([node],
                             TEST_SIMULATION_STEP_SIZE,
                             [marble])
-        model.run(max_num_steps=1)
+        # Simulate 1 unit time
+        num_steps = (1/TEST_SIMULATION_STEP_SIZE)
+        model.run(max_num_steps=num_steps)
 
-        expected_acc_node = stiffness*attract_funct(node, marble)
+        difference = marble.pos - node.pos
+        direction_node = difference / np.linalg.norm(difference)
+        expected_acc_node = stiffness * direction_node \
+            * attract_funct(node, marble) / node.mass #TODO: removing node.mass here creates very different result!
+        self.assertEqual(node.mass, 2)
         expected_pos_node, expected_vel_node = runge_kutta_4_step(
             pos=zero_vector, vel=zero_vector, acc=expected_acc_node,
-            duration=TEST_SIMULATION_STEP_SIZE)
-        # # No particle should have changed at all
+            duration=1)
         self.assertTrue(check_close(node.acc, expected_acc_node))
         self.assertTrue(check_close(node.vel, expected_vel_node))
         self.assertTrue(check_close(node.pos, expected_pos_node))
 
-        expected_acc_marble = -attract_funct(node, marble)
+        difference = -difference
+        direction_marble = difference / np.linalg.norm(difference)
+        expected_acc_marble = direction_marble \
+            * attract_funct(node, marble)
         expected_pos_marble, expected_vel_marble = runge_kutta_4_step(
             pos=np.array([1, 0]), vel=zero_vector, acc=expected_acc_marble,
-            duration=TEST_SIMULATION_STEP_SIZE)
-        self.assertTrue(check_close(marble.acc, expected_acc))
-        self.assertTrue(check_close(marble.vel, expected_vel))
-        self.assertTrue(check_close(marble.pos, expected_pos))
+            duration=1)
+        self.assertTrue(check_close(marble.acc, expected_acc_marble))
+        self.assertTrue(check_close(marble.vel, expected_vel_marble))
+        self.assertTrue(check_close(marble.pos, expected_pos_marble))
 
 
 if __name__ == '__main__':
