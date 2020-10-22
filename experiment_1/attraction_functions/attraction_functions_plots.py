@@ -14,7 +14,7 @@ import numpy as np
 
 X = np.concatenate([np.arange(-100, 0, 1),[-0.9, 0.9], np.arange(1, 100, 1)])
 X = np.concatenate([np.arange(-10, 0, 0.1), np.arange(0.1, 10.1, 0.1)])
-plt.plot(X, 0.2*abs(1/X), label="Absolute value of gravity")
+plt.plot(X, 0.2*abs(1/X**2), label="Absolute value of gravity")
 plt.plot(X, 1 - abs(np.tanh(X)), label="$1 - |\\tanh(x)|$")
 plt.legend()
 plt.xlabel("Distance")

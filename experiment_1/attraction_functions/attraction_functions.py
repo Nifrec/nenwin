@@ -55,7 +55,7 @@ class Gratan(AttractionFunction):
 class NewtonianGravity(AttractionFunction):
     """
     Newton's non-relativistic gravity formula:
-        p1, p2 -> p1.mass * p2.mass / radius
+        p1, p2 -> p1.mass * p2.mass / radius**2
 
     Note that radius should not equal 0 (division by 0).
     """
