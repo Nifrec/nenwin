@@ -55,7 +55,7 @@ class Gratan(AttractionFunction):
 class NewtonianGravity(AttractionFunction):
     """
     Newton's non-relativistic gravity formula:
-        p1, p2 -> p1.mass * p2.mass / radius
+        p1, p2 -> p1.mass * p2.mass / radius**2
 
     Note that radius should not equal 0 (division by 0).
     """
@@ -66,4 +66,4 @@ class NewtonianGravity(AttractionFunction):
                            ) -> float:
         warnings.warn("NewtonianGravity not yet unit-tested!")
         radius = np.linalg.norm(first_particle.pos - second_particle.pos)
-        return first_particle.mass * second_particle / radius
+        return first_particle.mass * second_particle / radius**2
