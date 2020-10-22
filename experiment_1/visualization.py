@@ -20,7 +20,7 @@ class NenwinVisualization():
     Creates and updates a visualization of a model.
     """
 
-    def __init__(self, resolution: Typle[int], model: NenwinModel):
+    def __init__(self, resolution: Tuple[int], model: NenwinModel):
         """
         Arguments:
         * resolution: (width, height) of window. Note that the simulation
