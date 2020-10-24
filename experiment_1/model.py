@@ -17,7 +17,9 @@ from numbers import Number
 
 from experiment_1.particle import PhysicalParticle
 from experiment_1.node import Node
+from experiment_1.node import MarbleEaterNode
 from experiment_1.marble import Marble
+import experiment_1.aux as aux
 
 
 class UICommands(enum.Enum):
@@ -56,6 +58,8 @@ class NenwinModel():
         which will move as soon as NenwinModel.run() is called.
         """
         self.__nodes = set(nodes)
+        self.__eater_nodes: List[MarbleEaterNode] =\
+            [node for node in nodes if isinstance(node, MarbleEaterNode)]
         if initial_marbles is not Node:
             self.__marbles = set(initial_marbles)
         else:
@@ -111,6 +115,10 @@ class NenwinModel():
             for particle in self.__all_particles:
                 particle.update_movement(self.__step_size)
 
+            for marble in self.__marbles:
+                self.__feed_marble_if_close_to_any_eater(marble)
+
+
     def __compute_net_force_for(self, particle: PhysicalParticle) -> np.ndarray:
         """
         Compute net force for [particle] as excerted on it by 
@@ -140,6 +148,14 @@ class NenwinModel():
                 self.__produce_outputs()
             elif command == UICommands.read_input:
                 self.__handle_inputs(message.data)
+
+    def __feed_marble_if_close_to_any_eater(self, marble: Marble):
+        warnings.warn("Method not tested yet")
+        for eater in self.__eater_nodes:
+            if aux.distance(marble, eater) <= eater.radius:
+                eater.eat(marble)
+                self.__marbles.remove(marble)
+                break
 
     def __handle_inputs(self, inputs):
         assert False, "TODO"
