@@ -9,11 +9,12 @@ Class to hold pieces of network together, perform timesteps and manage i/o
 around the simulation.
 """
 import numpy as np
-from typing import Set, Iterable, Optional
+from typing import Set, Iterable, Optional, List
 import multiprocessing
 import multiprocessing.connection
 import enum
 from numbers import Number
+import warnings
 
 from experiment_1.particle import PhysicalParticle
 from experiment_1.node import Node
@@ -67,6 +68,7 @@ class NenwinModel():
         self.__all_particles = self.__nodes.union(self.__marbles)
         self.__step_size = step_size
         self.__pipe_end, self.__other_pipe_end = multiprocessing.Pipe(True)
+        
 
     @property
     def nodes(self) -> Set[Node]:
@@ -75,6 +77,14 @@ class NenwinModel():
         each in their current state.
         """
         return self.__nodes.copy()
+
+    @property
+    def marble_eater_nodes(self) -> List[MarbleEaterNode]:
+        """
+        Get all the MarbleEaterNode's present in the nodes of this NenwinModel.
+        They are returned in the same order as their respective output.
+        """
+        return self.__eater_nodes.copy()
 
     @property
     def marbles(self) -> Set[Marble]:
@@ -115,7 +125,7 @@ class NenwinModel():
             for particle in self.__all_particles:
                 particle.update_movement(self.__step_size)
 
-            for marble in self.__marbles:
+            for marble in list(self.__marbles):
                 self.__feed_marble_if_close_to_any_eater(marble)
 
 
@@ -145,9 +155,9 @@ class NenwinModel():
             if command == UICommands.stop:
                 assert False, "TODO"
             elif command == UICommands.write_output:
-                self.__produce_outputs()
+                self._produce_outputs()
             elif command == UICommands.read_input:
-                self.__handle_inputs(message.data)
+                self._handle_inputs(message.data)
 
     def __feed_marble_if_close_to_any_eater(self, marble: Marble):
         warnings.warn("Method not tested yet")
@@ -157,10 +167,23 @@ class NenwinModel():
                 self.__marbles.remove(marble)
                 break
 
-    def __handle_inputs(self, inputs):
+    def _handle_inputs(self, inputs):
         assert False, "TODO"
         pass
 
-    def __produce_outputs(self):
+    def _produce_outputs(self):
         assert False, "TODO"
         pass
+
+class NumMarblesEatenAsOutputModel(NenwinModel):
+    """
+    Variant of the Nenwin model that outputs the integer amount of
+    Marbles that fel in each MarbleEaterNode, collected in an array,
+    as output.
+    """        
+
+    def _produce_outputs(self) -> np.ndarray:
+        outputs = np.empty((len(self.marble_eater_nodes)))
+        for idx in range(len(self.marble_eater_nodes)):
+            outputs[idx] = self.marble_eater_nodes[idx].num_marbles_eaten
+        return outputs
