@@ -43,13 +43,20 @@ class Gratan(AttractionFunction):
         p1, p2 -> p1.mass * p2.mass * (1 - |tanh(radius)|)
     """
 
+    def __init__(self, multiplier: float = 1):
+        """
+        Arguments:
+        * multiplier: a number to multiply the basic attraction with.
+        """
+        self.__multiplier = multiplier
+
     def compute_attraction(self,
                            first_particle: PhysicalParticle,
                            second_particle: PhysicalParticle
                            ) -> float:
         radius = np.linalg.norm(first_particle.pos - second_particle.pos)
         return first_particle.mass * second_particle.mass \
-            * (1-abs(np.tanh(radius)))
+            * (1-abs(np.tanh(radius))) * self.__multiplier
 
 
 class NewtonianGravity(AttractionFunction):
