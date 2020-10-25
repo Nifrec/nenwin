@@ -61,12 +61,12 @@ class NenwinVisualization():
             pygame.draw.circle(surf,
                                NODE_COLOUR,
                                np.round(node.pos).astype(int),
-                               round(node.mass * RADIUS_SCALE_FACTOR))
+                               round(abs(node.mass) * RADIUS_SCALE_FACTOR))
         for marble in self.__model.marbles:
             pygame.draw.circle(surf,
                                MARBLE_COLOUR,
                                np.round(marble.pos).astype(int),
-                               round(marble.mass * RADIUS_SCALE_FACTOR))
+                               round(abs(marble.mass) * RADIUS_SCALE_FACTOR))
         
         return surf
 
