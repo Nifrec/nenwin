@@ -5,7 +5,7 @@ the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 Author: Lulof Pirée
 October 2020
 
-Unit-tests for model.py.
+Unit-tests for NenwinModel class of model.py.
 """
 import unittest
 import numpy as np
