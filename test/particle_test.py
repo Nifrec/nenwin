@@ -179,6 +179,23 @@ class PhysicalParticleTestCase(unittest.TestCase):
 
         self.assertTrue(check_close(particle.acc, expected_acc))
 
+    def test_update_acceleration_3(self):
+        """
+        Corner case: negative mass, should not affect direction.
+        """
+        pos = np.array([1, 3, 2])
+        vel = np.array([1, 1, 1])
+        acc = np.array([10, 9, 0])
+        mass = -2
+        particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
+
+        forces = np.array([[1, 1, 1]])
+        expected_acc = np.array([0.5, 0.5, 0.5])
+
+        particle.update_acceleration(forces)
+
+        self.assertTrue(check_close(particle.acc, expected_acc))
+
     def test_update_acceleration_force_vector_dim_error(self):
         """
         Input [forces] does not have 2 dimensions.
@@ -269,6 +286,30 @@ class PhysicalParticleTestCase(unittest.TestCase):
 
         # -1 is for the direction, p2 is pulled towards negative x-direction
         expected = np.array([-1, 0, 0]) \
+            * attraction_funct.compute_attraction(p1, p2)
+        result = p1.compute_attraction_force_to(p2)
+        self.assertTrue(check_close(result, expected))
+
+    def test_compute_attraction_force_to_3(self):
+        """
+        One particle with negative mass, one with positive mass.
+        """
+        attraction_funct = Gratan()
+        pos1 = np.array([1, 0, 0])
+        vel1 = np.array([0, 0, 0])
+        acc1 = np.array([0, 0, 0])
+        mass1 = 2
+        p1 = PhysicalParticle(pos1, vel1, acc1, mass1, attraction_funct)
+
+        pos2 = np.array([10, 0, 0])
+        vel2 = np.array([0, 0, 0])
+        acc2 = np.array([0, 0, 0])
+        mass2 = -3
+        p2 = PhysicalParticle(pos2, vel2, acc2, mass2, attraction_funct)
+
+        # p2 is repelled from p1, 
+        # so the force should be in the positive x-direction.
+        expected = np.array([1, 0, 0]) \
             * attraction_funct.compute_attraction(p1, p2)
         result = p1.compute_attraction_force_to(p2)
         self.assertTrue(check_close(result, expected))

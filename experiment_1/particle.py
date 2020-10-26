@@ -135,7 +135,7 @@ class PhysicalParticle(Particle):
             raise ValueError(
                 "Unexpected shape of forces-array, expected 2 dims")
         self._set_prev_accs()
-        self.acc = np.sum(forces, axis=0) / self.mass
+        self.acc = np.sum(forces, axis=0) / abs(self.mass)
 
     def compute_attraction_force_to(
             self, other: PhysicalParticle) -> np.ndarray:
