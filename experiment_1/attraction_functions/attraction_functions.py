@@ -71,6 +71,5 @@ class NewtonianGravity(AttractionFunction):
                            first_particle: PhysicalParticle,
                            second_particle: PhysicalParticle
                            ) -> float:
-        warnings.warn("NewtonianGravity not yet unit-tested!")
         radius = np.linalg.norm(first_particle.pos - second_particle.pos)
         return first_particle.mass * second_particle.mass / radius**2

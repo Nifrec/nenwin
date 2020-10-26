@@ -109,6 +109,74 @@ def attraction_2_points(pos_1: np.ndarray,
 
     return attraction_funct(p1, p2)
 
+class NewtonainTestCase(unittest.TestCase):
+    def setUp(self):
+        self.newtonian = NewtonianGravity()
+
+    def test_newtonian_1(self):
+        """
+        Base case: both particles unit masses.
+        """
+        pos_1 = np.array([1, 1])
+        pos_2 = np.array([0, 0])
+        mass_1 = 1
+        mass_2 = 1
+
+        radius = np.linalg.norm(pos_1 - pos_2)
+        expected_attraction = mass_1 * mass_2 / (radius**2)
+
+        result = attraction_2_points(pos_1, mass_1, pos_2,
+                                     mass_2, self.newtonian)
+        self.assertTrue(check_close(expected_attraction, result))
+
+    def test_newtonian_2(self):
+        """
+        Base case: one particle negative mass.
+        """
+        pos_1 = np.array([1, 1])
+        pos_2 = np.array([0, 0])
+        mass_1 = -1
+        mass_2 = 1
+
+        radius = np.linalg.norm(pos_1 - pos_2)
+        expected_attraction = mass_1 * mass_2 / (radius**2)
+
+        result = attraction_2_points(pos_1, mass_1, pos_2,
+                                     mass_2, self.newtonian)
+        self.assertTrue(check_close(expected_attraction, result))
+
+    def test_newtonian_3(self):
+        """
+        Corner case: zero radius.
+        Infinite gravity force!
+        """
+        pos_1 = np.array([1, 1])
+        pos_2 = np.array([1, 1])
+        mass_1 = 1
+        mass_2 = 1
+
+        radius = np.linalg.norm(pos_1 - pos_2)
+        expected_attraction = float("inf")
+
+        result = attraction_2_points(pos_1, mass_1, pos_2,
+                                     mass_2, self.newtonian)
+        self.assertTrue(check_close(expected_attraction, result))
+
+    def test_newtonian_4(self):
+        """
+        Base case: large distance, large negative masses.
+        """
+        pos_1 = np.array([1, 1])
+        pos_2 = np.array([-100, -100])
+        mass_1 = -100
+        mass_2 = -200
+
+        radius = np.linalg.norm(pos_1 - pos_2)
+        expected_attraction = mass_1 * mass_2 / (radius**2)
+
+        result = attraction_2_points(pos_1, mass_1, pos_2,
+                                     mass_2, self.newtonian)
+        self.assertTrue(check_close(expected_attraction, result))
 
 if __name__ == '__main__':
     unittest.main()
