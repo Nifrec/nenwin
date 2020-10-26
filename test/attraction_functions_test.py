@@ -24,96 +24,90 @@ class GratanTestCase(unittest.TestCase):
         """
         Base case: both particles unit masses.
         """
-        zero = np.array([0, 0])
-        mass = 1
-
+        mass_1 = 1
+        mass_2 = 1
         pos_1 = np.array([1, 1])
-        p1 = PhysicalParticle(pos=pos_1, vel=zero, acc=zero,
-                              mass=mass, attraction_function=self.gratan)
-
         pos_2 = np.array([0, 0])
-        p2 = PhysicalParticle(pos=pos_2, vel=zero, acc=zero,
-                              mass=mass, attraction_function=self.gratan)
 
         radius = np.linalg.norm(pos_1 - pos_2)
         expected_attraction = 1 * (1 - abs(np.tanh(radius)))
 
-        result = self.gratan(p1, p2)
+        result = attraction_2_points(pos_1, mass_1, pos_2,
+                                     mass_2, self.gratan)
         self.assertTrue(check_close(expected_attraction, result))
 
     def test_gratan_2(self):
         """
         Corner case: zero radius.
         """
-        zero = np.array([0, 0])
-        mass = 2
+        mass_1 = 2
+        mass_2 = 2
 
         pos_1 = np.array([0, 0])
-        p1 = PhysicalParticle(pos=pos_1, vel=zero, acc=zero,
-                              mass=mass, attraction_function=self.gratan)
-
         pos_2 = np.array([0, 0])
-        p2 = PhysicalParticle(pos=pos_2, vel=zero, acc=zero,
-                              mass=mass, attraction_function=self.gratan)
 
-        expected_attraction = mass*mass
+        expected_attraction = mass_1*mass_2
 
-        result = self.gratan(p1, p2)
+        result = attraction_2_points(pos_1, mass_1, pos_2,
+                                     mass_2, self.gratan)
         self.assertTrue(check_close(expected_attraction, result))
 
     def test_gratan_3(self):
         """
         Base case: particles different masses.
         """
-        zero = np.array([0, 0])
-
         mass_1 = 2
         pos_1 = np.array([0, 0])
-        p1 = PhysicalParticle(pos=pos_1, vel=zero, acc=zero,
-                              mass=mass_1, attraction_function=self.gratan)
 
         mass_2 = 32
         pos_2 = np.array([0, 0])
-        p2 = PhysicalParticle(pos=pos_2, vel=zero, acc=zero,
-                              mass=mass_2, attraction_function=self.gratan)
 
         radius = np.linalg.norm(pos_1 - pos_2)
         expected_attraction = mass_1*mass_2 * (1 - abs(np.tanh(radius)))
 
-        result = self.gratan(p1, p2)
+        result = attraction_2_points(pos_1, mass_1, pos_2,
+                                     mass_2, self.gratan)
         self.assertTrue(check_close(expected_attraction, result))
 
     def test_gratan_4(self):
         """
-        Base case: with multiplier.
+        Base case: Gratan with multiplier.
         """
-        multiplier = 2
-        attraction_function = Gratan(multiplier)
-
-        zero = np.array([0, 0])
-
         mass_1 = 2
         pos_1 = np.array([0, 0])
-        p1 = PhysicalParticle(pos=pos_1,
-                              vel=zero,
-                              acc=zero,
-                              mass=mass_1,
-                              attraction_function=attraction_function)
-
         mass_2 = 32
         pos_2 = np.array([0, 0])
-        p2 = PhysicalParticle(pos=pos_2,
-                              vel=zero,
-                              acc=zero,
-                              mass=mass_2,
-                              attraction_function=attraction_function)
+
+        multiplier = 2
+        attraction_function = Gratan(multiplier)
 
         radius = np.linalg.norm(pos_1 - pos_2)
         expected_attraction = multiplier*mass_1*mass_2 \
             * (1 - abs(np.tanh(radius)))
 
-        result = attraction_function(p1, p2)
+        
+        result = attraction_2_points(pos_1, mass_1, pos_2,
+                                     mass_2, attraction_function)
         self.assertTrue(check_close(expected_attraction, result))
+
+def attraction_2_points(pos_1: np.ndarray,
+                        mass_1: float,
+                        pos_2: np.ndarray,
+                        mass_2: float,
+                        attraction_funct: callable) -> float:
+    zero = np.array([0, 0])
+    p1 = PhysicalParticle(pos=pos_1,
+                          vel=zero,
+                          acc=zero,
+                          mass=mass_1,
+                          attraction_function=None)
+    p2 = PhysicalParticle(pos=pos_2,
+                          vel=zero,
+                          acc=zero,
+                          mass=mass_2,
+                          attraction_function=None)
+
+    return attraction_funct(p1, p2)
 
 
 if __name__ == '__main__':
