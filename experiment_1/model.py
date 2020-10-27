@@ -136,8 +136,9 @@ class NenwinModel():
         The result is a 2D matrix with a single row.
         """
         forces = np.zeros_like(particle.acc)
-        other_particles = self.__all_particles.difference((particle,))
-        for other_particle in other_particles:
+        other_nodes = self.__nodes.difference((particle,))
+        warnings.warn("TODO: Why do only nodes attract stuff?")
+        for other_particle in other_nodes:
             forces += other_particle.compute_attraction_force_to(particle)
         return np.array([forces])
 
@@ -160,7 +161,6 @@ class NenwinModel():
                 self._handle_inputs(message.data)
 
     def __feed_marble_if_close_to_any_eater(self, marble: Marble):
-        warnings.warn("Method not tested yet")
         for eater in self.__eater_nodes:
             if aux.distance(marble, eater) <= eater.radius:
                 eater.eat(marble)
