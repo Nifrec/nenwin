@@ -150,3 +150,41 @@ class PhysicalParticle(Particle):
         direction = difference_vector / radius
 
         return direction * self._attraction_function(self, other)
+
+class StiffnessParticle(PhysicalParticle):
+    def __init__(self,
+                 pos: np.ndarray,
+                 vel: np.ndarray,
+                 acc: np.ndarray,
+                 mass: float,
+                 attraction_function: callable,
+                 marble_stiffness: float,
+                 node_stiffness: float,
+                 marble_attraction: float,
+                 node_attraction: float):
+        super().__init__(pos, vel, acc, mass, attraction_function)
+        self.__marble_stiffness = marble_stiffness
+        self.__node_stiffness = node_stiffness
+        self.__marble_attraction = marble_attraction
+        self.__node_attraction = node_attraction
+
+    @property
+    def marble_stiffness(self) -> float:
+        return self.__marble_stiffness
+
+    @property
+    def node_stiffness(self) -> float:
+        return self.__node_stiffness
+
+    @property
+    def marble_attraction(self) -> float:
+        return self.__marble_attraction
+
+    @property
+    def node_attraction(self) -> float:
+        return self.__node_attraction
+
+    
+
+    
+
