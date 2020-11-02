@@ -18,19 +18,22 @@ from test_aux import runge_kutta_4_step
 
 ZERO = np.array([0])
 
+
 class StiffnessParticleTestCase(unittest.TestCase):
 
     def test_stiffness_getters(self):
         marble_stiffness = 0.42
         node_stiffness = 0.13
-        particle = create_particle(marble_stiffness, node_stiffness, ZERO, ZERO)
+        particle = create_particle(
+            marble_stiffness, node_stiffness, ZERO, ZERO)
         self.assertEqual(particle.marble_stiffness, marble_stiffness)
         self.assertEqual(particle.node_stiffness, node_stiffness)
 
     def test_attraction_getters(self):
         marble_attraction = 0.42
         node_attraction = 0.13
-        particle = create_particle(ZERO, ZERO, marble_attraction, marble_attraction)
+        particle = create_particle(ZERO, ZERO,
+                                   marble_attraction, node_attraction)
         self.assertEqual(particle.marble_attraction, marble_attraction)
         self.assertEqual(particle.node_attraction, node_attraction)
 
