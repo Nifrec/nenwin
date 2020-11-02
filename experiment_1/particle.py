@@ -151,6 +151,7 @@ class PhysicalParticle(Particle):
 
         return direction * self._attraction_function(self, other)
 
+
 class StiffnessParticle(PhysicalParticle):
     def __init__(self,
                  pos: np.ndarray,
@@ -163,6 +164,16 @@ class StiffnessParticle(PhysicalParticle):
                  marble_attraction: float,
                  node_attraction: float):
         super().__init__(pos, vel, acc, mass, attraction_function)
+        raise_error_if_any_not_in_range(
+            (
+                marble_stiffness,
+                node_stiffness,
+                marble_attraction,
+                node_attraction
+            ),
+            0,
+            1
+        )
         self.__marble_stiffness = marble_stiffness
         self.__node_stiffness = node_stiffness
         self.__marble_attraction = marble_attraction
@@ -184,7 +195,9 @@ class StiffnessParticle(PhysicalParticle):
     def node_attraction(self) -> float:
         return self.__node_attraction
 
-    
 
-    
-
+def raise_error_if_any_not_in_range(values: Iterable[float],
+                                    lower: float,
+                                    upper: float):
+    if any(x < lower or x > upper for x in values):
+        raise ValueError("Expected value in range[0, 1]")
