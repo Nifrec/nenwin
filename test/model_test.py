@@ -20,21 +20,7 @@ from experiment_1.particle import PhysicalParticle
 from test_aux import check_close
 from test_aux import TEST_SIMULATION_STEP_SIZE
 from test_aux import runge_kutta_4_step
-
-
-class TestAttractionFunction(AttractionFunction):
-    """
-    Simplistic constant function to ease testing numerically.
-    (For constant forces => constant acceleration,
-    and I can find a precise value for this)
-    """
-
-    def compute_attraction(self,
-                           first_particle: PhysicalParticle,
-                           second_particle: PhysicalParticle
-                           ) -> float:
-        return 0.01
-
+from test_aux import TestAttractionFunction
 
 class ModelTestCase(unittest.TestCase):
 
@@ -143,7 +129,7 @@ class ModelTestCase(unittest.TestCase):
 
     def test_model_run_4(self):
         """
-        Base case: marble attracted by 2 nodes in non-orthogonal directions.
+        Base case: marble attracted by 2 nodes in opposite directions.
         """
         attract_funct = TestAttractionFunction()
         zero_vector = np.array([0, 0])
@@ -185,8 +171,7 @@ class ModelTestCase(unittest.TestCase):
         difference2 = node2.pos - marble.pos
         direction2 = difference2 / np.linalg.norm(difference2)
         # Newton's Second Law:
-        expected_acc = (direction1 * attract_funct(node1, marble) \
-            + direction2 * attract_funct(node2, marble))/marble.mass
+        expected_acc = np.array([0, 0])
         expected_pos, expected_vel = runge_kutta_4_step(
             pos=np.array([1, 0]), vel=zero_vector, acc=expected_acc,
             duration=TEST_SIMULATION_STEP_SIZE)
@@ -194,7 +179,7 @@ class ModelTestCase(unittest.TestCase):
         self.assertTrue(check_close(marble.vel, expected_vel))
         self.assertTrue(check_close(marble.pos, expected_pos))
 
-    def test_model_run_4(self):
+    def test_model_run_5(self):
         """
         Base case: single marble and a single movable node.
         (stiffness != 1)
