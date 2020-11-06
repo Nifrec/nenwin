@@ -10,9 +10,26 @@ and auxiliary functions.
 """
 import numpy as np
 from typing import Tuple
-
+from experiment_1.attraction_functions.attraction_functions import AttractionFunction
+from experiment_1.particle import PhysicalParticle
 NUMERICAL_ABS_ACCURACY_REQUIRED = 10e-5
 TEST_SIMULATION_STEP_SIZE = 0.001
+
+class TestAttractionFunction(AttractionFunction):
+    """
+    Simplistic constant function to ease testing numerically.
+    (For constant forces => constant acceleration)
+    """
+
+    @property
+    def value(self):
+        return 0.01
+
+    def compute_attraction(self,
+                           first_particle: PhysicalParticle,
+                           second_particle: PhysicalParticle
+                           ) -> float:
+        return self.value
 
 def check_close(result: np.ndarray, expected: np.ndarray) -> bool:
     if not np.allclose(result, expected, atol=NUMERICAL_ABS_ACCURACY_REQUIRED):
