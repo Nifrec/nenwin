@@ -121,6 +121,78 @@ class StiffnessParticleTestCase(unittest.TestCase):
         self.assertRaises(
             ValueError, particle.compute_attraction_force_to, other)
 
+    def test_stiffness_to_marble(self):
+        """
+        Base case: 50% stiffness to a single Marble.
+        """
+        marble_stiffness = 0.5
+        marble = Marble(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        particle = create_particle(marble_stiffness, 0, 0, 0)
+
+        expected = (1-marble_stiffness)*ATTRACT_FUNCT.value
+        result = particle.compute_experienced_force(set([marble]))
+        self.assertEqual(expected, result,
+                         "marble_stiffness, "
+                         + f"got: {result}, exptected:{expected}")
+
+    def test_stiffness_to_node(self):
+        """
+        Base case: 1% stiffness to a single Node.
+        """
+        node_stiffness = 0.01
+        node = Node(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, 0)
+        particle = create_particle(0, node_stiffness, 0, 0)
+
+        expected = (1-node_stiffness)*ATTRACT_FUNCT.value
+        result = particle.compute_experienced_force(set([node]))
+        self.assertEqual(expected, result,
+                         "node_stiffness, "
+                         + f"got: {result}, exptected:{expected}")
+
+    def test_stiffness_zero(self):
+        """
+        Corner case: 100% stiffness to any particle.
+        """
+        node_stiffness = 1
+        marble_stiffness = 1
+        marble = Marble(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        node = Node(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, 0)
+        particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
+
+        expected = ZERO
+        result = particle.compute_experienced_force(set([node]))
+        self.assertEqual(expected, result,
+                         "zero stiffness, "
+                         + f"got: {result}, exptected:{expected}")
+
+    def test_stiffness_error(self):
+        """
+        Corner case: raise error if one of particles is neither Node nor Marble.
+        """
+        node_stiffness = 1
+        marble_stiffness = 1
+        other = StiffnessParticle(ZERO, ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 0, 0)
+        particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
+
+        self.assertRaises(ValueError,
+                          particle.compute_experienced_force,
+                          set([other]))
+
+    def test_stiffness_to_set(self):
+        """
+        Base case: multiple other particles in input set of 
+            compute_experienced_force()
+        """
+        node_stiffness = 0.1
+        marble_stiffness = 0.6
+        node = Node(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, 0)
+        marble = Marble(np.array([-1]), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
+
+        expected = node_stiffness*ATTRACT_FUNCT.value \
+            - marble_stiffness*ATTRACT_FUNCT.value
+        result = particle.compute_experienced_force(set([node, marble]))
+
 
 def create_particle(marble_stiffness,
                     node_stiffness,
@@ -130,7 +202,7 @@ def create_particle(marble_stiffness,
     Simply attempt to create a StiffnessParticle with given parameters,
     and 0 or None for all other parameter values.
     """
-    return StiffnessParticle(ZERO, ZERO, ZERO, ZERO, ATTRACT_FUNCT,
+    return StiffnessParticle(ZERO, ZERO, ZERO, 0, ATTRACT_FUNCT,
                              marble_stiffness=marble_stiffness,
                              node_stiffness=node_stiffness,
                              marble_attraction=marble_attraction,

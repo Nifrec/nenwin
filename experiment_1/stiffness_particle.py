@@ -69,6 +69,33 @@ class StiffnessParticle(PhysicalParticle):
 
         return multiplier * super().compute_attraction_force_to(other)
 
+    def compute_experienced_force(self,
+                                  other_particles: Set[Union[Marble, Node]]
+                                  ) -> np.ndarray:
+        """
+        Given a set of other particles,
+        find the resulting force this object experiences as excerted
+        by the other particles. Keeps stiffness into account.
+        """
+        forces = np.zeros_like(self.acc)
+        for particle in other_particles:
+            stiffness = self.__find_stiffness_to(particle)
+            forces += (1-stiffness) * particle.compute_attraction_force_to(self)
+
+        return forces
+
+    def __find_stiffness_to(self, particle: Union[Marble, Node]) -> float:
+        """
+        Throws error if the particle is neither a Node or a Marble.
+        """
+        if isinstance(particle, Marble):
+            return self.__marble_stiffness
+        elif isinstance(particle, Node):
+            return self.__node_stiffness
+        else:
+            raise ValueError(
+                "__find_stiffness_to: particle is neither Node nor Marble")
+
 
 def raise_error_if_any_not_in_range(values: Iterable[float],
                                     lower: float,
