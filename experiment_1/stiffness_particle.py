@@ -11,12 +11,18 @@ from __future__ import annotations
 import abc
 import numpy as np
 from typing import Union
-from experiment_1.node import Node
-from experiment_1.marble import Marble
 from experiment_1.particle import PhysicalParticle
 
 
-class StiffnessParticle(PhysicalParticle):
+class Node(PhysicalParticle):
+    """
+    The particle that is used to build the architecture and represent data particles
+    of the network:
+    massfull 'nodes' that attract other nodes and/or marbles,
+    and that way steer their path.
+    They themselves may or may not be attracted by the marbles as well.
+    """
+
     def __init__(self,
                  pos: np.ndarray,
                  vel: np.ndarray,
@@ -27,6 +33,25 @@ class StiffnessParticle(PhysicalParticle):
                  node_stiffness: float,
                  marble_attraction: float,
                  node_attraction: float):
+        """
+        Raises error if pos, vel and/or acc vectors do not have the same shape.
+
+        Arguments:
+        * pos: vector describing initial position of Node.
+        * vel: vector describing initial velocity of Node.
+        * acc: vector describing initial acceleration of Node.
+        * mass: attraction strength of Node, negative values are allowed.
+        * attraction_function: function taking two particles and computes
+            attraction force exerted by first (this Node) on second.
+        * marble_stiffness: multiplier for force exerted on this
+            by other Marbles, in range [0, 1]. Overrides node_stiffness.
+        * marble_stiffness: multiplier for force exerted on this
+            by other non-Marble Nodes, in range [0, 1].
+        * marble_attraction: multiplier for force exerted by self
+            on Marbles, in range [0, 1]. Overrides node_attaraction.
+        * node_attaraction: multiplier for force exerted by self
+            on non-Marble Nodes, in range [0, 1].
+        """
         super().__init__(pos, vel, acc, mass, attraction_function)
         raise_error_if_any_not_in_range((marble_stiffness, node_stiffness,
                                          marble_attraction, node_attraction),
@@ -80,7 +105,8 @@ class StiffnessParticle(PhysicalParticle):
         forces = np.zeros_like(self.acc)
         for particle in other_particles:
             stiffness = self.__find_stiffness_to(particle)
-            forces += (1-stiffness) * particle.compute_attraction_force_to(self)
+            forces += (1-stiffness) * \
+                       particle.compute_attraction_force_to(self)
 
         return forces
 
@@ -95,6 +121,41 @@ class StiffnessParticle(PhysicalParticle):
         else:
             raise ValueError(
                 "__find_stiffness_to: particle is neither Node nor Marble")
+
+
+
+class Marble(Node):
+    """
+    The particle that is used to build the architecture of the network:
+    massfull 'nodes' that attract the marbles, and that way steer their path.
+    They themselves may or may not be attracted by the marbles as well.
+    """
+
+    def __init__(self,
+                 pos: np.ndarray,
+                 vel: np.ndarray,
+                 acc: np.ndarray,
+                 mass: float,
+                 attraction_function: callable,
+                 datum: object,
+                 marble_stiffness: float=1,
+                 node_stiffness: float=0,
+                 marble_attraction: float=0,
+                 node_attraction: float=1):
+        """
+        Initialize the Marble at the given position with the given acceleration,
+        velocity and mass. The Marble's attraction to any other Particle
+        is described by the[attraction_function].
+
+        The datum is the object that the Marble represent.
+        What form it may have is not specified.
+        """
+        super().__init__(pos, vel, acc, mass, attraction_function, marble_stiffness, node_stiffness, marble_attraction, node_attraction)
+        self.__datum = datum
+
+    @property
+    def datum(self):
+        return self.__datum
 
 
 def raise_error_if_any_not_in_range(values: Iterable[float],

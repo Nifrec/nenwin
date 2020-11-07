@@ -14,7 +14,7 @@ from experiment_1.attraction_functions.attraction_functions import AttractionFun
 from experiment_1.particle import PhysicalParticle
 NUMERICAL_ABS_ACCURACY_REQUIRED = 10e-5
 TEST_SIMULATION_STEP_SIZE = 0.001
-
+ZERO = np.array([0])
 class TestAttractionFunction(AttractionFunction):
     """
     Simplistic constant function to ease testing numerically.
