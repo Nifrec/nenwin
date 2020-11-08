@@ -15,6 +15,8 @@ from experiment_1.particle import PhysicalParticle
 NUMERICAL_ABS_ACCURACY_REQUIRED = 10e-5
 TEST_SIMULATION_STEP_SIZE = 0.001
 ZERO = np.array([0])
+
+
 class TestAttractionFunction(AttractionFunction):
     """
     Simplistic constant function to ease testing numerically.
@@ -31,8 +33,12 @@ class TestAttractionFunction(AttractionFunction):
                            ) -> float:
         return self.value
 
-def check_close(result: np.ndarray, expected: np.ndarray) -> bool:
-    if not np.allclose(result, expected, atol=NUMERICAL_ABS_ACCURACY_REQUIRED):
+
+def check_close(result: np.ndarray,
+                expected: np.ndarray,
+                atol=NUMERICAL_ABS_ACCURACY_REQUIRED
+                ) -> bool:
+    if not np.allclose(result, expected, atol=atol):
         print(f"expected:{expected}, result:{result}")
         return False
     else:
@@ -74,6 +80,9 @@ def runge_kutta_4_step(pos: np.ndarray,
     High order of accuracy approximation of new position and velocity
     after [duration] of time, given constant acceleration.
     """
+    pos = pos.copy()
+    vel = vel.copy()
+    
     for time_step in np.arange(0, duration, step_size):
         k1_v = acc * step_size
         k1_x = vel * step_size
