@@ -36,7 +36,7 @@ class InputPlacer(abc.ABC):
         return self.__input_region_sizes
 
     @abc.abstractmethod
-    def position_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
+    def marblize_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
         """
         Given a set of data, create a Marble for each input datum,
         and assign them a position in the input region.
@@ -46,5 +46,5 @@ class InputPlacer(abc.ABC):
 class NewtonRaphsonInputPlacer(InputPlacer):
     #TODO: docstring
 
-    def position_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
+    def marblize_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
         #TODO: docstring
