@@ -5,8 +5,9 @@ the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 Author: Lulof Pirée
 October 2020
 
-Class to hold pieces of network together, perform timesteps and manage i/o
-around the simulation.
+Class representing the state of a simulation:
+    keeps track of the nodes, marbles, and advances timesteps.
+Also related auxiliary and communication classes.
 """
 import numpy as np
 from typing import Set, Iterable, Optional, List
@@ -41,10 +42,6 @@ class UIMessage():
     def __init__(self, command: UICommands, data: Optional[object] = None):
         self.command = command
         self.data = data
-
-
-class OutputReader():
-    pass
 
 
 class NenwinModel():
