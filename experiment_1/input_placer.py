@@ -8,6 +8,10 @@ October 2020
 Class to place a set of input values into a given space.
 """
 import abc
+import numpy as np
+from typing import Iterable
+
+from experiment_1.stiffness_particle import Marble
 
 class InputPlacer(abc.ABC):
     """
@@ -48,3 +52,4 @@ class NewtonRaphsonInputPlacer(InputPlacer):
 
     def marblize_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
         #TODO: docstring
+        pass
