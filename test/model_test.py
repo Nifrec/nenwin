@@ -135,11 +135,23 @@ class ModelTestCase(unittest.TestCase):
 
         self.assertTrue(check_close(marble.pos, expected_pos, atol=0.01))
         self.assertTrue(check_close(marble.vel, expected_vel, atol=0.01))
-        self.assertTrue(check_close(marble.acc, -ATTRACT_FUNCT.value, atol=0.01))
+        self.assertTrue(check_close(marble.acc, -ATTRACT_FUNCT.value,
+                                    atol=0.01))
 
         self.assertTrue(check_close(node.pos, ZERO))
         self.assertTrue(check_close(node.vel, ZERO))
         self.assertTrue(check_close(node.acc, ZERO))
+
+    def test_no_initial_marbles(self):
+        """
+        In vitro test: should not raise error if no Marbles provided.
+        """
+        try:
+            model = NenwinModel([])
+        except:
+            self.fail("Initialization of NenwinModel without initial_marbles"
+                      + " should not fail.")
+
 
 def generate_dummy_marble() -> Marble:
     """

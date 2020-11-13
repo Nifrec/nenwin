@@ -7,7 +7,6 @@ October 2020
 
 Class representing the state of a simulation:
     keeps track of the nodes, marbles, and advances timesteps.
-Also related auxiliary and communication classes.
 """
 import numpy as np
 from typing import Set, Iterable, Optional, List
@@ -23,26 +22,6 @@ from experiment_1.stiffness_particle import Node
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.stiffness_particle import Marble
 import experiment_1.aux as aux
-
-
-class UICommands(enum.Enum):
-    """
-    Commands that the UI can give to a running NenwinModel.
-    """
-    # Stop/pause the simulation.
-    stop = "stop"
-    # Add a new input to the simulation
-    # (should come together with new input values).
-    read_input = "input"
-    # Write current output values to the pipe.
-    write_output = "output"
-
-
-class UIMessage():
-    def __init__(self, command: UICommands, data: Optional[object] = None):
-        self.command = command
-        self.data = data
-
 
 class NenwinModel():
     """
@@ -62,10 +41,10 @@ class NenwinModel():
         self.__nodes = set(nodes)
         self.__eater_nodes: List[MarbleEaterNode] =\
             [node for node in nodes if isinstance(node, MarbleEaterNode)]
-        if initial_marbles is not Node:
+        if initial_marbles is not None:
             self.__marbles = set(initial_marbles)
         else:
-            initial_marbles = set()
+            self.__marbles = set([])
         self.__all_particles = self.__nodes.union(self.__marbles)
 
     @property
