@@ -10,6 +10,8 @@ to a interprentable output.
 """
 import abc
 from typing import Any
+import numpy as np
+
 from experiment_1.model import NenwinModel
 
 class OutputReader(abc.ABC):
@@ -25,3 +27,12 @@ class OutputReader(abc.ABC):
         Abstract method to be defined by subclasses.
         """
         pass
+
+class NumMarblesOutputReader(OutputReader):
+
+    def read_output(self, model: NenwinModel) -> np.ndarray:
+        eater_nodes = model.marble_eater_nodes
+        outputs = np.empty((len(eater_nodes)))
+        for idx in range(len(eater_nodes)):
+            outputs[idx] = eater_nodes[idx].num_marbles_eaten
+        return outputs
