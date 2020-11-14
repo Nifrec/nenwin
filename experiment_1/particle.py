@@ -11,7 +11,6 @@ from __future__ import annotations
 import abc
 import numpy as np
 
-
 class Particle(abc.ABC):
     """
     Abstract Base Class for all particles of the simulation,
@@ -140,10 +139,8 @@ class PhysicalParticle(Particle):
     def compute_attraction_force_to(
             self, other: PhysicalParticle) -> np.ndarray:
         """
-        Computes the Newtonian gravity force vector induced
-        by this particle to the
+        Computes the force vector induced by this particle to the
         [other] paricle at the position of the other particle.
-        Note that no gravity constant is included in this computed force.
         """
         difference_vector = (self.pos - other.pos)
         radius = np.linalg.norm(difference_vector)

@@ -5,186 +5,206 @@ the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 Author: Lulof Pirée
 October 2020
 
-Unit-tests for node.py.
+Unit-tests for Node of stiffness_particle.py.
 """
 import unittest
 import numpy as np
-from typing import Tuple
 
-from experiment_1.node import Node, MarbleEaterNode
-from experiment_1.marble import Marble
 from experiment_1.attraction_functions.attraction_functions import Gratan
+from experiment_1.stiffness_particle import Node, Node, Marble
+from experiment_1.particle import PhysicalParticle
+from test_aux import TestAttractionFunction
+from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import check_close
+from test_aux import runge_kutta_4_step
+from test_aux import ZERO
+
+ATTRACT_FUNCT = TestAttractionFunction()
 
 
 class NodeTestCase(unittest.TestCase):
 
-    def test_stiffness_property_1(self):
+    def test_stiffness_getters(self):
+        marble_stiffness = 0.42
+        node_stiffness = 0.13
+        particle = create_particle(
+            marble_stiffness, node_stiffness, ZERO, ZERO)
+        self.assertEqual(particle.marble_stiffness, marble_stiffness)
+        self.assertEqual(particle.node_stiffness, node_stiffness)
+
+    def test_attraction_getters(self):
+        marble_attraction = 0.42
+        node_attraction = 0.13
+        particle = create_particle(ZERO, ZERO,
+                                   marble_attraction, node_attraction)
+        self.assertEqual(particle.marble_attraction, marble_attraction)
+        self.assertEqual(particle.node_attraction, node_attraction)
+
+    def test_stiffness_errors_1(self):
+        self.assertRaises(ValueError, create_particle, 1.1, ZERO, ZERO, ZERO)
+
+    def test_stiffness_errors_2(self):
+        self.assertRaises(ValueError, create_particle, ZERO, 1.1, ZERO, ZERO)
+
+    def test_stiffness_errors_3(self):
+        self.assertRaises(ValueError, create_particle, ZERO, -0.1, ZERO, ZERO)
+
+    def test_stiffness_errors_4(self):
+        self.assertRaises(ValueError, create_particle, -1, ZERO, ZERO, ZERO)
+
+    def test_attraction_errors_1(self):
+        self.assertRaises(ValueError, create_particle, ZERO, ZERO, 1.1, ZERO)
+
+    def test_attraction_errors_2(self):
+        self.assertRaises(ValueError, create_particle, ZERO, ZERO, ZERO, 1.1)
+
+    def test_attraction_errors_3(self):
+        self.assertRaises(ValueError, create_particle, ZERO, ZERO, -1, ZERO)
+
+    def test_attraction_errors_4(self):
+        self.assertRaises(ValueError, create_particle, ZERO, ZERO, ZERO, -0.1)
+
+    def test_attraction_node_1(self):
         """
-        Base case: just test the getter.
+        Check if the node_attraction multiplier is used to compute force to a
+        node.
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
-        mass = 1
-        stiffness = 0.5
-        node = Node(pos, vel, acc, mass, lambda: None, stiffness)
+        node_attraction = 0.5
+        # Position -1 ensures it will be pulled towards '+' x-direction
+        node = Node(np.array([-1]), ZERO, ZERO, 0, None, 0, 0, 0, 0)
+        particle = create_particle(0, 0, 0, node_attraction)
 
-        self.assertEqual(node.stiffness, stiffness)
+        result = particle.compute_attraction_force_to(node)
+        self.assertEqual(result, ATTRACT_FUNCT.value * node_attraction)
 
-    def test_stiffness_property_2(self):
+    def test_attraction_node_2(self):
         """
-        Corner case: invalid value, too high
+        Corner case: should not attract any node if the multiplier is 0.
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
-        mass = 1
-        stiffness = 1.0001
-        args = (pos, vel, acc, mass, lambda: None, stiffness)
+        node_attraction = 0
+        node = Node(np.array([-1]), ZERO, ZERO, 0, None, 0, 0, 1, 1)
+        particle = create_particle(0, 0, 0, node_attraction)
+        result = particle.compute_attraction_force_to(node)
+        self.assertEqual(result, 0)
 
-        self.assertRaises(ValueError, Node, *args)
-
-    def test_stiffness_property_3(self):
+    def test_attraction_marble_1(self):
         """
-        Corner case: invalid value, too low
+        Check if the marble_attraction multiplier is used to compute force to a
+        node.
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
-        mass = 1
-        stiffness = -0.0001
-        args = (pos, vel, acc, mass, lambda: None, stiffness)
+        marble_attraction = 0.5
+        # Position -1 ensures it will be pulled towards '+' x-direction
+        marble = Marble(np.array([-1]), ZERO, ZERO, 0, None, None)
+        particle = create_particle(0, 0, marble_attraction, 0)
 
-        self.assertRaises(ValueError, Node, *args)
+        result = particle.compute_attraction_force_to(marble)
+        self.assertEqual(result, ATTRACT_FUNCT.value * marble_attraction)
 
-    def test_stiffness_acc_update_1(self):
+    def test_attraction_marble_2(self):
         """
-        Base case: non-boundary stiffness.
+        Corner case: should not attract any node if the multiplier is 0.
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
-        mass = 1
-        stiffness = 0.5
-        node = Node(pos, vel, acc, mass, lambda: None, stiffness)
+        marble_attraction = 0
+        marble = Marble(np.array([-1]), ZERO, ZERO, 0, None, None)
+        particle = create_particle(0, 0, marble_attraction, 0)
+        result = particle.compute_attraction_force_to(marble)
+        self.assertEqual(result, 0)
 
-        forces = np.array([[1, 1, 1]])
-        node.update_acceleration(forces)
-
-        expected = np.array([1, 1, 1]) * stiffness
-
-        self.assertTrue(check_close(node.acc, expected))
-
-    def test_stiffness_acc_update_2(self):
+    def test_attraction_wrong_type(self):
         """
-        Corner case: 0 stiffness.
+        Corner case: can only compute attraction to Marbles and Nodes.
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
-        mass = 1
-        stiffness = 0
-        node = Node(pos, vel, acc, mass, lambda: None, stiffness)
+        other = PhysicalParticle(np.array([-1]), ZERO, ZERO, 0, None)
+        particle = create_particle(0, 0, 0, 0)
+        self.assertRaises(
+            ValueError, particle.compute_attraction_force_to, other)
 
-        forces = np.array([[1, 1, 1]])
-        node.update_acceleration(forces)
-
-        expected = np.array([1, 1, 1])
-
-        self.assertTrue(check_close(node.acc, expected))
-
-    def test_stiffness_acc_update_3(self):
+    def test_stiffness_to_marble(self):
         """
-        Corner case: 0 stiffness.
+        Base case: 50% stiffness to a single Marble.
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
-        mass = 1
-        stiffness = 1
-        node = Node(pos, vel, acc, mass, lambda: None, stiffness)
+        marble_stiffness = 0.5
+        marble = Marble(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        particle = create_particle(marble_stiffness, 0, 0, 0)
 
-        forces = np.array([[1, 1, 1]])
-        node.update_acceleration(forces)
+        expected = (1-marble_stiffness)*ATTRACT_FUNCT.value
+        result = particle.compute_experienced_force(set([marble]))
+        self.assertEqual(expected, result,
+                         "marble_stiffness, "
+                         + f"got: {result}, exptected:{expected}")
 
-        self.assertTrue(check_close(node.acc, acc))
-
-
-class MarbleEaterNodeTestCase(unittest.TestCase):
-
-    def test_eat_1(self):
+    def test_stiffness_to_node(self):
         """
-        Base case: eat a Marble, test if stored correctly.
+        Base case: 1% stiffness to a single Node.
         """
-        # Irrelevant parameters
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
-        mass = 1
-        stiffness = 0.5
-        radius = 0
+        node_stiffness = 0.01
+        node = Node(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
+        particle = create_particle(0, node_stiffness, 0, 0)
 
-        node = MarbleEaterNode(pos, vel, acc, mass, lambda: None,
-                               stiffness, radius)
-        datum = "Hell0 W0rld!"
-        marble = Marble(pos, vel, acc, mass, lambda: None, datum)
+        expected = (1-node_stiffness)*ATTRACT_FUNCT.value
+        result = particle.compute_experienced_force(set([node]))
+        self.assertEqual(expected, result,
+                         "node_stiffness, "
+                         + f"got: {result}, exptected:{expected}")
 
-        node.eat(marble)
-        del marble # It is supposed to dissapear now in the Simulation as well.
-
-        self.assertEqual(node.num_marbles_eaten, 1)
-        self.assertListEqual(node.marble_data_eaten, [datum])
-
-    def test_eat_2(self):
+    def test_stiffness_zero(self):
         """
-        Corner case: no Marbles eaten.
+        Corner case: 100% stiffness to any particle.
         """
-        # Irrelevant parameters
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
-        mass = 1
-        stiffness = 0.5
-        radius = 0
+        node_stiffness = 1
+        marble_stiffness = 1
+        marble = Marble(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        node = Node(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
+        particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
 
-        node = MarbleEaterNode(pos, vel, acc, mass, lambda: None,
-                               stiffness, radius)
+        expected = ZERO
+        result = particle.compute_experienced_force(set([node]))
+        self.assertEqual(expected, result,
+                         "zero stiffness, "
+                         + f"got: {result}, exptected:{expected}")
 
-        self.assertEqual(node.num_marbles_eaten, 0)
-        self.assertListEqual(node.marble_data_eaten, [])
-
-    def test_eat_2(self):
+    def test_stiffness_error(self):
         """
-        Base case: eat 2 Marbles, test if stored correctly in right order.
+        Corner case: raise error if one of particles is neither Node nor Marble.
         """
-        # Irrelevant parameters
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
-        mass = 1
-        stiffness = 0.5
-        radius = 0
+        node_stiffness = 1
+        marble_stiffness = 1
+        other = PhysicalParticle(ZERO, ZERO, ZERO, 0, ATTRACT_FUNCT)
+        particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
 
-        node = MarbleEaterNode(pos, vel, acc, mass, lambda: None,
-                               stiffness, radius)
-        datum1 = "Hell0 W0rld!"
-        marble1 = Marble(pos, vel, acc, mass, lambda: None, datum1)
+        self.assertRaises(ValueError,
+                          particle.compute_experienced_force,
+                          set([other]))
 
-        node.eat(marble1)
-        del marble1 # It is supposed to dissapear now in the Simulation as well.
+    def test_stiffness_to_set(self):
+        """
+        Base case: multiple other particles in input set of 
+            compute_experienced_force()
+        """
+        node_stiffness = 0.1
+        marble_stiffness = 0.6
+        node = Node(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 0, 0)
+        marble = Marble(np.array([-1]), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
 
-        datum2 = set([1, 2, 3])
-        marble2 = Marble(pos, vel, acc, mass, lambda: None, datum2)
-        node.eat(marble2)
-        del marble2
-
-        self.assertEqual(node.num_marbles_eaten, 2)
-        self.assertListEqual(node.marble_data_eaten, [datum1, datum2])
-
-
+        expected = node_stiffness*ATTRACT_FUNCT.value \
+            - marble_stiffness*ATTRACT_FUNCT.value
+        result = particle.compute_experienced_force(set([node, marble]))
 
 
+def create_particle(marble_stiffness,
+                    node_stiffness,
+                    marble_attraction,
+                    node_attraction) -> Node:
+    """
+    Simply attempt to create a Node with given parameters,
+    and 0 or None for all other parameter values.
+    """
+    return Node(ZERO, ZERO, ZERO, 0, ATTRACT_FUNCT,
+                             marble_stiffness=marble_stiffness,
+                             node_stiffness=node_stiffness,
+                             marble_attraction=marble_attraction,
+                             node_attraction=node_attraction)
 
 
 if __name__ == '__main__':
