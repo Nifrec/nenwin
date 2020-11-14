@@ -110,17 +110,3 @@ class NenwinModel():
                 eater.eat(marble)
                 self.__marbles.remove(marble)
                 break
-
-
-# class NumMarblesEatenAsOutputModel(NenwinModel):
-#     """
-#     Variant of the Nenwin model that outputs the integer amount of
-#     Marbles that fel in each MarbleEaterNode, collected in an array,
-#     as output.
-#     """
-
-#     def _produce_outputs(self) -> np.ndarray:
-#         outputs = np.empty((len(self.marble_eater_nodes)))
-#         for idx in range(len(self.marble_eater_nodes)):
-#             outputs[idx] = self.marble_eater_nodes[idx].num_marbles_eaten
-#         return outputs
