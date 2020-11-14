@@ -33,6 +33,10 @@ class TestAttractionFunction(AttractionFunction):
                            ) -> float:
         return self.value
 
+class MockPipe:
+
+    def poll(self):
+        return None
 
 def check_close(result: np.ndarray,
                 expected: np.ndarray,

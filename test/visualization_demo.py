@@ -15,6 +15,7 @@ from experiment_1.stiffness_particle import Marble
 from experiment_1.stiffness_particle import Node
 from experiment_1.simulation import Simulation
 from experiment_1.attraction_functions.attraction_functions import Gratan, NewtonianGravity
+from test_aux import MockPipe
 
 def visualization_demo():
     attract_funct = NewtonianGravity()
@@ -77,11 +78,6 @@ def visualization_demo():
     simulation = Simulation(model, None, None, MockPipe())
     visualization = NenwinVisualization((1500, 1000), simulation, model)
     visualization.run(10, 0.01)
-
-class MockPipe:
-
-    def poll(self):
-        return None
 
 if __name__ == "__main__":
     visualization_demo()
