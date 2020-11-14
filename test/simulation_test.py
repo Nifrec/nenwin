@@ -18,10 +18,11 @@ from experiment_1.model import NenwinModel
 from experiment_1.stiffness_particle import Marble
 from test_aux import ZERO
 
-# Just an arbitrary non-trivial object 
+# Just an arbitrary non-trivial object
 # ('None' would also be returned when faultly no return value is specified)
 MOCK_KEYWORD = "test"
 MOCK_MARBLE = Marble(ZERO, ZERO, ZERO, 0, None, None)
+
 
 class SimulationTestCase(unittest.TestCase):
 
@@ -73,7 +74,7 @@ class SimulationTestCase(unittest.TestCase):
         """
         Base case: test for termination.
         """
-        self.simulation.run(step_size = 1, max_num_steps=1)
+        self.simulation.run(step_size=1, max_num_steps=1)
         self.assertFalse(self.simulation.is_running)
 
     def test_run_2(self):
@@ -81,9 +82,18 @@ class SimulationTestCase(unittest.TestCase):
         Base case: test if model's step function was called max_num_steps times.
         """
         num_steps = 10
-        self.simulation.run(step_size = 1, max_num_steps=num_steps)
+        self.simulation.run(step_size=1, max_num_steps=num_steps)
         self.assertEqual(self.model.invocation_count, num_steps)
 
+    def test_run_3(self):
+        """
+        Base case: stop after one step if stop command on pipe.
+        """
+        max_num_steps = 10
+        message = UIMessage(UICommands.stop)
+        self.pipe.send(message)
+        self.simulation.run(step_size=1, max_num_steps=max_num_steps)
+        self.assertEqual(self.model.invocation_count, 1)
 
     def send_command_and_let_process(self, command: UICommands):
         """
@@ -93,8 +103,6 @@ class SimulationTestCase(unittest.TestCase):
         message = UIMessage(command)
         self.pipe.send(message)
         self.simulation._Simulation__handle_commands()
-
-
 
 
 class CheckInvokedMocker():
@@ -132,6 +140,7 @@ class MockNenwinModel(CheckInvokedMocker, NenwinModel):
 
     def make_timestep(self, time_passed):
         self.count_invocation()
+
 
 if __name__ == '__main__':
     unittest.main()

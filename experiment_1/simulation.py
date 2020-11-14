@@ -80,7 +80,7 @@ class Simulation():
 
         while (self.__num_remaining_timesteps > 0):
             self.__num_remaining_timesteps -= 1
-            self.__handle_commands
+            self.__handle_commands()
             self.__model.make_timestep(step_size)
 
     def __handle_commands(self):
