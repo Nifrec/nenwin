@@ -17,6 +17,7 @@ from experiment_1.model import NenwinModel
 from experiment_1.input_placer import InputPlacer
 from experiment_1.output_reader import OutputReader
 
+
 class UICommands(enum.Enum):
     """
     Commands that the UI can give to a running NenwinModel.
@@ -35,6 +36,7 @@ class UIMessage():
         self.command = command
         self.data = data
 
+
 class Simulation():
     """
     Class to hold pieces of a network simulation together
@@ -50,15 +52,36 @@ class Simulation():
         self.__input_placer = input_placer
         self.__output_reader = output_reader
         self.__pipe = pipe_end
-        self.__is_running = False
+        self.__num_remaining_timesteps = 0
 
     @property
     def is_running(self) -> bool:
-        return self.__is_running
+        return self.__num_remaining_timesteps > 0
 
-    def run(max_num_steps: Number = float("inf")):
-        self.__is_running = True
-        pass
+    def run(self,
+            step_size: Number,
+            max_num_steps: Optional[Number] = float("inf")):
+        """
+        Repeatedly read commands (stop, new inputs, output request),
+        and advance the simulation one step.
+        Simulation is stopped (paused, not deleted) when the stop command
+        is sent via the associated pipe, or optionally after a maximum number
+        of steps.
+
+        Arguments:
+        * step_size: how much passed time is simulated during a single timestep.
+            Lowever values lead to more accurate simulation, but also require
+            more computation time.
+        * [Optional] max_num_steps: amount of steps after which the simulation
+            is guarranteed to stop. 
+            It might stop earlier in case of a stop command.
+        """
+        self.__num_remaining_timesteps = max_num_steps
+
+        while (self.__num_remaining_timesteps > 0):
+            self.__num_remaining_timesteps -= 1
+            self.__handle_commands
+            self.__model.make_timestep(step_size)
 
     def __handle_commands(self):
         """
@@ -72,7 +95,7 @@ class Simulation():
 
             command = message.command
             if command == UICommands.stop:
-                self.__is_running = False
+                self.__num_remaining_timesteps = 0
             elif command == UICommands.write_output:
                 self.__produce_outputs()
             elif command == UICommands.read_input:
@@ -85,20 +108,3 @@ class Simulation():
     def __handle_inputs(self, data: Iterable):
         new_marbles = self.__input_placer.marblize_data(data)
         self.__model.add_marbles(new_marbles)
-    # def run(self, max_num_steps: Number = float("inf")):
-    #     """
-    #     Start simulation and imput processing until stop signal is received.
-    #     While running, will accept inputs, and produce outputs when requested.
-
-    #     By default runs indefinitely until stop signal is received.
-    #     An optional max amount of timesteps can be given
-    #     (convenient for testing).
-    #     """
-    #     num_remaining_steps = max_num_steps
-
-    #     while num_remaining_steps > 0:
-    #         num_remaining_steps -= 1
-
-    #         self.__handle_commands()
-
-    #         

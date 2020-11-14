@@ -26,7 +26,7 @@ MOCK_MARBLE = Marble(ZERO, ZERO, ZERO, 0, None, None)
 class SimulationTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.model = NenwinModel([])
+        self.model = MockNenwinModel()
         self.input_placer = MockInputPlacer()
         self.output_reader = MockOutputReader()
         self.pipe, self.__other_pipe_end = multiprocessing.Pipe(duplex=True)
@@ -69,6 +69,21 @@ class SimulationTestCase(unittest.TestCase):
         self.send_command_and_let_process(UICommands.read_input)
         self.assertEqual(self.input_placer.invocation_count, 2)
 
+    def test_run_1(self):
+        """
+        Base case: test for termination.
+        """
+        self.simulation.run(step_size = 1, max_num_steps=1)
+        self.assertFalse(self.simulation.is_running)
+
+    def test_run_2(self):
+        """
+        Base case: test if model's step function was called max_num_steps times.
+        """
+        num_steps = 10
+        self.simulation.run(step_size = 1, max_num_steps=num_steps)
+        self.assertEqual(self.model.invocation_count, num_steps)
+
 
     def send_command_and_let_process(self, command: UICommands):
         """
@@ -109,6 +124,14 @@ class MockOutputReader(CheckInvokedMocker, OutputReader):
         self.count_invocation()
         return MOCK_KEYWORD
 
+
+class MockNenwinModel(CheckInvokedMocker, NenwinModel):
+    def __init__(self):
+        CheckInvokedMocker.__init__(self)
+        NenwinModel.__init__(self, [], [])
+
+    def make_timestep(self, time_passed):
+        self.count_invocation()
 
 if __name__ == '__main__':
     unittest.main()
