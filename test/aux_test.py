@@ -12,7 +12,7 @@ import numpy as np
 
 from experiment_1.particle import Particle
 from test_aux import check_close
-from experiment_1.aux import distance
+from experiment_1.auxliary import distance
 class DistanceCase(unittest.TestCase):
 
     def test_distance_1(self):

@@ -21,7 +21,7 @@ from experiment_1.particle import PhysicalParticle
 from experiment_1.stiffness_particle import Node
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.stiffness_particle import Marble
-import experiment_1.aux as aux
+import experiment_1.auxliary as auxliary
 
 class NenwinModel():
     """
