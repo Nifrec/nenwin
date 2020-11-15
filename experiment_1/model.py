@@ -106,7 +106,7 @@ class NenwinModel():
 
     def __feed_marble_if_close_to_any_eater(self, marble: Marble):
         for eater in self.__eater_nodes:
-            if aux.distance(marble, eater) <= eater.radius:
+            if auxliary.distance(marble, eater) <= eater.radius:
                 eater.eat(marble)
                 self.__marbles.remove(marble)
                 break
