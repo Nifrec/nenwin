@@ -109,15 +109,15 @@ class NenwinVisualization():
                 if (event.key == pygame.K_ESCAPE):  # User pressed ESC
                     self.__is_running = False
 
-    def run(self, steps_per_display_update: int, step_size: Number):
+    def run(self, simulation_steps_per_frame: int, step_size: Number):
         """
         Run the model and update the visualization every 
-        [steps_per_display_update] steps of the simulation.
+        [simulation_steps_per_frame] steps of the simulation.
         """
         self.__is_running = True
 
         while self.__is_running:
             self.__draw_all_particles()
             self.__simulation.run(step_size=step_size,
-                                  max_num_steps=steps_per_display_update)
+                                  max_num_steps=simulation_steps_per_frame)
             self.__process_events()
