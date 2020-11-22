@@ -26,18 +26,23 @@ An experiment to see if an architecture can be made that accelerates a
 import numpy as np
 from typing import List
 
-from experiment_1.model import NenwinModel
-from experiment_1.node import Node, MarbleEaterNode
-from experiment_1.marble import Marble
-from experiment_1.attraction_functions.attraction_functions import Gratan
+from experiment_1.marble_eater_node import MarbleEaterNode
+from experiment_1.stiffness_particle import Node, Marble
 from experiment_1.attraction_functions.attraction_functions import NewtonianGravity
-from experiment_1.visualization import NenwinVisualization
-
+from experiment_1.architectures.run_and_visualize import run
+from experiment_1.auxliary import generate_stiffness_dict
 ZERO = np.array([0, 0])
 ATTRACTION_FUNCTION = NewtonianGravity()
+NODE_STIFFNESSES = generate_stiffness_dict(marble_stiffness=1,
+                                           node_stiffness=1,
+                                           marble_attraction=1,
+                                           node_attraction=0)
+MARBLE_STIFFNESS = generate_stiffness_dict(marble_stiffness=0,
+                                           node_stiffness=0,
+                                           marble_attraction=0,
+                                           node_attraction=0)
 
-
-def nand_gate(input_1: bool, input_2: bool) -> bool:
+def cannon_experiment():
     """
     Simulate a NAND gate using a Nenwin architecture.
     Also visualizes the simulation and prints the result.
@@ -46,13 +51,12 @@ def nand_gate(input_1: bool, input_2: bool) -> bool:
                     vel=np.array([10, 0]),
                     acc=ZERO,
                     mass=-1,
-                    attraction_function=NewtonianGravity,
-                    datum=None)
+                    attraction_function=ATTRACTION_FUNCTION,
+                    datum=None,
+                    **MARBLE_STIFFNESS
+                    )
     nodes = __generate_canon_nodes()
-    model = NenwinModel(nodes, 0.001, [marble])
-    visualization = NenwinVisualization((500, 500), model, 2)
-    visualization.run(10)
-    output = model._produce_outputs()
+    run([marble], nodes)
 
 
 def __generate_canon_nodes() -> List[Node]:
@@ -84,10 +88,10 @@ def __generate_canon_nodes() -> List[Node]:
                         acc=ZERO,
                         mass=mass,
                         attraction_function=ATTRACTION_FUNCTION,
-                        stiffness=1)
+                        **NODE_STIFFNESSES)
         nodes.append(new_node)
     return nodes
 
 
 if __name__ == "__main__":
-    nand_gate(True, False)
+    cannon_experiment()
