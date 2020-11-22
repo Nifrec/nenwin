@@ -73,3 +73,24 @@ class NewtonianGravity(AttractionFunction):
                            ) -> float:
         radius = np.linalg.norm(first_particle.pos - second_particle.pos)
         return first_particle.mass * second_particle.mass / radius**2
+
+class ThresholdGravity(NewtonianGravity):
+    """
+    Variant of Newton's gravity function that returns 0 when the radius
+    is greater than a certain threshold value.
+    """
+
+    def __init__(self, threshold: float):
+        self.__threshold = threshold
+
+    def compute_attraction(self,
+                           first_particle: PhysicalParticle,
+                           second_particle: PhysicalParticle
+                           ) -> float:
+        radius = np.linalg.norm(first_particle.pos - second_particle.pos)
+
+        if (radius <= self.__threshold):
+            return super().compute_attraction(first_particle, second_particle)
+        else:
+            return 0
+

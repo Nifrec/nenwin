@@ -13,7 +13,9 @@ from experiment_1.particle import PhysicalParticle
 from experiment_1.attraction_functions.attraction_functions import Gratan
 from experiment_1.attraction_functions.attraction_functions \
     import NewtonianGravity
-from test_aux import check_close
+from experiment_1.attraction_functions.attraction_functions \
+    import ThresholdGravity
+from test_aux import check_close, ZERO
 
 
 class GratanTestCase(unittest.TestCase):
@@ -90,25 +92,6 @@ class GratanTestCase(unittest.TestCase):
                                      mass_2, attraction_function)
         self.assertTrue(check_close(expected_attraction, result))
 
-def attraction_2_points(pos_1: np.ndarray,
-                        mass_1: float,
-                        pos_2: np.ndarray,
-                        mass_2: float,
-                        attraction_funct: callable) -> float:
-    zero = np.array([0, 0])
-    p1 = PhysicalParticle(pos=pos_1,
-                          vel=zero,
-                          acc=zero,
-                          mass=mass_1,
-                          attraction_function=None)
-    p2 = PhysicalParticle(pos=pos_2,
-                          vel=zero,
-                          acc=zero,
-                          mass=mass_2,
-                          attraction_function=None)
-
-    return attraction_funct(p1, p2)
-
 class NewtonainTestCase(unittest.TestCase):
     def setUp(self):
         self.newtonian = NewtonianGravity()
@@ -177,6 +160,67 @@ class NewtonainTestCase(unittest.TestCase):
         result = attraction_2_points(pos_1, mass_1, pos_2,
                                      mass_2, self.newtonian)
         self.assertTrue(check_close(expected_attraction, result))
+
+class ThresholdGravityTestCase(unittest.TestCase):
+    def setUp(self):
+        self.threshold = 10
+        self.threshold_grav = ThresholdGravity(10)
+
+    def test_threshold_gravity_1(self):
+        """
+        Base case: below threshold.
+        """
+        pos_1 = np.array([0, 0])
+        pos_2 = np.array([1, 0])
+        mass = 1
+
+        result = attraction_2_points(pos_1, mass, pos_2, mass, self.threshold_grav)
+        expected = 1
+        self.assertTrue(check_close(expected, result))
+
+    def test_threshold_gravity_2(self):
+        """
+        Base case: above threshold.
+        """
+        pos_1 = np.array([0, 0])
+        pos_2 = np.array([11, 0])
+        mass = 1
+
+        result = attraction_2_points(pos_1, mass, pos_2, mass, self.threshold_grav)
+        expected = 0
+        self.assertTrue(check_close(expected, result))
+
+    def test_threshold_gravity_3(self):
+        """
+        Corner case: exactly at threshold.
+        """
+        pos_1 = np.array([0, 0])
+        pos_2 = np.array([10, 0])
+        mass = 1
+
+        result = attraction_2_points(pos_1, mass, pos_2, mass, self.threshold_grav)
+        expected = 1 / (10**2)
+        self.assertTrue(check_close(expected, result))
+    
+
+def attraction_2_points(pos_1: np.ndarray,
+                        mass_1: float,
+                        pos_2: np.ndarray,
+                        mass_2: float,
+                        attraction_funct: callable) -> float:
+    zero = np.array([0, 0])
+    p1 = PhysicalParticle(pos=pos_1,
+                          vel=zero,
+                          acc=zero,
+                          mass=mass_1,
+                          attraction_function=None)
+    p2 = PhysicalParticle(pos=pos_2,
+                          vel=zero,
+                          acc=zero,
+                          mass=mass_2,
+                          attraction_function=None)
+
+    return attraction_funct(p1, p2)
 
 if __name__ == '__main__':
     unittest.main()
