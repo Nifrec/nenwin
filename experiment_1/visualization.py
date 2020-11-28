@@ -7,18 +7,21 @@ October 2020
 
 Simple graphical visualization of a running simulation.
 """
-from numbers import Number
+from typing import Tuple, Optional 
 from os import environ
 # Disable pygame welcome message. Need to be set before 'import pygame'
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-import numpy as np
 import pygame
+import numpy as np
+from numbers import Number
 
-from experiment_1.marble_eater_node import MarbleEaterNode
-from experiment_1.stiffness_particle import Node
-from experiment_1.simulation import Simulation
 from experiment_1.model import NenwinModel
-from typing import Tuple
+from experiment_1.simulation import Simulation
+from experiment_1.stiffness_particle import Node
+from experiment_1.marble_eater_node import MarbleEaterNode
+
+
+
 
 NODE_COLOUR = pygame.Color(255, 143, 95)
 MARBLE_COLOUR = pygame.Color(155, 255, 95)
@@ -74,7 +77,7 @@ class NenwinVisualization():
                                NODE_COLOUR,
                                np.round(self.__scale_factor *
                                         node.pos).astype(int),
-                               np.round(self.__scale_factor*radius))
+                               int(np.round(self.__scale_factor*radius).flatten()))
         for marble in self.__model.marbles:
             pygame.draw.circle(surf,
                                MARBLE_COLOUR,
@@ -109,15 +112,23 @@ class NenwinVisualization():
                 if (event.key == pygame.K_ESCAPE):  # User pressed ESC
                     self.__is_running = False
 
-    def run(self, simulation_steps_per_frame: int, step_size: Number):
+    def run(self,
+            simulation_steps_per_frame: int,
+            step_size: Number,
+            max_num_frames: Optional[int] = None):
         """
         Run the model and update the visualization every 
         [simulation_steps_per_frame] steps of the simulation.
         """
         self.__is_running = True
+        frame_number = 0
 
         while self.__is_running:
             self.__draw_all_particles()
             self.__simulation.run(step_size=step_size,
                                   max_num_steps=simulation_steps_per_frame)
             self.__process_events()
+
+            frame_number += 1
+            if max_num_frames is not None and frame_number >= max_num_frames:
+                self.__is_running = False
