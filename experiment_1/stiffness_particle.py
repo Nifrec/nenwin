@@ -48,7 +48,7 @@ class Node(PhysicalParticle):
         * marble_stiffness: multiplier for force exerted on this
             by other non-Marble Nodes, in range [0, 1].
         * marble_attraction: multiplier for force exerted by self
-            on Marbles, in range [0, 1]. Overrides node_attaraction.
+            on Marbles, in range [0, 1]. Overrides node_attraction.
         * node_attaraction: multiplier for force exerted by self
             on non-Marble Nodes, in range [0, 1].
         """

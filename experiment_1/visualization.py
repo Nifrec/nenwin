@@ -25,7 +25,7 @@ from experiment_1.marble_eater_node import MarbleEaterNode
 
 NODE_COLOUR = pygame.Color(255, 143, 95)
 MARBLE_COLOUR = pygame.Color(155, 255, 95)
-BACKGROUND_COLOR = pygame.Color(225, 201, 255)
+BACKGROUND_COLOR = pygame.Color(10, 10, 10)
 NODE_RADIUS = 10
 MARBLE_RADIUS = 5
 
