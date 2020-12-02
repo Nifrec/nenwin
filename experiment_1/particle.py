@@ -11,6 +11,7 @@ from __future__ import annotations
 import abc
 import numpy as np
 
+
 class Particle(abc.ABC):
     """
     Abstract Base Class for all particles of the simulation,
@@ -92,6 +93,9 @@ class Particle(abc.ABC):
         self.vel = self.vel + (1/12)*time_passed*(
             5*self.acc + 8*self._prev_acc - self._prev_prev_acc)
 
+    def copy(self) -> Particle:
+        return Particle(self.pos, self.vel, self.acc)
+
 
 class PhysicalParticle(Particle):
     """
@@ -147,3 +151,7 @@ class PhysicalParticle(Particle):
         direction = difference_vector / radius
 
         return direction * self._attraction_function(self, other)
+
+    def copy(self) -> PhysicalParticle:
+        return PhysicalParticle(self.pos, self.vel, self.acc, self.mass,
+                                self._attraction_function)

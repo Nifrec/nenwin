@@ -203,5 +203,22 @@ class PhysicalParticleTestCase(unittest.TestCase):
         result = p1.compute_attraction_force_to(p2)
         self.assertTrue(check_close(result, expected))
 
+    def test_copy(self):
+        pos = np.array([1])
+        vel = np.array([2])
+        acc = np.array([3])
+        mass = 4
+        attraction_funct = Gratan()
+        original = PhysicalParticle(pos, vel, acc, mass, attraction_funct)
+        copy = original.copy()
+
+        self.assertFalse(copy is original)
+
+        self.assertTrue(check_close(acc, copy.acc))
+        self.assertTrue(check_close(vel, copy.vel))
+        self.assertTrue(check_close(pos, copy.pos))
+        self.assertEqual(mass, copy.mass)
+        self.assertTrue(attraction_funct is copy._attraction_function)
+
 if __name__ == '__main__':
     unittest.main()

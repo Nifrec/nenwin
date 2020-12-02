@@ -127,6 +127,18 @@ class ParticleTestCase(unittest.TestCase):
         self.assertTrue(check_close(vel, p.vel))
         self.assertTrue(check_close(pos, p.pos))
 
+    def test_copy(self):
+        pos = np.array([-10, -100])
+        vel = np.array([0, 0])
+        acc = np.array([0, 0])
+        original = Particle(pos, vel, acc)
+        copy = original.copy()
+
+        self.assertFalse(copy is original)
+
+        self.assertTrue(check_close(acc, copy.acc))
+        self.assertTrue(check_close(vel, copy.vel))
+        self.assertTrue(check_close(pos, copy.pos))
 
 if __name__ == '__main__':
     unittest.main()
