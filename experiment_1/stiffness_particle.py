@@ -94,6 +94,17 @@ class Node(PhysicalParticle):
 
         return multiplier * super().compute_attraction_force_to(other)
 
+    def copy(self) -> Node:
+        return Node(self.pos,
+                    self.vel,
+                    self.acc,
+                    self.mass,
+                    self._attraction_function,
+                    self.marble_stiffness,
+                    self.node_stiffness,
+                    self.marble_attraction,
+                    self.node_attraction)
+
     def compute_experienced_force(self,
                                   other_particles: Set[Union[Marble, Node]]
                                   ) -> np.ndarray:
@@ -106,7 +117,7 @@ class Node(PhysicalParticle):
         for particle in other_particles:
             stiffness = self.__find_stiffness_to(particle)
             forces += (1-stiffness) * \
-                       particle.compute_attraction_force_to(self)
+                particle.compute_attraction_force_to(self)
 
         return forces
 
@@ -123,7 +134,6 @@ class Node(PhysicalParticle):
                 "__find_stiffness_to: particle is neither Node nor Marble")
 
 
-
 class Marble(Node):
     """
     The particle that is used to build the architecture of the network:
@@ -138,10 +148,10 @@ class Marble(Node):
                  mass: float,
                  attraction_function: callable,
                  datum: object,
-                 marble_stiffness: float=1,
-                 node_stiffness: float=0,
-                 marble_attraction: float=0,
-                 node_attraction: float=1):
+                 marble_stiffness: float = 1,
+                 node_stiffness: float = 0,
+                 marble_attraction: float = 0,
+                 node_attraction: float = 1):
         """
         Initialize the Marble at the given position with the given acceleration,
         velocity and mass. The Marble's attraction to any other Particle
@@ -150,12 +160,25 @@ class Marble(Node):
         The datum is the object that the Marble represent.
         What form it may have is not specified.
         """
-        super().__init__(pos, vel, acc, mass, attraction_function, marble_stiffness, node_stiffness, marble_attraction, node_attraction)
+        super().__init__(pos, vel, acc, mass, attraction_function,
+                         marble_stiffness, node_stiffness, marble_attraction, node_attraction)
         self.__datum = datum
 
     @property
     def datum(self):
         return self.__datum
+
+    def copy(self) -> Marble:
+        return Marble(self.pos,
+                      self.vel,
+                      self.acc,
+                      self.mass,
+                      self._attraction_function,
+                      self.datum,
+                      self.marble_stiffness,
+                      self.node_stiffness,
+                      self.marble_attraction,
+                      self.node_attraction)
 
 
 def raise_error_if_any_not_in_range(values: Iterable[float],

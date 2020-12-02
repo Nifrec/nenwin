@@ -11,15 +11,13 @@ import unittest
 import numpy as np
 
 from experiment_1.attraction_functions.attraction_functions import Gratan
-from experiment_1.stiffness_particle import Node, Node, Marble
+from experiment_1.stiffness_particle import Node, Marble
 from experiment_1.particle import PhysicalParticle
-from test_aux import TestAttractionFunction
+from experiment_1.auxliary import generate_stiffness_dict
+from test_aux import ATTRACT_FUNCT
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import check_close
-from test_aux import runge_kutta_4_step
 from test_aux import ZERO
-
-ATTRACT_FUNCT = TestAttractionFunction()
 
 
 class NodeTestCase(unittest.TestCase):
@@ -191,6 +189,31 @@ class NodeTestCase(unittest.TestCase):
             - marble_stiffness*ATTRACT_FUNCT.value
         result = particle.compute_experienced_force(set([node, marble]))
 
+    def test_copy(self):
+        pos = np.array([1])
+        vel = np.array([2])
+        acc = np.array([3])
+        mass = 4
+        attraction_funct = ATTRACT_FUNCT
+        stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
+        original = Node(pos, vel, acc, mass, attraction_funct,
+                        **stiffnesses)
+        copy = original.copy()
+
+        self.assertFalse(copy is original)
+
+        self.assertTrue(check_close(acc, copy.acc))
+        self.assertTrue(check_close(vel, copy.vel))
+        self.assertTrue(check_close(pos, copy.pos))
+        self.assertEqual(mass, copy.mass)
+        self.assertTrue(attraction_funct is copy._attraction_function)
+        self.assertEqual(copy.marble_stiffness,
+                         stiffnesses["marble_stiffness"])
+        self.assertEqual(copy.node_stiffness, stiffnesses["node_stiffness"])
+        self.assertEqual(copy.marble_attraction,
+                         stiffnesses["marble_attraction"])
+        self.assertEqual(copy.node_attraction, stiffnesses["node_attraction"])
+
 
 def create_particle(marble_stiffness,
                     node_stiffness,
@@ -201,10 +224,10 @@ def create_particle(marble_stiffness,
     and 0 or None for all other parameter values.
     """
     return Node(ZERO, ZERO, ZERO, 0, ATTRACT_FUNCT,
-                             marble_stiffness=marble_stiffness,
-                             node_stiffness=node_stiffness,
-                             marble_attraction=marble_attraction,
-                             node_attraction=node_attraction)
+                marble_stiffness=marble_stiffness,
+                node_stiffness=node_stiffness,
+                marble_attraction=marble_attraction,
+                node_attraction=node_attraction)
 
 
 if __name__ == '__main__':
