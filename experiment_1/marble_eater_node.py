@@ -56,3 +56,19 @@ class MarbleEaterNode(Node):
     def eat(self, marble: Marble):
         self.__num_marbles_eaten += 1
         self.__marble_data_eaten.append(marble.datum)
+
+    def copy(self) -> MarbleEaterNode:
+        """
+        Create copy of this MarbleEaterNode,
+        but reset the number of marbles eaten of the copy to 0.
+        """
+        return MarbleEaterNode(self.pos,
+                               self.vel,
+                               self.acc,
+                               self.mass,
+                               self._attraction_function,
+                               self.marble_stiffness,
+                               self.node_stiffness,
+                               self.marble_attraction,
+                               self.node_attraction,
+                               self.radius)
