@@ -33,6 +33,8 @@ class TestAttractionFunction(AttractionFunction):
                            ) -> float:
         return self.value
 
+ATTRACT_FUNCT = TestAttractionFunction()
+
 class MockPipe:
 
     def poll(self):
