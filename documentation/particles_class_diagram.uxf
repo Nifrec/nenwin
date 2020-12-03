@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <diagram program="umlet" version="14.3.0">
-  <zoom_level>10</zoom_level>
+  <zoom_level>9</zoom_level>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>100</x>
-      <y>260</y>
-      <w>300</w>
-      <h>130</h>
+      <x>297</x>
+      <y>279</y>
+      <w>270</w>
+      <h>117</h>
     </coordinates>
     <panel_attributes>&lt;&lt;Abstract&gt;&gt;
 /*Particle*/
@@ -23,10 +23,10 @@ style=autoresize</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>50</x>
-      <y>500</y>
-      <w>400</w>
-      <h>180</h>
+      <x>252</x>
+      <y>495</y>
+      <w>360</w>
+      <h>162</h>
     </coordinates>
     <panel_attributes>*PhysicalParticle*
 --
@@ -45,10 +45,10 @@ style=autoresize</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>240</x>
-      <y>380</y>
-      <w>30</w>
-      <h>140</h>
+      <x>423</x>
+      <y>387</y>
+      <w>27</w>
+      <h>126</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;.</panel_attributes>
     <additional_attributes>10.0;10.0;10.0;120.0</additional_attributes>
@@ -56,10 +56,10 @@ style=autoresize</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>670</x>
-      <y>330</y>
-      <w>60</w>
-      <h>40</h>
+      <x>810</x>
+      <y>342</y>
+      <w>54</w>
+      <h>36</h>
     </coordinates>
     <panel_attributes>*Node*
 style=autoresize</panel_attributes>
@@ -68,10 +68,10 @@ style=autoresize</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>180</x>
-      <y>730</y>
-      <w>110</w>
-      <h>60</h>
+      <x>369</x>
+      <y>702</y>
+      <w>99</w>
+      <h>54</h>
     </coordinates>
     <panel_attributes>*Marble*
 --
@@ -82,10 +82,10 @@ style=autoresize</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>230</x>
-      <y>670</y>
-      <w>30</w>
-      <h>80</h>
+      <x>414</x>
+      <y>648</y>
+      <w>27</w>
+      <h>72</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;-</panel_attributes>
     <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
@@ -93,10 +93,10 @@ style=autoresize</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>440</x>
-      <y>340</y>
-      <w>250</w>
-      <h>200</h>
+      <x>603</x>
+      <y>351</y>
+      <w>225</w>
+      <h>180</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;-</panel_attributes>
     <additional_attributes>10.0;180.0;70.0;180.0;70.0;10.0;230.0;10.0</additional_attributes>
@@ -104,10 +104,10 @@ style=autoresize</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>600</x>
-      <y>430</y>
-      <w>200</w>
-      <h>110</h>
+      <x>747</x>
+      <y>432</y>
+      <w>180</w>
+      <h>99</h>
     </coordinates>
     <panel_attributes>*MarbleEaterNode*
 --
@@ -122,18 +122,51 @@ style=autoresize</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>620</x>
-      <y>600</y>
-      <w>170</w>
-      <h>130</h>
+      <x>765</x>
+      <y>585</y>
+      <w>153</w>
+      <h>54</h>
     </coordinates>
-    <panel_attributes>*EmitterNode*
+    <panel_attributes>*MarbleEmitterNode*
 --
-- stored_mass: float
-- marble_mass: float
-- marble_vel: vector
++ get_emitter()
+style=autoresize</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>828</x>
+      <y>369</y>
+      <w>27</w>
+      <h>81</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;70.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>828</x>
+      <y>522</y>
+      <w>27</w>
+      <h>81</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;70.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>774</x>
+      <y>693</y>
+      <w>135</w>
+      <h>72</h>
+    </coordinates>
+    <panel_attributes>*MarbleEmitter*
 --
-+ can_emit(): Boolean
+- prototype: Marble
+--
 + emit(): Marble
 style=autoresize</panel_attributes>
     <additional_attributes/>
@@ -141,23 +174,46 @@ style=autoresize</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>690</x>
-      <y>360</y>
-      <w>30</w>
-      <h>90</h>
+      <x>828</x>
+      <y>630</y>
+      <w>27</w>
+      <h>81</h>
     </coordinates>
-    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;70.0</additional_attributes>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;70.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>990</x>
+      <y>495</y>
+      <w>189</w>
+      <h>171</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Abstract&gt;&gt;
+/*Emitter*/
+--
+- stored_mass: float
+- emit_delay: float
+- time_since_last_emit: float
+- prototype: PhysicalParticle
+--
++ eat_mass(mass: float)
++ time_passed(time: float)
++ can_emit(): Boolean
++ emit(): PhysicalParticle
+style=autoresize</panel_attributes>
+    <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>690</x>
-      <y>530</y>
-      <w>30</w>
+      <x>900</x>
+      <y>657</y>
+      <w>207</w>
       <h>90</h>
     </coordinates>
-    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;70.0</additional_attributes>
+    <panel_attributes>lt=&lt;&lt;.</panel_attributes>
+    <additional_attributes>210.0;10.0;210.0;80.0;10.0;80.0</additional_attributes>
   </element>
 </diagram>
