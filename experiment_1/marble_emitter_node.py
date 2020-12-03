@@ -31,7 +31,7 @@ class MarbleEmitterNode(MarbleEaterNode):
                  marble_stiffness: float,
                  node_stiffness: float,
                  marble_attraction: float,
-                 node_attraction: float,
+                 node_attraction,
                  radius: float,
                  emitter: Emitter):
         super().__init__(pos, vel, acc, mass,
@@ -41,12 +41,33 @@ class MarbleEmitterNode(MarbleEaterNode):
                          marble_attraction,
                          node_attraction,
                          radius)
-        self.__emit_interval = emit_interval
-        self.__stored_mass = 0
+        self.__emitter = emitter
 
     def eat(self, marble: Marble):
-        self.__stored_mass += marble.mass
+        self.__emitter.eat_mass(marble.mass)
         super().eat(marble)
+
+    @property
+    def emitter(self):
+        return self.__emitter
+
+    def copy(self) -> MarbleEmitterNode:
+        """
+        Create copy of this MarbleEmitterNode,
+        but reset the number of marbles eaten of the copy to 0.
+        The copy will use the same emitter instance.
+        """
+        return MarbleEmitterNode(self.pos,
+                               self.vel,
+                               self.acc,
+                               self.mass,
+                               self._attraction_function,
+                               self.marble_stiffness,
+                               self.node_stiffness,
+                               self.marble_attraction,
+                               self.node_attraction,
+                               self.radius,
+                               self.emitter)
 
 
 class Emitter(abc.ABC):
@@ -57,7 +78,11 @@ class Emitter(abc.ABC):
                  stored_mass: Optional[float] = 0):
         self.__stored_mass = stored_mass
         self.__delay = delay
-        self.__time_since_last_emit = 0
+        self.__time_since_last_emit = float("inf")
+
+    def can_emit(self) -> bool:
+        return (self.__time_since_last_emit >= self.__delay)
+
 
     def emit(self) -> Node:
         if self.__time_since_last_emit >= self.__delay:
