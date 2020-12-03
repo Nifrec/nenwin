@@ -1,0 +1,1 @@
+# self.__pipe_end, self.__other_pipe_end = multiprocessing.Pipe(True)
