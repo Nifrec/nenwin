@@ -78,7 +78,7 @@ class Emitter(abc.ABC):
                  stored_mass: Optional[float] = 0):
         self.__stored_mass = stored_mass
         self.__delay = delay
-        self.__time_since_last_emit = float("inf")
+        self.__time_since_last_emit = 0
 
     def can_emit(self) -> bool:
         return (self.__time_since_last_emit >= self.__delay)
