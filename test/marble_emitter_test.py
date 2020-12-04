@@ -97,14 +97,6 @@ class MarbleEmitterTestCase(unittest.TestCase):
 
         expected = self.__mock_prototype
         self.assertIs(expected, result)
-        # self.assertTrue(check_close(expected.pos, result.pos))
-        # self.assertTrue(check_close(expected.vel, result.vel))
-        # self.assertTrue(check_close(expected.acc, result.acc))
-        # self.assertEqual(expected.marble_stiffness, result.marble_stiffness)
-        # self.assertEqual(expected.marble_attraction, result.marble_attraction)
-        # self.assertEqual(expected.node_stiffness, result.node_stiffness)
-        # self.assertEqual(expected.node_attraction, result.node_attraction)
-        # self.assertIs(expected.datum, result.datum)
 
 
 class MarbleEmitterNodeTestCase(unittest.TestCase):
