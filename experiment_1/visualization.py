@@ -17,7 +17,7 @@ from numbers import Number
 
 from experiment_1.model import NenwinModel
 from experiment_1.simulation import Simulation
-from experiment_1.stiffness_particle import Node
+from experiment_1.node import Node
 from experiment_1.marble_eater_node import MarbleEaterNode
 
 

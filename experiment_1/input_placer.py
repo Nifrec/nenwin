@@ -11,7 +11,7 @@ import abc
 import numpy as np
 from typing import Iterable
 
-from experiment_1.stiffness_particle import Marble
+from experiment_1.node import Marble
 
 class InputPlacer(abc.ABC):
     """

@@ -11,7 +11,7 @@ import unittest
 import numpy as np
 from typing import Tuple
 
-from experiment_1.stiffness_particle import Node, Marble
+from experiment_1.node import Node, Marble
 from experiment_1.model import NenwinModel
 from experiment_1.attraction_functions.attraction_functions \
     import AttractionFunction

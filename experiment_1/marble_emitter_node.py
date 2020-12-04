@@ -14,7 +14,7 @@ import numpy as np
 import abc
 
 from experiment_1.marble_eater_node import MarbleEaterNode
-from experiment_1.stiffness_particle import Marble, Node
+from experiment_1.node import Marble, Node
 
 
 class MarbleEmitterNode(MarbleEaterNode):

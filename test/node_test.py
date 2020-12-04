@@ -5,13 +5,13 @@ the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 Author: Lulof Pirée
 October 2020
 
-Unit-tests for Node of stiffness_particle.py.
+Unit-tests for Node of node.py.
 """
 import unittest
 import numpy as np
 
 from experiment_1.attraction_functions.attraction_functions import Gratan
-from experiment_1.stiffness_particle import Node, Marble
+from experiment_1.node import Node, Marble
 from experiment_1.particle import PhysicalParticle
 from experiment_1.auxliary import generate_stiffness_dict
 from test_aux import ATTRACT_FUNCT

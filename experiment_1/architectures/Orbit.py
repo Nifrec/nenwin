@@ -24,7 +24,7 @@ Architecture implementing the simulation of a semi-stable orbit.
 """
 import numpy as np
 from typing import Tuple, Optional, Dict
-from experiment_1.stiffness_particle import Node, Marble
+from experiment_1.node import Node, Marble
 from experiment_1.attraction_functions.attraction_functions import NewtonianGravity
 from experiment_1.architectures.run_and_visualize import run
 from experiment_1.auxliary import generate_stiffness_dict

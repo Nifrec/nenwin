@@ -12,7 +12,7 @@ import unittest
 from typing import List
 from experiment_1.model import NenwinModel
 from experiment_1.output_reader import NumMarblesOutputReader
-from experiment_1.stiffness_particle import Marble
+from experiment_1.node import Marble
 from experiment_1.marble_eater_node import MarbleEaterNode
 from test_aux import ZERO
 from test_aux import check_close

@@ -12,7 +12,7 @@ import numpy as np
 from typing import Tuple
 
 from experiment_1.marble_eater_node import MarbleEaterNode
-from experiment_1.stiffness_particle import Marble
+from experiment_1.node import Marble
 from experiment_1.attraction_functions.attraction_functions import Gratan
 from experiment_1.auxliary import generate_stiffness_dict
 from test_aux import check_close, ZERO, ATTRACT_FUNCT

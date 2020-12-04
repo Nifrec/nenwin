@@ -11,8 +11,8 @@ import numpy as np
 
 from experiment_1.visualization import NenwinVisualization
 from experiment_1.model import NenwinModel
-from experiment_1.stiffness_particle import Marble
-from experiment_1.stiffness_particle import Node
+from experiment_1.node import Marble
+from experiment_1.node import Node
 from experiment_1.simulation import Simulation
 from experiment_1.attraction_functions.attraction_functions import Gratan, NewtonianGravity
 from test_aux import MockPipe

@@ -31,7 +31,7 @@ import math
 
 from experiment_1.simulation import Simulation
 from experiment_1.model import NenwinModel
-from experiment_1.stiffness_particle import Node, Marble
+from experiment_1.node import Node, Marble
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.attraction_functions.attraction_functions import AttractionFunction
 from experiment_1.visualization import NenwinVisualization

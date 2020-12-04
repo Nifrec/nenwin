@@ -14,7 +14,7 @@ import numpy as np
 from test_aux import ZERO, ATTRACT_FUNCT, check_close
 from experiment_1.auxliary import generate_stiffness_dict
 from experiment_1.particle import Particle
-from experiment_1.stiffness_particle import Marble
+from experiment_1.node import Marble
 from experiment_1.marble_emitter_node import MarbleEmitter, \
     Emitter, MarbleEmitterNode
 

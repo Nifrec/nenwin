@@ -15,7 +15,7 @@ from experiment_1.input_placer import InputPlacer
 from experiment_1.output_reader import OutputReader
 from experiment_1.simulation import Simulation, UICommands, UIMessage
 from experiment_1.model import NenwinModel
-from experiment_1.stiffness_particle import Marble
+from experiment_1.node import Marble
 from test_aux import ZERO
 
 # Just an arbitrary non-trivial object

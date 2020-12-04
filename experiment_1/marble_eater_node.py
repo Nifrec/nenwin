@@ -9,7 +9,7 @@ A variant of the Node that can 'consume' Marbles if they come close.
 """
 from __future__ import annotations
 import numpy as np
-from experiment_1.stiffness_particle import Marble, Node
+from experiment_1.node import Marble, Node
 
 
 class MarbleEaterNode(Node):
