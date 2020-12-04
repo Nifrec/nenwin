@@ -77,6 +77,7 @@ class ModelTestCase(unittest.TestCase):
 
         expected = set([marble, *new_marbles])
         self.assertSetEqual(expected, model.marbles)
+        self.assertSetEqual(expected, model._NenwinModel__all_particles)
 
     def test_add_marbles_empty(self):
         """

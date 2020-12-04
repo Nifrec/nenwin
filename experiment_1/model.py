@@ -76,6 +76,7 @@ class NenwinModel():
         Add more Marbles to the set of actively simulated Marbles.
         """
         self.__marbles.update(new_marbles)
+        self.__all_particles.update(new_marbles)
 
     def make_timestep(self, time_passed: float):
         """
