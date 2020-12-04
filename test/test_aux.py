@@ -23,9 +23,12 @@ class TestAttractionFunction(AttractionFunction):
     (For constant forces => constant acceleration)
     """
 
+    def __init__(self, value:float = 0.01):
+        self.__value = 0.01
+
     @property
     def value(self):
-        return 0.01
+        return self.__value
 
     def compute_attraction(self,
                            first_particle: PhysicalParticle,
