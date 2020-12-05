@@ -7,6 +7,10 @@ October 2020
 
 Simple graphical visualization of a running simulation.
 """
+from os import environ
+# Disable pygame welcome message. Need to be set before 'import pygame'
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+
 from experiment_1.marble_emitter_node import MarbleEmitterNode
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.node import Node
@@ -16,9 +20,7 @@ from numbers import Number
 import numpy as np
 import pygame
 from typing import Tuple, Optional
-from os import environ
-# Disable pygame welcome message. Need to be set before 'import pygame'
-environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+
 
 
 NODE_COLOR = pygame.Color(255, 143, 95)
