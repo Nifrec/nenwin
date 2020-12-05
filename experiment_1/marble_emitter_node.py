@@ -87,19 +87,34 @@ class Emitter(abc.ABC):
         * initial_time_passed: how much time since the last delay is
             initially counted, used to set time until first real emit.
         """
-        self.__stored_mass = stored_mass
+        self.__prototype = prototype.copy()
         self.__delay = delay
+        self.__stored_mass = stored_mass
         self.__time_since_last_emit = initial_time_passed
 
+    @property
+    def prototype(self):
+        return self.__prototype
+
     def can_emit(self) -> bool:
-        return (self.__time_since_last_emit >= self.__delay)
+        can = (self.__time_since_last_emit >= self.__delay)
+
+        output_mass = self.__prototype.mass
+        if (output_mass >= 0):
+            can = can and (self.__stored_mass >= output_mass)
+        else:
+            can = can and (self.__stored_mass <= output_mass)
+
+        return can
 
     def emit(self) -> Node:
-        if self.__time_since_last_emit >= self.__delay:
+        if self.can_emit():
             self.__time_since_last_emit = 0
+            self.__stored_mass -= self.__prototype.mass
             return self._create_particle()
         else:
-            raise RuntimeError("Cannot emit, delay not completely passed")
+            raise RuntimeError(
+                "Cannot emit, delay not passed or too little mass stored")
 
     @abc.abstractmethod
     def _create_particle(self) -> Node:
@@ -122,7 +137,6 @@ class MarbleEmitter(Emitter):
         if not isinstance(prototype, Marble):
             raise ValueError("Prototype of MarbleEmitter must be a Marble")
         super().__init__(prototype, delay, stored_mass, initial_time_passed)
-        self.__prototype = prototype.copy()
 
     def _create_particle(self) -> Marble:
-        return self.__prototype.copy()
+        return self.prototype.copy()

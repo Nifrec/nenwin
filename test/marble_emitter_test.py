@@ -10,6 +10,7 @@ Unit-tests for marble_emitter_node.py.
 
 import unittest
 import numpy as np
+from typing import Optional
 
 from test_aux import ZERO, ATTRACT_FUNCT, check_close
 from experiment_1.auxliary import generate_stiffness_dict
@@ -26,8 +27,8 @@ class MockEmitter(Emitter):
 
 class MockPrototype(Marble):
 
-    def __init__(self):
-        super().__init__(ZERO, ZERO, ZERO, 0, None, "TestDatum", 0, 0, 0, 0)
+    def __init__(self, mass: Optional[float] = 0):
+        super().__init__(ZERO, ZERO, ZERO, mass, None, "TestDatum", 0, 0, 0, 0)
         self.copy_called = False
 
     def copy(self):
@@ -38,6 +39,8 @@ class MockPrototype(Marble):
 class MarbleEmitterTestCase(unittest.TestCase):
     def setUp(self):
         self.__mock_prototype = MockPrototype()
+        self.__mass = 1
+        self.__massfull_prototype = MockPrototype(self.__mass)
 
     def test_emit(self):
         emitter = MarbleEmitter(self.__mock_prototype, 0)
@@ -90,6 +93,47 @@ class MarbleEmitterTestCase(unittest.TestCase):
                                 initial_time_passed=0)
         self.assertFalse(emitter.can_emit())
 
+    def test_can_emit_massfull_1(self):
+        """
+        Base case: cannot emit massfull Marble when no mass stored.
+        """
+        emitter = MarbleEmitter(self.__massfull_prototype, 0, stored_mass=0)
+        self.assertFalse(emitter.can_emit())
+
+    def test_can_emit_massfull_2(self):
+        """
+        Base case: can emit after adding sufficient mass.
+        """
+        emitter = MarbleEmitter(self.__massfull_prototype, 0, stored_mass=0)
+        emitter.eat_mass(self.__mass)
+        self.assertTrue(emitter.can_emit())
+
+    def test_can_emit_massfull_3(self):
+        """
+        Base case: can emit negative mass when negative mass stored.
+        """
+        neg_mass_prototype = MockPrototype(-1)
+        emitter = MarbleEmitter(neg_mass_prototype, 0, stored_mass=-1)
+        self.assertTrue(emitter.can_emit())
+
+    def test_can_emit_massfull_4(self):
+        """
+        Base case: can emit if initial mass is sufficient.
+        """
+        emitter = MarbleEmitter(self.__massfull_prototype,
+                                0,
+                                stored_mass=self.__mass)
+        self.assertTrue(emitter.can_emit())
+
+    def test_can_emit_massfull_5(self):
+        """
+        Corner case: cannot emit negative mass if own mass is positive.
+        """
+        emitter = MarbleEmitter(MockPrototype(-1),
+                                0,
+                                stored_mass=1)
+        self.assertFalse(emitter.can_emit())
+
     def test_emit_1(self):
         """
         Corner case: throw error when trying to emit 
@@ -112,6 +156,65 @@ class MarbleEmitterTestCase(unittest.TestCase):
         expected = self.__mock_prototype
         self.assertIs(expected, result)
 
+    def test_emit_mass_stored_1(self):
+        """
+        Base case: emitting positive mass decreases mass stored.
+        """
+        emitter = MarbleEmitter(self.__massfull_prototype,
+                                0,
+                                stored_mass=self.__mass)
+        emitter.emit()
+        self.assertEqual(emitter._Emitter__stored_mass, 0)
+
+    def test_emit_mass_stored_2(self):
+        """
+        Base case: emitting negative mass increases mass stored.
+        """
+        emitter = MarbleEmitter(MockPrototype(-1),
+                                0,
+                                stored_mass=-1)
+        emitter.emit()
+        self.assertEqual(emitter._Emitter__stored_mass, 0)
+
+
+
+    def test_emit_mass_stored_3(self):
+        """
+        Corner case: emitting 0 mass does not affect mass stored.
+        """
+        emitter = MarbleEmitter(self.__mock_prototype,
+                                0,
+                                stored_mass=13)
+        emitter.emit()
+        self.assertEqual(emitter._Emitter__stored_mass, 13)
+
+    def test_emit_massfull_1(self):
+        """
+        Base case: cannot emit massfull Marble when no mass stored.
+        """
+        emitter = MarbleEmitter(self.__massfull_prototype, 0, stored_mass=0)
+        self.assertRaises(RuntimeError, emitter.emit)
+
+    def test_emit_massfull_2(self):
+        """
+        Base case: can emit massfull Marble when sufficient mass stored.
+        """
+        emitter = MarbleEmitter(self.__massfull_prototype,
+                                0,
+                                stored_mass=self.__mass)
+        result = emitter.emit()
+
+        expected = self.__massfull_prototype
+        self.assertIs(expected, result)
+
+    def test_emit_massfull_3(self):
+        """
+        Base case: can emit negaitve massfull Marble when negative mass stored.
+        (Should not raise any errors)
+        """
+        neg_mass_prototype = MockPrototype(-1)
+        emitter = MarbleEmitter(neg_mass_prototype, 0, stored_mass=-1)
+
 
 class MarbleEmitterNodeTestCase(unittest.TestCase):
 
@@ -123,7 +226,7 @@ class MarbleEmitterNodeTestCase(unittest.TestCase):
         attraction_funct = ATTRACT_FUNCT
         stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
         radius = 9
-        emitter = MockEmitter(None, None)
+        emitter = MockEmitter(MockPrototype(), 0)
         original = MarbleEmitterNode(pos,
                                      vel,
                                      acc,
