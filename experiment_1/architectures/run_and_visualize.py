@@ -30,7 +30,7 @@ from typing import Tuple, Iterable, Optional, Any
 import math
 
 from experiment_1.simulation import Simulation
-from experiment_1.model import NenwinModel
+from experiment_1.emitter_model import ModelWithEmitters
 from experiment_1.node import Node, Marble
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.attraction_functions.attraction_functions import AttractionFunction
@@ -57,7 +57,7 @@ def run(marbles: Iterable[Marble],
     Simulate and visualize a only-at-start-input experiment:
     only the nodes, marbles and attraction function need to be specified.
     """
-    model = NenwinModel(nodes=nodes, initial_marbles=marbles)
+    model = ModelWithEmitters(nodes=nodes, initial_marbles=marbles)
     simulation = Simulation(model, None, None, MockPipe())
     scale_factor = compute_scale_factor(set(marbles).union(set(nodes)))
     visualization = NenwinVisualization(
