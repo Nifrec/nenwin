@@ -58,16 +58,16 @@ class MarbleEmitterNode(MarbleEaterNode):
         The copy will use the same emitter instance.
         """
         return MarbleEmitterNode(self.pos,
-                               self.vel,
-                               self.acc,
-                               self.mass,
-                               self._attraction_function,
-                               self.marble_stiffness,
-                               self.node_stiffness,
-                               self.marble_attraction,
-                               self.node_attraction,
-                               self.radius,
-                               self.emitter)
+                                 self.vel,
+                                 self.acc,
+                                 self.mass,
+                                 self._attraction_function,
+                                 self.marble_stiffness,
+                                 self.node_stiffness,
+                                 self.marble_attraction,
+                                 self.node_attraction,
+                                 self.radius,
+                                 self.emitter)
 
 
 class Emitter(abc.ABC):
@@ -75,14 +75,24 @@ class Emitter(abc.ABC):
     def __init__(self,
                  prototype: Node,
                  delay: float,
-                 stored_mass: Optional[float] = 0):
+                 stored_mass: Optional[float] = 0,
+                 initial_time_passed: Optional[float] = 0):
+        """
+        Arguments:
+        * Prototype: instance of object to be copied when emitting a new
+            instance.
+        * delay: amount of time between consecutive emits are allowed.
+        * stored_mass: initial amount of mass stored, that is depleted when
+            emitting.
+        * initial_time_passed: how much time since the last delay is
+            initially counted, used to set time until first real emit.
+        """
         self.__stored_mass = stored_mass
         self.__delay = delay
-        self.__time_since_last_emit = 0
+        self.__time_since_last_emit = initial_time_passed
 
     def can_emit(self) -> bool:
         return (self.__time_since_last_emit >= self.__delay)
-
 
     def emit(self) -> Node:
         if self.__time_since_last_emit >= self.__delay:
@@ -100,17 +110,18 @@ class Emitter(abc.ABC):
 
     def register_time_passed(self, time_passed: float):
         self.__time_since_last_emit += time_passed
- 
+
 
 class MarbleEmitter(Emitter):
 
     def __init__(self,
                  prototype: Marble,
                  delay: flat,
-                 stored_mass: Optional[float] = 0):
+                 stored_mass: Optional[float] = 0,
+                 initial_time_passed: Optional[float] = 0):
         if not isinstance(prototype, Marble):
             raise ValueError("Prototype of MarbleEmitter must be a Marble")
-        super().__init__(prototype, delay, stored_mass)
+        super().__init__(prototype, delay, stored_mass, initial_time_passed)
         self.__prototype = prototype.copy()
 
     def _create_particle(self) -> Marble:

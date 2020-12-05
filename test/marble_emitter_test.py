@@ -18,9 +18,11 @@ from experiment_1.node import Marble
 from experiment_1.marble_emitter_node import MarbleEmitter, \
     Emitter, MarbleEmitterNode
 
+
 class MockEmitter(Emitter):
     def _create_particle(self):
         pass
+
 
 class MockPrototype(Marble):
 
@@ -31,7 +33,7 @@ class MockPrototype(Marble):
     def copy(self):
         self.copy_called = True
         return self
-    
+
 
 class MarbleEmitterTestCase(unittest.TestCase):
     def setUp(self):
@@ -44,16 +46,19 @@ class MarbleEmitterTestCase(unittest.TestCase):
 
     def test_delay_1(self):
         """
-        Corner case: can always emit at start.
+        Base case: can always emit at start if initial_time_passed high enough.
         """
-        emitter = MarbleEmitter(self.__mock_prototype, 10)
+        emitter = MarbleEmitter(self.__mock_prototype, 10,
+                                initial_time_passed=10)
         self.assertTrue(emitter.can_emit())
 
     def test_delay_2(self):
         """
         Base case: cannot emit right after previous emit, when delay > 0.
         """
-        emitter = MarbleEmitter(self.__mock_prototype, 10)
+        delay = 10
+        emitter = MarbleEmitter(self.__mock_prototype, delay)
+        emitter.register_time_passed(delay)
         emitter.emit()
         self.assertFalse(emitter.can_emit())
 
@@ -63,6 +68,7 @@ class MarbleEmitterTestCase(unittest.TestCase):
         """
         delay = 10
         emitter = MarbleEmitter(self.__mock_prototype, delay)
+        emitter.register_time_passed(delay)
         emitter.emit()
         emitter.register_time_passed(delay)
         self.assertTrue(emitter.can_emit())
@@ -73,9 +79,16 @@ class MarbleEmitterTestCase(unittest.TestCase):
         """
         delay = 10
         emitter = MarbleEmitter(self.__mock_prototype, delay)
-        emitter.emit()
         emitter.register_time_passed(delay + 10)
         self.assertTrue(emitter.can_emit())
+
+    def test_delay_5(self):
+        """
+        Base case: cannot emit at start if initial_time_passed is too low.
+        """
+        emitter = MarbleEmitter(self.__mock_prototype, 10,
+                                initial_time_passed=0)
+        self.assertFalse(emitter.can_emit())
 
     def test_emit_1(self):
         """
@@ -84,6 +97,7 @@ class MarbleEmitterTestCase(unittest.TestCase):
         """
         delay = 10
         emitter = MarbleEmitter(self.__mock_prototype, delay)
+        emitter.register_time_passed(delay)
         emitter.emit()
         emitter.register_time_passed(delay/2)
         self.assertRaises(RuntimeError, emitter.emit)
@@ -111,13 +125,13 @@ class MarbleEmitterNodeTestCase(unittest.TestCase):
         radius = 9
         emitter = MockEmitter(None, None)
         original = MarbleEmitterNode(pos,
-                                   vel,
-                                   acc,
-                                   mass,
-                                   attraction_funct,
-                                   radius=radius,
-                                   emitter=emitter,
-                                   **stiffnesses)
+                                     vel,
+                                     acc,
+                                     mass,
+                                     attraction_funct,
+                                     radius=radius,
+                                     emitter=emitter,
+                                     **stiffnesses)
         copy = original.copy()
 
         self.assertFalse(copy is original)
@@ -137,7 +151,6 @@ class MarbleEmitterNodeTestCase(unittest.TestCase):
         self.assertEqual(copy.num_marbles_eaten, 0)
         self.assertIs(emitter, copy.emitter)
 
-    
 
 if __name__ == "__main__":
     unittest.main()
