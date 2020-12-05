@@ -27,14 +27,17 @@ from typing import Tuple, Optional, Dict
 
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.node import Node, Marble
-from experiment_1.attraction_functions.attraction_functions import ThresholdGravity
+from experiment_1.attraction_functions.attraction_functions \
+    import ThresholdGravity, ConstantAttraction
 from experiment_1.architectures.run_and_visualize import run
 from experiment_1.auxliary import generate_stiffness_dict
 from experiment_1.output_reader import NumMarblesOutputReader
+from experiment_1.marble_emitter_node import MarbleEmitterNode, MarbleEmitter
 ZERO = np.array([0, 0])
 
 THRESHOLD = 100
 ATTRACTION_FUNCTION = ThresholdGravity(THRESHOLD)
+ZERO_ATTRACTION = ConstantAttraction(0)
 NODE_STIFFNESSES = generate_stiffness_dict(marble_stiffness=1,
                                            node_stiffness=1,
                                            marble_attraction=1,
@@ -92,17 +95,18 @@ def bit_read_experiment(bit_state: bool = True):
                                          radius=6,
                                          **NODE_STIFFNESSES)
     true_output_eater = MarbleEaterNode(np.array([250, 100]),
-                                         ZERO,
-                                         ZERO,
-                                         1,
-                                         ATTRACTION_FUNCTION,
-                                         radius=6,
-                                         **NODE_STIFFNESSES)
+                                        ZERO,
+                                        ZERO,
+                                        1,
+                                        ATTRACTION_FUNCTION,
+                                        radius=6,
+                                        **NODE_STIFFNESSES)
     if bit_state:
         marbles = (bit_marble, reader_marble)
     else:
         marbles = (reader_marble,)
-    output = run(marbles, locker_nodes + [false_output_eater, true_output_eater])
+    output = run(marbles, locker_nodes +
+                 [false_output_eater, true_output_eater])
     print("Read state of bit:", __model_output_to_bit_state(output))
 
 
@@ -177,7 +181,7 @@ def __model_output_to_bit_state(model_output: np.array) -> bool:
         raise RuntimeError("model_output could not be interpreted")
 
 
-def bit_write_experiment():
+def bit_write_experiment_propelling():
     """
     Propelling a Marble into a '0' bit,
     and ensuring it becomes fixed in the center of the bit -> '1' bit.
@@ -209,6 +213,36 @@ def bit_write_experiment():
     run([writer_marble1, writer_marble2, writer_marble3], locker_nodes)
 
 
+def bit_write_expetiment_emitters():
+    locker_nodes = __generate_locker_nodes(LOCKER_POSITIONS)
+
+    # Unity vector from lower-left-corner towards upper-right-corner
+    incoming_direction = 0.5*np.sqrt(2) * np.ones(2)
+    outer_emitter_pos = BIT_POS - 10*incoming_direction
+    inner_emitter_pos = BIT_POS - 0.1*incoming_direction
+
+    signal_marble_prototype = Marble(pos=outer_emitter_pos,
+                                     vel=10*incoming_direction,
+                                     acc=ZERO,
+                                     mass=1,
+                                     attraction_function=ZERO_ATTRACTION,
+                                     datum=None,
+                                     **BIT_MARBLE_STIFFNESS)
+    outer_emitter = MarbleEmitter(signal_marble_prototype, 0, 0)
+    outer_emitter_node = MarbleEmitterNode(outer_emitter_pos,
+                                           ZERO, 
+                                           ZERO, 
+                                           1, 
+                                           ZERO_ATTRACTION, 
+                                           0, 
+                                           0, 
+                                           0, 
+                                           0, 
+                                           0,
+                                           outer_emitter)
+    run([], locker_nodes + [outer_emitter_node])
+
+
 if __name__ == "__main__":
-    bit_read_experiment(True)
-    # bit_write_experiment()
+    #bit_read_experiment(True)
+    bit_write_expetiment_emitters()
