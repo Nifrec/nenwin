@@ -7,27 +7,33 @@ October 2020
 
 Simple graphical visualization of a running simulation.
 """
-from typing import Tuple, Optional 
+from experiment_1.marble_emitter_node import MarbleEmitterNode
+from experiment_1.marble_eater_node import MarbleEaterNode
+from experiment_1.node import Node
+from experiment_1.simulation import Simulation
+from experiment_1.model import NenwinModel
+from numbers import Number
+import numpy as np
+import pygame
+from typing import Tuple, Optional
 from os import environ
 # Disable pygame welcome message. Need to be set before 'import pygame'
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
-import pygame
-import numpy as np
-from numbers import Number
-
-from experiment_1.model import NenwinModel
-from experiment_1.simulation import Simulation
-from experiment_1.node import Node
-from experiment_1.marble_eater_node import MarbleEaterNode
 
 
-
-
-NODE_COLOUR = pygame.Color(255, 143, 95)
-MARBLE_COLOUR = pygame.Color(155, 255, 95)
-BACKGROUND_COLOR = pygame.Color(10, 10, 10)
+NODE_COLOR = pygame.Color(255, 143, 95)
+EATER_COLOR = pygame.Color(255, 29, 0)
+EMITTER_COLOR = pygame.Color(255, 252, 0)
+MARBLE_COLOR = pygame.Color(155, 255, 95)
+BACKGROUND_COLOR = pygame.Color(145, 145, 145)
 NODE_RADIUS = 10
 MARBLE_RADIUS = 5
+
+NODE_TYPE_TO_COLOR = {
+    MarbleEaterNode: EATER_COLOR,
+    MarbleEmitterNode: EMITTER_COLOR,
+    Node: NODE_COLOR
+}
 
 
 class NenwinVisualization():
@@ -73,19 +79,23 @@ class NenwinVisualization():
         surf.fill(BACKGROUND_COLOR)
         for node in self.__model.nodes:
             radius = self.__find_radius_of_node(node)
-            pygame.draw.circle(surf,
-                               NODE_COLOUR,
-                               np.round(self.__scale_factor *
-                                        node.pos).astype(int),
-                               int(np.round(self.__scale_factor*radius).flatten()))
+            self.__draw_node(radius, node, surf)
         for marble in self.__model.marbles:
             pygame.draw.circle(surf,
-                               MARBLE_COLOUR,
+                               MARBLE_COLOR,
                                np.round(self.__scale_factor *
                                         marble.pos).astype(int),
                                MARBLE_RADIUS)
 
         return surf
+
+    def __draw_node(self, radius: int, node: Node, surf: pygame.Surface):
+        color = NODE_TYPE_TO_COLOR[type(node)]
+        pygame.draw.circle(surf,
+                           color,
+                           np.round(self.__scale_factor *
+                                    node.pos).astype(int),
+                           int(np.round(self.__scale_factor*radius).flatten()))
 
     def __find_radius_of_node(self, node: Node) -> float:
         """
