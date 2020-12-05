@@ -10,33 +10,13 @@ and auxiliary functions.
 """
 import numpy as np
 from typing import Tuple
-from experiment_1.attraction_functions.attraction_functions import AttractionFunction
+from experiment_1.attraction_functions.attraction_functions import ConstantAttraction
 from experiment_1.particle import PhysicalParticle
 NUMERICAL_ABS_ACCURACY_REQUIRED = 10e-5
 TEST_SIMULATION_STEP_SIZE = 0.001
 ZERO = np.array([0])
 
-
-class TestAttractionFunction(AttractionFunction):
-    """
-    Simplistic constant function to ease testing numerically.
-    (For constant forces => constant acceleration)
-    """
-
-    def __init__(self, value:float = 0.01):
-        self.__value = 0.01
-
-    @property
-    def value(self):
-        return self.__value
-
-    def compute_attraction(self,
-                           first_particle: PhysicalParticle,
-                           second_particle: PhysicalParticle
-                           ) -> float:
-        return self.value
-
-ATTRACT_FUNCT = TestAttractionFunction()
+ATTRACT_FUNCT = ConstantAttraction()
 
 class MockPipe:
 

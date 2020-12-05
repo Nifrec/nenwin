@@ -11,7 +11,8 @@ Unit-tests for emitter_model.py.
 import unittest
 import numpy as np
 
-from test_aux import ZERO, TestAttractionFunction, check_close
+from test_aux import ZERO, check_close
+from experiment_1.attraction_functions.attraction_functions import ConstantAttraction
 from experiment_1.auxliary import generate_stiffness_dict
 from experiment_1.particle import Particle
 from experiment_1.node import Marble
@@ -19,7 +20,7 @@ from experiment_1.marble_emitter_node import MarbleEmitter, \
     Emitter, MarbleEmitterNode
 from experiment_1.emitter_model import ModelWithEmitters
 
-ATTRACT_FUNCT = TestAttractionFunction(0)
+ATTRACT_FUNCT = ConstantAttraction(0)
 
 
 class EmitterModelTestCase(unittest.TestCase):

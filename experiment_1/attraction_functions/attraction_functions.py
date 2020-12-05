@@ -94,3 +94,20 @@ class ThresholdGravity(NewtonianGravity):
         else:
             return 0
 
+class ConstantAttraction(AttractionFunction):
+    """
+    Always returns same attraction value, regardless of distance or masses.
+    """
+
+    def __init__(self, value:float = 0.01):
+        self.__value = 0.01
+
+    @property
+    def value(self):
+        return self.__value
+
+    def compute_attraction(self,
+                           first_particle: PhysicalParticle,
+                           second_particle: PhysicalParticle
+                           ) -> float:
+        return self.value
