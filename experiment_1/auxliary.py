@@ -43,3 +43,26 @@ def generate_stiffness_dict(marble_stiffness: float,
         "marble_attraction": marble_attraction,
         "node_attraction": node_attraction
     }
+
+
+def generate_node_dict(pos: np.ndarray,
+                       vel: np.ndarray,
+                       acc: np.ndarray,
+                       mass: float,
+                       attraction_function: callable,
+                       marble_stiffness: float,
+                       node_stiffness: float,
+                       marble_attraction: float,
+                       node_attraction: float) -> Dict[str, float]:
+    output = {
+        "pos": pos,
+        "vel": vel,
+        "acc": acc,
+        "mass": mass,
+        "attraction_function": attraction_function
+    }
+    output.update(generate_stiffness_dict(marble_stiffness,
+                                          node_stiffness,
+                                          marble_attraction,
+                                          node_attraction))
+    return output
