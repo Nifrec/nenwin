@@ -30,7 +30,7 @@ from experiment_1.node import Node, Marble
 from experiment_1.attraction_functions.attraction_functions \
     import ThresholdGravity, ConstantAttraction
 from experiment_1.architectures.run_and_visualize import run
-from experiment_1.auxliary import generate_stiffness_dict
+from experiment_1.auxliary import generate_stiffness_dict, generate_node_dict
 from experiment_1.output_reader import NumMarblesOutputReader
 from experiment_1.marble_emitter_node import MarbleEmitterNode, MarbleEmitter
 ZERO = np.array([0, 0])
@@ -41,6 +41,10 @@ ZERO_ATTRACTION = ConstantAttraction(0)
 NODE_STIFFNESSES = generate_stiffness_dict(marble_stiffness=1,
                                            node_stiffness=1,
                                            marble_attraction=1,
+                                           node_attraction=0)
+EMITTER_STIFFNESSES = generate_stiffness_dict(marble_stiffness=1,
+                                           node_stiffness=1,
+                                           marble_attraction=0,
                                            node_attraction=0)
 BIT_MARBLE_STIFFNESS = generate_stiffness_dict(marble_stiffness=1,
                                                node_stiffness=0,
@@ -58,7 +62,13 @@ LOCKER_POSITIONS = (
     (23.3974596, 100)
 )
 BIT_POS = sum(np.array(pos) for pos in LOCKER_POSITIONS)/3
-
+BIT_MARBLE_SETTTINGS = generate_node_dict(BIT_POS,
+                        ZERO,
+                        ZERO,
+                        -100,
+                        ATTRACTION_FUNCTION,
+                        **BIT_MARBLE_STIFFNESS)
+BIT_MARBLE_SETTTINGS["datum"] = None
 
 def bit_read_experiment(bit_state: bool = True):
     """
@@ -70,18 +80,13 @@ def bit_read_experiment(bit_state: bool = True):
 
     locker_nodes = __generate_locker_nodes(LOCKER_POSITIONS)
 
-    bit_marble = Marble(BIT_POS,
-                        ZERO,
-                        ZERO,
-                        -100,
-                        ATTRACTION_FUNCTION,
-                        None,
-                        **BIT_MARBLE_STIFFNESS)
+    
     reader_marble = __at_angle_toward_bit_marble(BIT_POS,
                                                  0.25*np.pi,
                                                  100,
                                                  READER_MARBLE_STIFFNESS,
                                                  0.03)
+    bit_marble = Marble(**BIT_MARBLE_SETTTINGS)                                                 
 
     # Any position in line of the movement of the reader Marble,
     # will work as long as it is far enough from the bit not to capture
@@ -101,6 +106,7 @@ def bit_read_experiment(bit_state: bool = True):
                                         ATTRACTION_FUNCTION,
                                         radius=6,
                                         **NODE_STIFFNESSES)
+
     if bit_state:
         marbles = (bit_marble, reader_marble)
     else:
@@ -217,11 +223,13 @@ def bit_write_expetiment_emitters():
     locker_nodes = __generate_locker_nodes(LOCKER_POSITIONS)
 
     # Unity vector from lower-left-corner towards upper-right-corner
-    incoming_direction = 0.5*np.sqrt(2) * np.ones(2)
-    outer_emitter_pos = BIT_POS - 10*incoming_direction
+    incoming_direction = 0.5*np.sqrt(2) * np.array([1, -1])
+    outer_emitter_pos = BIT_POS - 50*incoming_direction
     inner_emitter_pos = BIT_POS - 0.1*incoming_direction
+    outer_radius = 5
 
-    signal_marble_prototype = Marble(pos=outer_emitter_pos,
+    signal_marble_pos = outer_emitter_pos + np.array([outer_radius+ 0.0001, 0])
+    signal_marble_prototype = Marble(pos = signal_marble_pos,
                                      vel=10*incoming_direction,
                                      acc=ZERO,
                                      mass=1,
@@ -234,15 +242,25 @@ def bit_write_expetiment_emitters():
                                            ZERO, 
                                            1, 
                                            ZERO_ATTRACTION, 
-                                           0, 
-                                           0, 
-                                           0, 
-                                           0, 
-                                           0,
-                                           outer_emitter)
-    run([], locker_nodes + [outer_emitter_node])
+                                           radius = outer_radius, 
+                                           emitter = outer_emitter,
+                                           **EMITTER_STIFFNESSES)
+    
+    bit_marble = Marble(**BIT_MARBLE_SETTTINGS)
+    inner_emitter = MarbleEmitter(bit_marble, 0)
+    inner_emitter_pos = BIT_POS - np.array([0.0001, 0])
+    print(inner_emitter_pos, bit_marble.pos)
+    inner_emitter_node = MarbleEmitterNode(inner_emitter_pos,
+                                           ZERO, 
+                                           ZERO, 
+                                           1, 
+                                           ZERO_ATTRACTION, 
+                                           radius = 0.0001, 
+                                           emitter = inner_emitter,
+                                           **EMITTER_STIFFNESSES)
 
+    run([], locker_nodes + [outer_emitter_node, inner_emitter_node])
 
 if __name__ == "__main__":
-    #bit_read_experiment(True)
+    # bit_read_experiment(True)
     bit_write_expetiment_emitters()
