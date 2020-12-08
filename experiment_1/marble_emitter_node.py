@@ -15,6 +15,8 @@ import abc
 
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.node import Marble, Node
+from experiment_1.auxliary import distance
+from experiment_1.constants import MAX_EMITTER_SPAWN_DIST
 
 
 class MarbleEmitterNode(MarbleEaterNode):
@@ -42,6 +44,13 @@ class MarbleEmitterNode(MarbleEaterNode):
                          node_attraction,
                          radius)
         self.__emitter = emitter
+        self.__raise_error_if_prototype_too_far_away(emitter.prototype)
+
+    def __raise_error_if_prototype_too_far_away(self, prototype: Marble):
+        distance_to_prototype = distance(self, prototype)
+        if distance_to_prototype > self.radius + MAX_EMITTER_SPAWN_DIST:
+            raise ValueError("prototype to emit further than "
+                + "MAX_EMITTER_SPAWN_DIST from border of radius")
 
     def eat(self, marble: Marble):
         self.__emitter.eat_mass(marble.mass)

@@ -33,6 +33,7 @@ from experiment_1.particle import Particle
 from experiment_1.node import Marble
 from experiment_1.marble_emitter_node import MarbleEmitter, \
     Emitter, MarbleEmitterNode
+from experiment_1.constants import MAX_EMITTER_SPAWN_DIST
 
 
 class MockEmitter(Emitter):
@@ -191,8 +192,6 @@ class MarbleEmitterTestCase(unittest.TestCase):
         emitter.emit()
         self.assertEqual(emitter._Emitter__stored_mass, 0)
 
-
-
     def test_emit_mass_stored_3(self):
         """
         Corner case: emitting 0 mass does not affect mass stored.
@@ -232,6 +231,24 @@ class MarbleEmitterTestCase(unittest.TestCase):
 
 
 class MarbleEmitterNodeTestCase(unittest.TestCase):
+
+    def test_spawn_distance(self):
+        """
+        Should raise error when the distance of the spawned Marble
+        is greater than specified in constants.py
+        """
+        node_pos = ZERO
+        radius = 1
+        marble_pos = node_pos + radius + 2*MAX_EMITTER_SPAWN_DIST
+        other_settings = {"vel": ZERO, "acc": ZERO, "mass": 0,
+                          "attraction_function": ATTRACT_FUNCT}
+        other_settings.update(generate_stiffness_dict(0, 0, 0, 0))
+        prototype_marble = Marble(pos=marble_pos, datum=None, **other_settings)
+        emitter = MockEmitter(prototype_marble, 0)
+        gen_node = lambda : MarbleEmitterNode(pos=node_pos, emitter=emitter,
+                                         radius=radius, **other_settings)
+
+        self.assertRaises(ValueError, gen_node)
 
     def test_copy(self):
         pos = np.array([1])
