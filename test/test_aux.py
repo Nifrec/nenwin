@@ -24,6 +24,7 @@ Settings (constants) for the test cases, such as required numerical precision,
 and auxiliary functions.
 """
 import numpy as np
+import torch
 from typing import Tuple
 from experiment_1.attraction_functions.attraction_functions import ConstantAttraction
 from experiment_1.particle import PhysicalParticle
@@ -38,8 +39,8 @@ class MockPipe:
     def poll(self):
         return None
 
-def check_close(result: np.ndarray,
-                expected: np.ndarray,
+def check_close(result: torch.Tensor,
+                expected: torch.Tensor,
                 atol=NUMERICAL_ABS_ACCURACY_REQUIRED
                 ) -> bool:
     if not np.allclose(result, expected, atol=atol):
@@ -49,11 +50,11 @@ def check_close(result: np.ndarray,
         return True
 
 
-def high_accuracy_forward_euler_step(pos: np.ndarray,
-                                     vel: np.ndarray,
-                                     acc: np.ndarray,
+def high_accuracy_forward_euler_step(pos: torch.Tensor,
+                                     vel: torch.Tensor,
+                                     acc: torch.Tensor,
                                      step_size=0.001,
-                                     duration=1) -> Tuple[np.ndarray]:
+                                     duration=1) -> Tuple[torch.Tensor]:
     """
     Update velocity and position for [duration] time,
     using simple Forward-Euler integration rules and Newtonian mechanics.
@@ -75,11 +76,11 @@ def high_accuracy_forward_euler_step(pos: np.ndarray,
     return pos, vel
 
 
-def runge_kutta_4_step(pos: np.ndarray,
-                       vel: np.ndarray,
-                       acc: np.ndarray,
+def runge_kutta_4_step(pos: torch.Tensor,
+                       vel: torch.Tensor,
+                       acc: torch.Tensor,
                        step_size=0.001,
-                       duration=1) -> Tuple[np.ndarray]:
+                       duration=1) -> Tuple[torch.Tensor]:
     """
     High order of accuracy approximation of new position and velocity
     after [duration] of time, given constant acceleration.
