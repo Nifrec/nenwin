@@ -60,7 +60,9 @@ class Particle(abc.ABC, nn.Module):
             raise ValueError("Input values have mismatching dimensions: "
                              + f"{pos.shape}, {vel.shape}, {acc.shape}")
 
-    def __init_prev_value(self, vector: Union[np.ndarray, torch.Tensor]):
+    def __init_prev_value(self,
+                          vector: Union[np.ndarray, torch.Tensor]
+                          ) -> torch.Tensor:
         """
         Create correct datastructure for a non-trainable vector variable such as
         self.__prev_pos, self._prev_acc, self._prev_prev_acc
