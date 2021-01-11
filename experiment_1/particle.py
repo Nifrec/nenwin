@@ -39,27 +39,37 @@ class Particle(abc.ABC, nn.Module):
     """
 
     def __init__(self,
-                 pos: torch.Tensor,
-                 vel: torch.Tensor,
-                 acc: torch.Tensor,
+                 pos: Union[np.ndarray, torch.Tensor],
+                 vel: Union[np.ndarray, torch.Tensor],
+                 acc: Union[np.ndarray, torch.Tensor],
                  device: Optional[Union[torch.device, str]] = DEVICE):
         nn.Module.__init__(self)
         self.__device = device
         self.__check_input_dims(pos, vel, acc)
         self.__pos = create_vector_param(pos, device)
-        self.__prev_pos = torch.tensor(pos, dtype=torch.float, device=device)
+        self.__prev_pos = self.__init_prev_value(pos)
         self.__vel = create_vector_param(vel, device)
         self.__acc = create_vector_param(acc, device)
         # Previous value of self.acc (updated when self.acc changes)
-        self._prev_acc = torch.tensor(acc, dtype=torch.float, device=device)
+        self._prev_acc = self.__init_prev_value(acc)
         # The value of self.acc that came *before* prev_acc
-        self._prev_prev_acc = torch.tensor(
-            acc, dtype=torch.float, device=device)
+        self._prev_prev_acc = self.__init_prev_value(acc)
 
     def __check_input_dims(self, pos, vel, acc):
         if (pos.shape != vel.shape) or (pos.shape != acc.shape):
             raise ValueError("Input values have mismatching dimensions: "
                              + f"{pos.shape}, {vel.shape}, {acc.shape}")
+
+    def __init_prev_value(self, vector: Union[np.ndarray, torch.Tensor]):
+        """
+        Create correct datastructure for a non-trainable vector variable such as
+        self.__prev_pos, self._prev_acc, self._prev_prev_acc
+        """
+        if isinstance(vector, torch.Tensor):
+            return vector.clone().detach().requires_grad_(False)
+        else:
+            return torch.tensor(vector, dtype=torch.float,
+                                device=self.device, requires_grad=False)
 
     @property
     def device(self) -> torch.device:
@@ -188,6 +198,9 @@ class PhysicalParticle(Particle):
 
 
 def create_vector_param(vector: Union[np.ndarray, torch.Tensor],
-        device: torch.device = DEVICE) -> nn.Parameter:
+                        device: torch.device = DEVICE) -> nn.Parameter:
+    if isinstance(vector, torch.Tensor):
+        output = vector.clone().detach().to(device)
+    else:
         output = torch.tensor(vector, dtype=torch.float, device=device)
-        return nn.Parameter(output)
+    return nn.Parameter(output)
