@@ -61,12 +61,14 @@ class MarbleTestCase(unittest.TestCase):
         self.assertTrue(check_close(pos, copy.pos))
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
-        self.assertEqual(copy.marble_stiffness,
-                         stiffnesses["marble_stiffness"])
-        self.assertEqual(copy.node_stiffness, stiffnesses["node_stiffness"])
-        self.assertEqual(copy.marble_attraction,
-                         stiffnesses["marble_attraction"])
-        self.assertEqual(copy.node_attraction, stiffnesses["node_attraction"])
+        self.assertAlmostEqual(copy.marble_stiffness,
+                               stiffnesses["marble_stiffness"])
+        self.assertAlmostEqual(copy.node_stiffness,
+                               stiffnesses["node_stiffness"])
+        self.assertAlmostEqual(copy.marble_attraction,
+                               stiffnesses["marble_attraction"])
+        self.assertAlmostEqual(copy.node_attraction,
+                               stiffnesses["node_attraction"])
         self.assertEqual(copy.datum, datum)
 
 
