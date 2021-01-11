@@ -170,6 +170,7 @@ class ParticleTestCase(unittest.TestCase):
             expected_value = expected_names.pop(name)
             param = param.clone().detach().numpy()
             self.assertTrue(check_close(expected_value, param))
+        self.assertEqual(len(expected_names), 0)
 
 
 if __name__ == '__main__':

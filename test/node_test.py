@@ -174,8 +174,8 @@ class NodeTestCase(unittest.TestCase):
         expected = ZERO
         result = particle.compute_experienced_force(set([node]))
         self.assertTrue(check_close(expected, result),
-                         "zero stiffness, "
-                         + f"got: {result}, exptected:{expected}")
+                        "zero stiffness, "
+                        + f"got: {result}, exptected:{expected}")
 
     def test_stiffness_error(self):
         """
@@ -224,11 +224,36 @@ class NodeTestCase(unittest.TestCase):
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
         self.assertAlmostEqual(copy.marble_stiffness,
-                         stiffnesses["marble_stiffness"])
-        self.assertAlmostEqual(copy.node_stiffness, stiffnesses["node_stiffness"])
+                               stiffnesses["marble_stiffness"])
+        self.assertAlmostEqual(copy.node_stiffness,
+                               stiffnesses["node_stiffness"])
         self.assertAlmostEqual(copy.marble_attraction,
-                         stiffnesses["marble_attraction"])
-        self.assertAlmostEqual(copy.node_attraction, stiffnesses["node_attraction"])
+                               stiffnesses["marble_attraction"])
+        self.assertAlmostEqual(copy.node_attraction,
+                               stiffnesses["node_attraction"])
+
+    def test_parameters(self):
+        pos = np.array([1])
+        vel = np.array([2])
+        acc = np.array([3])
+        mass = 4
+        attraction_funct = ATTRACT_FUNCT
+        stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
+        node = Node(pos, vel, acc, mass, attraction_funct,
+                        **stiffnesses)
+
+        named_params = node.named_parameters()
+        expected_names = {
+            '_Node__marble_stiffness': stiffnesses["marble_stiffness"],
+            '_Node__node_stiffness': stiffnesses["node_stiffness"],
+            '_Node__marble_attraction': stiffnesses["marble_attraction"],
+            '_Node__node_attraction': stiffnesses["node_attraction"]}
+        for name, param in named_params:
+            if name in set(expected_names.keys()):
+                expected_value = expected_names.pop(name)
+                param = param.clone().detach().numpy()
+                self.assertTrue(check_close(expected_value, param))
+        self.assertEqual(len(expected_names), 0)
 
 
 def create_particle(marble_stiffness,
