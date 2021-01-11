@@ -25,6 +25,8 @@ Base class for Nodes and Marbles, subclass of PhysicalParticle.
 from __future__ import annotations
 import abc
 import numpy as np
+import torch
+import torch.nn as nn
 from typing import Union
 from experiment_1.particle import PhysicalParticle
 
@@ -39,9 +41,9 @@ class Node(PhysicalParticle):
     """
 
     def __init__(self,
-                 pos: np.ndarray,
-                 vel: np.ndarray,
-                 acc: np.ndarray,
+                 pos: torch.Tensor,
+                 vel: torch.Tensor,
+                 acc: torch.Tensor,
                  mass: float,
                  attraction_function: callable,
                  marble_stiffness: float,
@@ -73,29 +75,35 @@ class Node(PhysicalParticle):
                                         lower=0,
                                         upper=1
                                         )
-        self.__marble_stiffness = marble_stiffness
-        self.__node_stiffness = node_stiffness
-        self.__marble_attraction = marble_attraction
-        self.__node_attraction = node_attraction
+        self.__marble_stiffness = self.__make_parameter(marble_stiffness)
+        self.__node_stiffness = self.__make_parameter(node_stiffness)
+        self.__marble_attraction = self.__make_parameter(marble_attraction)
+        self.__node_attraction = self.__make_parameter(node_attraction)
+
+    def __make_parameter(self, value: float) -> nn.Parameter:
+        value_as_tensor = torch.tensor(value,
+                                       dtype=torch.float,
+                                       device=self.device)
+        return nn.Parameter(value_as_tensor)
 
     @property
     def marble_stiffness(self) -> float:
-        return self.__marble_stiffness
+        return self.__marble_stiffness.item()
 
     @property
     def node_stiffness(self) -> float:
-        return self.__node_stiffness
+        return self.__node_stiffness.item()
 
     @property
     def marble_attraction(self) -> float:
-        return self.__marble_attraction
+        return self.__marble_attraction.item()
 
     @property
     def node_attraction(self) -> float:
-        return self.__node_attraction
+        return self.__node_attraction.item()
 
     def compute_attraction_force_to(
-            self, other: Union[Marble, Node]) -> np.ndarray:
+            self, other: Union[Marble, Node]) -> torch.Tensor:
         """
         Computes the force vector induced by this particle to the
         [other] paricle at the position of the other particle.
@@ -122,13 +130,13 @@ class Node(PhysicalParticle):
 
     def compute_experienced_force(self,
                                   other_particles: Set[Union[Marble, Node]]
-                                  ) -> np.ndarray:
+                                  ) -> torch.Tensor:
         """
         Given a set of other particles,
         find the resulting force this object experiences as excerted
         by the other particles. Keeps stiffness into account.
         """
-        forces = np.zeros_like(self.acc)
+        forces = torch.zeros_like(self.acc, requires_grad=False)
         for particle in other_particles:
             stiffness = self.__find_stiffness_to(particle)
             forces += (1-stiffness) * \
@@ -141,9 +149,9 @@ class Node(PhysicalParticle):
         Throws error if the particle is neither a Node or a Marble.
         """
         if isinstance(particle, Marble):
-            return self.__marble_stiffness
+            return self.marble_stiffness
         elif isinstance(particle, Node):
-            return self.__node_stiffness
+            return self.node_stiffness
         else:
             raise ValueError(
                 "__find_stiffness_to: particle is neither Node nor Marble")
@@ -157,9 +165,9 @@ class Marble(Node):
     """
 
     def __init__(self,
-                 pos: np.ndarray,
-                 vel: np.ndarray,
-                 acc: np.ndarray,
+                 pos: torch.Tensor,
+                 vel: torch.Tensor,
+                 acc: torch.Tensor,
                  mass: float,
                  attraction_function: callable,
                  datum: object,

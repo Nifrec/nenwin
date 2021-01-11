@@ -24,6 +24,7 @@ Multi-purpose auxiliary functions.
 """
 import numpy as np
 from typing import Dict
+import torch
 
 from experiment_1.particle import Particle
 
@@ -45,9 +46,9 @@ def generate_stiffness_dict(marble_stiffness: float,
     }
 
 
-def generate_node_dict(pos: np.ndarray,
-                       vel: np.ndarray,
-                       acc: np.ndarray,
+def generate_node_dict(pos: torch.Tensor,
+                       vel: torch.Tensor,
+                       acc: torch.Tensor,
                        mass: float,
                        attraction_function: callable,
                        marble_stiffness: float,

@@ -24,6 +24,7 @@ Unit-tests for Node of node.py.
 """
 import unittest
 import numpy as np
+import torch
 
 from experiment_1.attraction_functions.attraction_functions import Gratan
 from experiment_1.node import Node, Marble
@@ -42,16 +43,16 @@ class NodeTestCase(unittest.TestCase):
         node_stiffness = 0.13
         particle = create_particle(
             marble_stiffness, node_stiffness, ZERO, ZERO)
-        self.assertEqual(particle.marble_stiffness, marble_stiffness)
-        self.assertEqual(particle.node_stiffness, node_stiffness)
+        self.assertAlmostEqual(particle.marble_stiffness, marble_stiffness)
+        self.assertAlmostEqual(particle.node_stiffness, node_stiffness)
 
     def test_attraction_getters(self):
         marble_attraction = 0.42
         node_attraction = 0.13
         particle = create_particle(ZERO, ZERO,
                                    marble_attraction, node_attraction)
-        self.assertEqual(particle.marble_attraction, marble_attraction)
-        self.assertEqual(particle.node_attraction, node_attraction)
+        self.assertAlmostEqual(particle.marble_attraction, marble_attraction)
+        self.assertAlmostEqual(particle.node_attraction, node_attraction)
 
     def test_stiffness_errors_1(self):
         self.assertRaises(ValueError, create_particle, 1.1, ZERO, ZERO, ZERO)
@@ -172,7 +173,7 @@ class NodeTestCase(unittest.TestCase):
 
         expected = ZERO
         result = particle.compute_experienced_force(set([node]))
-        self.assertEqual(expected, result,
+        self.assertTrue(check_close(expected, result),
                          "zero stiffness, "
                          + f"got: {result}, exptected:{expected}")
 
@@ -222,12 +223,12 @@ class NodeTestCase(unittest.TestCase):
         self.assertTrue(check_close(pos, copy.pos))
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
-        self.assertEqual(copy.marble_stiffness,
+        self.assertAlmostEqual(copy.marble_stiffness,
                          stiffnesses["marble_stiffness"])
-        self.assertEqual(copy.node_stiffness, stiffnesses["node_stiffness"])
-        self.assertEqual(copy.marble_attraction,
+        self.assertAlmostEqual(copy.node_stiffness, stiffnesses["node_stiffness"])
+        self.assertAlmostEqual(copy.marble_attraction,
                          stiffnesses["marble_attraction"])
-        self.assertEqual(copy.node_attraction, stiffnesses["node_attraction"])
+        self.assertAlmostEqual(copy.node_attraction, stiffnesses["node_attraction"])
 
 
 def create_particle(marble_stiffness,
