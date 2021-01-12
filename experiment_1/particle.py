@@ -46,10 +46,10 @@ class Particle(abc.ABC, nn.Module):
         nn.Module.__init__(self)
         self.__device = device
         self.__check_input_dims(pos, vel, acc)
-        self.__pos = create_vector_param(pos, device)
+        self.__pos = create_param(pos, device)
         self.__prev_pos = self.__init_prev_value(pos)
-        self.__vel = create_vector_param(vel, device)
-        self.__acc = create_vector_param(acc, device)
+        self.__vel = create_param(vel, device)
+        self.__acc = create_param(acc, device)
         # Previous value of self.acc (updated when self.acc changes)
         self._prev_acc = self.__init_prev_value(acc)
         # The value of self.acc that came *before* prev_acc
@@ -93,7 +93,7 @@ class Particle(abc.ABC, nn.Module):
     def pos(self, new_pos: torch.Tensor):
         if (new_pos.shape != self.__pos.shape):
             raise RuntimeError("New position particle has different dimension")
-        new_pos = create_vector_param(new_pos, self.device)
+        new_pos = create_param(new_pos, self.device)
         self.__pos = new_pos
 
     @ acc.setter
@@ -102,7 +102,7 @@ class Particle(abc.ABC, nn.Module):
             raise RuntimeError(
                 "New acceleration particle has different dimension")
         self._set_prev_accs()
-        new_acc = create_vector_param(new_acc, self.device)
+        new_acc = create_param(new_acc, self.device)
         self.__acc = new_acc
 
     def _set_prev_accs(self):
@@ -117,7 +117,7 @@ class Particle(abc.ABC, nn.Module):
     def vel(self, new_vel: torch.Tensor):
         if (new_vel.shape != self.__vel.shape):
             raise RuntimeError("New velocity particle has different dimension")
-        new_vel = create_vector_param(new_vel, self.device)
+        new_vel = create_param(new_vel, self.device)
         self.__vel = new_vel
 
     def update_movement(self, time_passed: float):
@@ -150,10 +150,11 @@ class PhysicalParticle(Particle):
                  vel: torch.Tensor,
                  acc: torch.Tensor,
                  mass: float,
-                 attraction_function: callable):
-        super().__init__(pos, vel, acc)
+                 attraction_function: callable,
+                 device: Optional[Union[torch.device, str]] = DEVICE):
+        super().__init__(pos, vel, acc, device)
         self._attraction_function = attraction_function
-        self.__mass = mass
+        self.__mass = create_param(mass, device)
 
     @ property
     def mass(self) -> float:
@@ -161,7 +162,8 @@ class PhysicalParticle(Particle):
 
     @ mass.setter
     def mass(self, new_mass: float):
-        self.__mass = new_mass
+        self.__mass = create_param(new_mass,
+                                   device=self.device)
 
     def update_acceleration(self, forces: torch.Tensor):
         """
@@ -174,13 +176,14 @@ class PhysicalParticle(Particle):
         themselves.
         """
         if forces.size == 0:
-            self.acc = np.zeros_like(self.acc, dtype=float)
+            self.acc *= 0
             return
         if (len(forces.shape) != 2) or (forces[0].shape != self.acc.shape):
             raise ValueError(
                 "Unexpected shape of forces-array, expected 2 dims")
         self._set_prev_accs()
-        self.acc = np.sum(forces, axis=0) / abs(self.mass)
+        self.acc = torch.tensor(np.sum(forces, axis=0) / abs(self.mass.item()),
+                                dtype=torch.float, device=self.device)
 
     def compute_attraction_force_to(
             self, other: PhysicalParticle) -> torch.Tensor:
@@ -199,8 +202,8 @@ class PhysicalParticle(Particle):
                                 self._attraction_function)
 
 
-def create_vector_param(vector: Union[np.ndarray, torch.Tensor],
-                        device: torch.device = DEVICE) -> nn.Parameter:
+def create_param(vector: Union[np.ndarray, torch.Tensor, float],
+                 device: torch.device = DEVICE) -> nn.Parameter:
     if isinstance(vector, torch.Tensor):
         output = vector.clone().detach().to(device)
     else:

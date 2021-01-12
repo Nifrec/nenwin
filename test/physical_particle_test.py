@@ -166,8 +166,8 @@ class PhysicalParticleTestCase(unittest.TestCase):
 
         # p2 is pulled towards positive all directions
         expected = np.array([np.sqrt(3)/3, np.sqrt(3)/3, np.sqrt(3)/3]) \
-            * attraction_funct.compute_attraction(p1, p2)
-        result = p1.compute_attraction_force_to(p2)
+            * attraction_funct.compute_attraction(p1, p2).clone().detach().numpy()
+        result = p1.compute_attraction_force_to(p2).clone().detach().numpy()
         self.assertTrue(check_close(result, expected))
 
 
@@ -190,8 +190,8 @@ class PhysicalParticleTestCase(unittest.TestCase):
 
         # -1 is for the direction, p2 is pulled towards negative x-direction
         expected = np.array([-1, 0, 0]) \
-            * attraction_funct.compute_attraction(p1, p2)
-        result = p1.compute_attraction_force_to(p2)
+            * attraction_funct.compute_attraction(p1, p2).clone().detach().numpy()
+        result = p1.compute_attraction_force_to(p2).clone().detach().numpy()
         self.assertTrue(check_close(result, expected))
 
     def test_compute_attraction_force_to_3(self):
@@ -214,8 +214,9 @@ class PhysicalParticleTestCase(unittest.TestCase):
         # p2 is repelled from p1, 
         # so the force should be in the positive x-direction.
         expected = np.array([1, 0, 0]) \
-            * attraction_funct.compute_attraction(p1, p2)
-        result = p1.compute_attraction_force_to(p2)
+            * attraction_funct.compute_attraction(p1, p2)\
+                .clone().detach().numpy()
+        result = p1.compute_attraction_force_to(p2).clone().detach().numpy()
         self.assertTrue(check_close(result, expected))
 
     def test_copy(self):
@@ -234,6 +235,23 @@ class PhysicalParticleTestCase(unittest.TestCase):
         self.assertTrue(check_close(pos, copy.pos))
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
+
+    def test_parameters(self):
+        pos = np.array([1])
+        vel = np.array([2])
+        acc = np.array([3])
+        mass = 4
+        attraction_funct = Gratan()
+        particle = PhysicalParticle(pos, vel, acc, mass, attraction_funct)
+
+        named_params = particle.named_parameters()
+        expected_names = {'_PhysicalParticle__mass':mass}
+        for name, param in named_params:
+            if name in set(expected_names.keys()):
+                expected_value = expected_names.pop(name)
+                param = param.clone().detach().numpy()
+                self.assertTrue(check_close(expected_value, param))
+        self.assertEqual(len(expected_names), 0)
 
 if __name__ == '__main__':
     unittest.main()
