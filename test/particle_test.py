@@ -31,6 +31,8 @@ from experiment_1.attraction_functions.attraction_functions import Gratan
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import check_close
 from test_aux import runge_kutta_4_step
+from test_aux import check_named_parameters
+
 
 class ParticleTestCase(unittest.TestCase):
 
@@ -162,15 +164,11 @@ class ParticleTestCase(unittest.TestCase):
         particle = Particle(pos, vel, acc)
 
         named_params = particle.named_parameters()
-        expected_names = {'_Particle__pos':pos,
-                          '_Particle__vel':vel,
-                          '_Particle__acc':acc}
-        for name, param in named_params:
-            self.assertIn(name, set(expected_names.keys()))
-            expected_value = expected_names.pop(name)
-            param = param.clone().detach().numpy()
-            self.assertTrue(check_close(expected_value, param))
-        self.assertEqual(len(expected_names), 0)
+        expected_names = {'_Particle__pos': pos,
+                          '_Particle__vel': vel,
+                          '_Particle__acc': acc}
+        self.assertTrue(check_named_parameters(expected_names,
+                                               tuple(named_params)))
 
 
 if __name__ == '__main__':

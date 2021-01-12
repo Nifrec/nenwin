@@ -25,8 +25,10 @@ and auxiliary functions.
 """
 import numpy as np
 import torch
-from typing import Tuple
-from experiment_1.attraction_functions.attraction_functions import ConstantAttraction
+from typing import Tuple, Dict
+
+from experiment_1.attraction_functions.attraction_functions \
+    import ConstantAttraction
 from experiment_1.particle import PhysicalParticle
 NUMERICAL_ABS_ACCURACY_REQUIRED = 10e-5
 TEST_SIMULATION_STEP_SIZE = 0.001
@@ -34,10 +36,12 @@ ZERO = np.array([0])
 
 ATTRACT_FUNCT = ConstantAttraction()
 
+
 class MockPipe:
 
     def poll(self):
         return None
+
 
 def check_close(result: torch.Tensor,
                 expected: torch.Tensor,
@@ -48,6 +52,25 @@ def check_close(result: torch.Tensor,
         return False
     else:
         return True
+
+
+def check_named_parameters(expected: Dict[str, object],
+                       named_parameters: Tuple[Tuple[str, torch.Tensor]]
+                       ) -> bool:
+    """
+    Given a tuple of named parameters 
+    (as returned by torch.nn.Module instances),
+    computes if *at least* all the named with corresponding values of the
+    named_parameters dict occur.
+    """
+    output = True
+    for name, param in named_parameters:
+            if name in set(expected.keys()):
+                expected_value = expected.pop(name)
+                param = param.clone().detach().numpy()
+                output = True and check_close(expected_value, param)
+    output = output and (len(expected) == 0)
+    return output
 
 
 def high_accuracy_forward_euler_step(pos: torch.Tensor,
@@ -87,7 +110,7 @@ def runge_kutta_4_step(pos: torch.Tensor,
     """
     pos = pos.copy()
     vel = vel.copy()
-    
+
     for time_step in np.arange(0, duration, step_size):
         k1_v = acc * step_size
         k1_x = vel * step_size
