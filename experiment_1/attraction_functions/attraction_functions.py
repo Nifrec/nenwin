@@ -25,6 +25,10 @@ between particles.
 """
 import abc
 import numpy as np
+import torch.nn as nn
+import torch
+
+from experiment_1.constants import DEVICE
 from experiment_1.particle import PhysicalParticle
 import warnings
 
@@ -89,6 +93,7 @@ class NewtonianGravity(AttractionFunction):
         radius = np.linalg.norm(first_particle.pos - second_particle.pos)
         return first_particle.mass * second_particle.mass / radius**2
 
+
 class ThresholdGravity(NewtonianGravity):
     """
     Variant of Newton's gravity function that returns 0 when the radius
@@ -98,23 +103,40 @@ class ThresholdGravity(NewtonianGravity):
     def __init__(self, threshold: float):
         self.__threshold = threshold
 
+    @property
+    def threshold(self):
+        return self.__threshold
+
     def compute_attraction(self,
                            first_particle: PhysicalParticle,
                            second_particle: PhysicalParticle
                            ) -> float:
         radius = np.linalg.norm(first_particle.pos - second_particle.pos)
 
-        if (radius <= self.__threshold):
+        if (radius <= self.threshold):
             return super().compute_attraction(first_particle, second_particle)
         else:
             return 0
+
+
+class TrainableThresholdGravity(ThresholdGravity, nn.Module):
+    def __init__(self, threshold: float):
+        nn.Module.__init__(self)
+        threshold_as_tensor = torch.tensor(threshold,
+                                           dtype=torch.float,
+                                           device=DEVICE)
+        self.__threshold = nn.Parameter(threshold_as_tensor)
+
+    @property
+    def threshold(self):
+        return self.__threshold.item()
 
 class ConstantAttraction(AttractionFunction):
     """
     Always returns same attraction value, regardless of distance or masses.
     """
 
-    def __init__(self, value:float = 0.01):
+    def __init__(self, value: float = 0.01):
         self.__value = 0.01
 
     @property

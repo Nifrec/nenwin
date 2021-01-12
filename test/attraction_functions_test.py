@@ -24,12 +24,16 @@ Unit-tests for experiment_1/attraction_functions/attraction_functions.py
 """
 import unittest
 import numpy as np
+import torch
+
 from experiment_1.particle import PhysicalParticle
 from experiment_1.attraction_functions.attraction_functions import Gratan
 from experiment_1.attraction_functions.attraction_functions \
     import NewtonianGravity
 from experiment_1.attraction_functions.attraction_functions \
     import ThresholdGravity
+from experiment_1.attraction_functions.attraction_functions \
+    import TrainableThresholdGravity
 from test_aux import check_close, ZERO
 
 
@@ -216,11 +220,19 @@ class ThresholdGravityTestCase(unittest.TestCase):
         result = attraction_2_points(pos_1, mass, pos_2, mass, self.threshold_grav)
         expected = 1 / (10**2)
         self.assertTrue(check_close(expected, result))
-    
 
-def attraction_2_points(pos_1: np.ndarray,
+class TrainableThresholdGravityTestCase(unittest.TestCase):
+
+    def test_parameters(self):
+        threshold = 13
+        funct = TrainableThresholdGravity(threshold)
+        params = tuple(funct.named_parameters())
+        self.assertEqual(params[0][0], '_TrainableThresholdGravity__threshold')
+        self.assertEqual(params[0][1], threshold)
+
+def attraction_2_points(pos_1: torch.Tensor,
                         mass_1: float,
-                        pos_2: np.ndarray,
+                        pos_2: torch.Tensor,
                         mass_2: float,
                         attraction_funct: callable) -> float:
     zero = np.array([0, 0])
