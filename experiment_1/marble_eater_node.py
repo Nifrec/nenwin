@@ -24,6 +24,9 @@ A variant of the Node that can 'consume' Marbles if they come close.
 """
 from __future__ import annotations
 import numpy as np
+import torch
+import torch.nn as nn
+
 from experiment_1.node import Marble, Node
 
 
@@ -36,9 +39,9 @@ class MarbleEaterNode(Node):
     """
 
     def __init__(self,
-                 pos: np.ndarray,
-                 vel: np.ndarray,
-                 acc: np.ndarray,
+                 pos: torch.Tensor,
+                 vel: torch.Tensor,
+                 acc: torch.Tensor,
                  mass: float,
                  attraction_function: callable,
                  marble_stiffness: float,
@@ -52,13 +55,16 @@ class MarbleEaterNode(Node):
                          node_stiffness,
                          marble_attraction,
                          node_attraction)
-        self.__radius = radius
+        radius_as_tensor = torch.tensor(radius,
+                                        dtype=torch.float,
+                                        device=self.device)
+        self.__radius = nn.Parameter(radius_as_tensor)
         self.__num_marbles_eaten: int = 0
         self.__marble_data_eaten = []
 
     @property
     def radius(self) -> float:
-        return self.__radius
+        return self.__radius.item()
 
     @property
     def num_marbles_eaten(self) -> int:

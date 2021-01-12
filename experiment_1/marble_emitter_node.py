@@ -25,9 +25,9 @@ class MarbleEmitterNode(MarbleEaterNode):
     """
 
     def __init__(self,
-                 pos: np.ndarray,
-                 vel: np.ndarray,
-                 acc: np.ndarray,
+                 pos: torch.Tensor,
+                 vel: torch.Tensor,
+                 acc: torch.Tensor,
                  mass: float,
                  attraction_function: callable,
                  marble_stiffness: float,

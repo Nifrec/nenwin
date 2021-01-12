@@ -31,6 +31,7 @@ from experiment_1.node import Marble
 from experiment_1.attraction_functions.attraction_functions import Gratan
 from experiment_1.auxliary import generate_stiffness_dict
 from test_aux import check_close, ZERO, ATTRACT_FUNCT
+from test_aux import check_named_parameters
 
 
 class MarbleEaterNodeTestCase(unittest.TestCase):
@@ -129,14 +130,36 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
         self.assertTrue(check_close(pos, copy.pos))
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
-        self.assertEqual(copy.marble_stiffness,
-                         stiffnesses["marble_stiffness"])
-        self.assertEqual(copy.node_stiffness, stiffnesses["node_stiffness"])
-        self.assertEqual(copy.marble_attraction,
-                         stiffnesses["marble_attraction"])
-        self.assertEqual(copy.node_attraction, stiffnesses["node_attraction"])
+        self.assertAlmostEqual(copy.marble_stiffness,
+                               stiffnesses["marble_stiffness"])
+        self.assertAlmostEqual(copy.node_stiffness,
+                               stiffnesses["node_stiffness"])
+        self.assertAlmostEqual(copy.marble_attraction,
+                               stiffnesses["marble_attraction"])
+        self.assertAlmostEqual(copy.node_attraction,
+                               stiffnesses["node_attraction"])
         self.assertEqual(copy.radius, radius)
         self.assertEqual(copy.num_marbles_eaten, 0)
+
+    def test_named_parameters(self):
+
+        pos = np.array([1])
+        vel = np.array([2])
+        acc = np.array([3])
+        mass = 4
+        attraction_funct = ATTRACT_FUNCT
+        stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
+        radius = 9
+        eater = MarbleEaterNode(pos, vel, acc, mass,
+                                attraction_funct,
+                                radius=radius,
+                                ** stiffnesses)
+
+        named_params = eater.named_parameters()
+        expected_names = {'_MarbleEaterNode__radius': radius}
+        self.assertTrue(check_named_parameters(expected_names,
+                                               tuple(named_params)))
+
 
 if __name__ == '__main__':
     unittest.main()
