@@ -23,6 +23,7 @@ October 2020
 Architecture implementing the simulation of a single read+write bit register.
 """
 import numpy as np
+import torch
 from typing import Tuple, Optional, Dict
 
 from experiment_1.marble_eater_node import MarbleEaterNode
@@ -62,7 +63,7 @@ LOCKER_POSITIONS = (
     (110, 150),
     (23.3974596, 100)
 )
-BIT_MARBLE_MASS = -1
+BIT_MARBLE_MASS = -100
 BIT_POS = sum(np.array(pos) for pos in LOCKER_POSITIONS)/3
 BIT_MARBLE_SETTTINGS = generate_node_dict(BIT_POS,
                                           ZERO,
@@ -150,7 +151,7 @@ def __heads_on_to_bit_marble(locker_positions) -> Marble:
     return reader_marble
 
 
-def __at_angle_toward_bit_marble(bit_position: np.ndarray,
+def __at_angle_toward_bit_marble(bit_position: torch.Tensor,
                                  angle: float,
                                  horizontal_distance: float,
                                  stiffnesses: Dict[str, float],
