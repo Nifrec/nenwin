@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Class representing the state of a simulation:
     keeps track of the nodes, marbles, and advances timesteps.
 """
-import numpy as np
+import torch
 from typing import Set, Iterable, Optional, List
 import multiprocessing
 import multiprocessing.connection
@@ -109,14 +109,14 @@ class NenwinModel():
             for marble in list(self.__marbles):
                 self.__feed_marble_if_close_to_any_eater(marble)
 
-    def __compute_net_force_for(self, particle: Node) -> np.ndarray:
+    def __compute_net_force_for(self, particle: Node) -> torch.Tensor:
         """
         Compute net force for [particle] as excerted on it by 
         all other particles in the simulation.
         The result is a 2D matrix with a single row.
         """
         other_particles = self.__all_particles.difference((particle,))
-        net_force = np.zeros((1,) + particle.acc.shape)
+        net_force = torch.zeros((1,) + particle.acc.shape)
         net_force += particle.compute_experienced_force(other_particles)
         return net_force
 

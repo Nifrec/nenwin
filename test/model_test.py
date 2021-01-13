@@ -35,10 +35,8 @@ from experiment_1.marble_eater_node import MarbleEaterNode
 from test_aux import check_close
 from test_aux import TEST_SIMULATION_STEP_SIZE
 from test_aux import runge_kutta_4_step
-from test_aux import TestAttractionFunction
+from test_aux import ATTRACT_FUNCT
 from test_aux import ZERO
-
-ATTRACT_FUNCT = TestAttractionFunction()
 
 
 class ModelTestCase(unittest.TestCase):
@@ -143,10 +141,11 @@ class ModelTestCase(unittest.TestCase):
         model = NenwinModel([node], [marble])
         time_passed = 1
 
-        expected_pos, expected_vel = runge_kutta_4_step(marble.pos,
-                                                        marble.vel,
-                                                        -ATTRACT_FUNCT.value,
-                                                        duration=time_passed)
+        expected_pos, expected_vel = runge_kutta_4_step(
+            marble.pos.clone().detach().numpy(),
+            marble.vel.clone().detach().numpy(),
+            -ATTRACT_FUNCT.value,
+            duration=time_passed)
         model.make_timestep(time_passed)
 
         self.assertTrue(check_close(marble.pos, expected_pos, atol=0.01))
