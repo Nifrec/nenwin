@@ -10,7 +10,7 @@ sufficient other Marbles.
 """
 from __future__ import annotations
 from typing import Optional
-import numpy as np
+import torch
 import abc
 
 from experiment_1.marble_eater_node import MarbleEaterNode
