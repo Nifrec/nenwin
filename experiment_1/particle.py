@@ -77,26 +77,26 @@ class Particle(abc.ABC, nn.Module):
     def device(self) -> torch.device:
         return self.__device
 
-    @ property
+    @property
     def pos(self) -> torch.Tensor:
         return self.__pos.clone().detach().requires_grad_(False)
 
-    @ property
+    @property
     def vel(self) -> torch.Tensor:
         return self.__vel.clone().detach().requires_grad_(False)
 
-    @ property
+    @property
     def acc(self) -> torch.Tensor:
         return self.__acc.clone().detach().requires_grad_(False)
 
-    @ pos.setter
+    @pos.setter
     def pos(self, new_pos: torch.Tensor):
         if (new_pos.shape != self.__pos.shape):
             raise RuntimeError("New position particle has different dimension")
         new_pos = create_param(new_pos, self.device)
         self.__pos = new_pos
 
-    @ acc.setter
+    @acc.setter
     def acc(self, new_acc: torch.Tensor):
         if (new_acc.shape != self.__acc.shape):
             raise RuntimeError(
@@ -156,11 +156,11 @@ class PhysicalParticle(Particle):
         self._attraction_function = attraction_function
         self.__mass = create_param(mass, device)
 
-    @ property
+    @property
     def mass(self) -> float:
-        return self.__mass
+        return self.__mass.item()
 
-    @ mass.setter
+    @mass.setter
     def mass(self, new_mass: float):
         self.__mass = create_param(new_mass,
                                    device=self.device)
@@ -182,8 +182,7 @@ class PhysicalParticle(Particle):
             raise ValueError(
                 "Unexpected shape of forces-array, expected 2 dims")
         self._set_prev_accs()
-        self.acc = torch.tensor(np.sum(forces, axis=0) / abs(self.mass.item()),
-                                dtype=torch.float, device=self.device)
+        self.acc = torch.sum(forces, dim=0) / abs(self.mass)
 
     def compute_attraction_force_to(
             self, other: PhysicalParticle) -> torch.Tensor:
