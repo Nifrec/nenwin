@@ -93,23 +93,14 @@ class Particle(abc.ABC, nn.Module):
 
     @property
     def pos(self) -> torch.Tensor:
-        return self.__pos.clone().detach().requires_grad_(False)
-
-    def get_pos_with_grad(self) -> torch.Tensor:
         return self.__pos.clone()
 
     @property
     def vel(self) -> torch.Tensor:
-        return self.__vel.clone().detach().requires_grad_(False)
-
-    def get_vel_with_grad(self) -> torch.Tensor:
         return self.__vel.clone()
 
     @property
     def acc(self) -> torch.Tensor:
-        return self.__acc.clone().detach().requires_grad_(False)
-
-    def get_acc_with_grad(self) -> torch.Tensor:
         return self.__acc.clone()
 
     @pos.setter
