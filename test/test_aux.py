@@ -70,6 +70,9 @@ def check_named_parameters(expected: Dict[str, object],
                 param = param.clone().detach().numpy()
                 output = True and check_close(expected_value, param)
     output = output and (len(expected) == 0)
+
+    if not output:
+        print(f"check_named_parameters: Remaining names: {expected}")
     return output
 
 

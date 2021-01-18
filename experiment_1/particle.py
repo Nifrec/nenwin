@@ -46,10 +46,10 @@ class Particle(abc.ABC, nn.Module):
         nn.Module.__init__(self)
         self.__device = device
         self.__check_input_dims(pos, vel, acc)
-        self.__pos = create_param(pos, device)
+        self.__pos = self.__init_motion_tensor(pos)
         self.__prev_pos = self.__init_prev_value(pos)
-        self.__vel = create_param(vel, device)
-        self.__acc = create_param(acc, device)
+        self.__vel = self.__init_motion_tensor(vel)
+        self.__acc = self.__init_motion_tensor(acc)
         # Previous value of self.acc (updated when self.acc changes)
         self._prev_acc = self.__init_prev_value(acc)
         # The value of self.acc that came *before* prev_acc
@@ -59,6 +59,20 @@ class Particle(abc.ABC, nn.Module):
         if (pos.shape != vel.shape) or (pos.shape != acc.shape):
             raise ValueError("Input values have mismatching dimensions: "
                              + f"{pos.shape}, {vel.shape}, {acc.shape}")
+
+    def __init_motion_tensor(self,
+                             vector: Union[np.ndarray, torch.Tensor]
+                             ) -> torch.Tensor:
+        """
+        Convert input arguments for pos, vel and acc to right datatype.
+        """
+        if isinstance(vector, np.ndarray):
+            return torch.tensor(vector,
+                                dtype=torch.float,
+                                device=self.device,
+                                requires_grad=True)
+        else:
+            return vector.to(dtype=torch.float, device=self.device)
 
     def __init_prev_value(self,
                           vector: Union[np.ndarray, torch.Tensor]
@@ -81,20 +95,35 @@ class Particle(abc.ABC, nn.Module):
     def pos(self) -> torch.Tensor:
         return self.__pos.clone().detach().requires_grad_(False)
 
+    def get_pos_with_grad(self) -> torch.Tensor:
+        return self.__pos.clone()
+
     @property
     def vel(self) -> torch.Tensor:
         return self.__vel.clone().detach().requires_grad_(False)
+
+    def get_vel_with_grad(self) -> torch.Tensor:
+        return self.__vel.clone()
 
     @property
     def acc(self) -> torch.Tensor:
         return self.__acc.clone().detach().requires_grad_(False)
 
+    def get_acc_with_grad(self) -> torch.Tensor:
+        return self.__acc.clone()
+
     @pos.setter
     def pos(self, new_pos: torch.Tensor):
         if (new_pos.shape != self.__pos.shape):
             raise RuntimeError("New position particle has different dimension")
-        new_pos = create_param(new_pos, self.device)
-        self.__pos = new_pos
+        self.__pos = self.__init_motion_tensor(new_pos)
+
+    @ vel.setter
+    def vel(self, new_vel: torch.Tensor):
+        if (new_vel.shape != self.__vel.shape):
+            raise RuntimeError("New velocity particle has different dimension")
+        new_vel = create_param(new_vel, self.device)
+        self.__vel = self.__init_motion_tensor(new_vel)
 
     @acc.setter
     def acc(self, new_acc: torch.Tensor):
@@ -102,8 +131,7 @@ class Particle(abc.ABC, nn.Module):
             raise RuntimeError(
                 "New acceleration particle has different dimension")
         self._set_prev_accs()
-        new_acc = create_param(new_acc, self.device)
-        self.__acc = new_acc
+        self.__acc = self.__init_motion_tensor(new_acc)
 
     def _set_prev_accs(self):
         """
@@ -112,13 +140,6 @@ class Particle(abc.ABC, nn.Module):
         """
         self._prev_prev_acc = self._prev_acc
         self._prev_acc = self.acc
-
-    @ vel.setter
-    def vel(self, new_vel: torch.Tensor):
-        if (new_vel.shape != self.__vel.shape):
-            raise RuntimeError("New velocity particle has different dimension")
-        new_vel = create_param(new_vel, self.device)
-        self.__vel = new_vel
 
     def update_movement(self, time_passed: float):
         """
@@ -139,7 +160,49 @@ class Particle(abc.ABC, nn.Module):
         return Particle(self.pos, self.vel, self.acc)
 
 
-class PhysicalParticle(Particle):
+class InitialValueParticle(Particle):
+    """
+    Variant of Particle with the same properties,
+    but with its *initial* pos, vel and acc as trainable parameters.
+    Has a function to restore its pos, vel and acc 
+    to the original (optimized) value.
+    """
+
+    def __init__(self,
+                 pos: Union[np.ndarray, torch.Tensor],
+                 vel: Union[np.ndarray, torch.Tensor],
+                 acc: Union[np.ndarray, torch.Tensor],
+                 device: Optional[Union[torch.device, str]] = DEVICE):
+        Particle.__init__(self, pos, vel, acc, device)
+        self.__init_pos = create_param(pos, device=device)
+        self.__init_vel = create_param(vel, device=device)
+        self.__init_acc = create_param(acc, device=device)
+
+        # Note: detach() is intentionally *not* used,
+        # the initial values need to be optimized
+        self.pos = 1 * self.__init_pos
+        self.vel = 1 * self.__init_vel
+        self.acc = 1 * self.__init_acc
+
+    @property
+    def init_pos(self):
+        return self.__init_pos.clone()
+
+    @property
+    def init_vel(self):
+        return self.__init_vel.clone()
+
+    @property
+    def init_acc(self):
+        return self.__init_acc.clone()
+
+    def reset(self):
+        self.pos = self.__init_pos.clone()
+        self.vel = self.__init_vel.clone()
+        self.acc = self.__init_acc.clone()
+
+
+class PhysicalParticle(InitialValueParticle):
     """
     Particle with mass (negative mass allowed).
     Has a gravity field defines around it, that can locally be inferred.
@@ -204,7 +267,10 @@ class PhysicalParticle(Particle):
 def create_param(vector: Union[np.ndarray, torch.Tensor, float],
                  device: torch.device = DEVICE) -> nn.Parameter:
     if isinstance(vector, torch.Tensor):
-        output = vector.clone().detach().to(device)
+        output = vector.clone().to(device).requires_grad_(True)
     else:
-        output = torch.tensor(vector, dtype=torch.float, device=device)
+        output = torch.tensor(vector,
+                              dtype=torch.float,
+                              device=device,
+                              requires_grad=True)
     return nn.Parameter(output)

@@ -157,19 +157,6 @@ class ParticleTestCase(unittest.TestCase):
         self.assertTrue(check_close(vel, copy.vel))
         self.assertTrue(check_close(pos, copy.pos))
 
-    def test_parameters(self):
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
-        particle = Particle(pos, vel, acc)
-
-        named_params = particle.named_parameters()
-        expected_names = {'_Particle__pos': pos,
-                          '_Particle__vel': vel,
-                          '_Particle__acc': acc}
-        self.assertTrue(check_named_parameters(expected_names,
-                                               tuple(named_params)))
-
 
 if __name__ == '__main__':
     unittest.main()
