@@ -51,19 +51,6 @@ class InitialValueParticleTestCase(unittest.TestCase):
         self.assertTrue(check_named_parameters(expected_names,
                                                tuple(named_params)))
 
-    # Not used because of technical difficulties:
-
-    # def test_set_initial_pos(self):
-    #     pos = np.array([1, 3, 2])
-    #     vel = np.array([1, 1, 1])
-    #     acc = np.array([0, 0, 0])
-    #     particle = InitialValueParticle(pos, vel, acc)
-
-    #     new_pos = np.array([1, 2, 3])
-    #     particle.pos = new_pos
-    #     self.assertTrue(check_close(
-    #         new_pos, particle._InitialValueParticle__init_pos.detach().numpy()))
-
     def test_gradients(self):
         """
         Test if the gradients flow back from the pos to the initial pos.
@@ -73,19 +60,15 @@ class InitialValueParticleTestCase(unittest.TestCase):
         acc = np.array([0, 0, 0])
         particle = InitialValueParticle(pos, vel, acc)
         loss = torch.tensor([1, 1, 1], dtype=torch.float, requires_grad=True) 
-        loss = loss / particle.get_pos_with_grad()
+        loss = loss / particle.pos
         loss = torch.sum(loss)
 
-        print(loss)
-        print(particle._InitialValueParticle__init_pos)
         loss.backward()
-        print(particle._InitialValueParticle__init_pos.grad)
-        print(particle._Particle__pos.grad)
 
 
         not_expected = torch.tensor([0, 0, 0], dtype=torch.float)
-        self.assertFalse(torch.allclose(not_expected,
-                                       particle._InitialValueParticle__init_pos.grad))
+        self.assertFalse(torch.allclose(
+            not_expected, particle._InitialValueParticle__init_pos.grad))
 
 
 if __name__ == '__main__':
