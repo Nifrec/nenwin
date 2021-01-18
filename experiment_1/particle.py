@@ -109,11 +109,10 @@ class Particle(abc.ABC, nn.Module):
             raise RuntimeError("New position particle has different dimension")
         self.__pos = self.__init_motion_tensor(new_pos)
 
-    @ vel.setter
+    @vel.setter
     def vel(self, new_vel: torch.Tensor):
         if (new_vel.shape != self.__vel.shape):
             raise RuntimeError("New velocity particle has different dimension")
-        new_vel = create_param(new_vel, self.device)
         self.__vel = self.__init_motion_tensor(new_vel)
 
     @acc.setter
