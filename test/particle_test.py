@@ -42,9 +42,12 @@ class ParticleTestCase(unittest.TestCase):
         acc = np.array([0, 0, 0])
         particle = Particle(pos, vel, acc)
 
-        self.assertTrue(np.allclose(particle.pos, pos), "Pos getter")
-        self.assertTrue(np.allclose(particle.vel, vel), "Vel getter")
-        self.assertTrue(np.allclose(particle.acc, acc), "Acc getter")
+        self.assertTrue(np.allclose(particle.pos.detach().numpy(), pos),
+                        "Pos getter")
+        self.assertTrue(np.allclose(particle.vel.detach().numpy(), vel),
+                        "Vel getter")
+        self.assertTrue(np.allclose(particle.acc.detach().numpy(), acc),
+                        "Acc getter")
 
     def test_particle_setters(self):
         pos = np.array([1, 3, 2])
@@ -60,9 +63,12 @@ class ParticleTestCase(unittest.TestCase):
         particle.vel = vel2
         particle.acc = acc2
 
-        self.assertTrue(np.allclose(particle.pos, pos2), "Pos setter")
-        self.assertTrue(np.allclose(particle.vel, vel2), "Vel setter")
-        self.assertTrue(np.allclose(particle.acc, acc2), "Acc setter")
+        self.assertTrue(np.allclose(particle.pos.detach().numpy(), pos2),
+                        "Pos setter")
+        self.assertTrue(np.allclose(particle.vel.detach().numpy(), vel2),
+                        "Vel setter")
+        self.assertTrue(np.allclose(particle.acc.detach().numpy(), acc2),
+                        "Acc setter")
 
     def test_particle_setters_dim_check(self):
         pos = np.array([1, 3, 2])
@@ -108,9 +114,11 @@ class ParticleTestCase(unittest.TestCase):
             p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
-        self.assertTrue(check_close(p.acc, acc))  # Should not have changed
-        self.assertTrue(check_close(p.pos, expected[0]))
-        self.assertTrue(check_close(p.vel, expected[1]))
+        
+        self.assertTrue(check_close(p.pos.detach().numpy(), expected[0]))
+        self.assertTrue(check_close(p.vel.detach().numpy(), expected[1]))
+        # Should not have changed
+        self.assertTrue(check_close(p.acc.detach().numpy(), acc))  
 
     def test_movement_2(self):
         """
@@ -124,9 +132,10 @@ class ParticleTestCase(unittest.TestCase):
             p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
-        self.assertTrue(check_close(acc, p.acc))  # Should not have changed
-        self.assertTrue(check_close(expected[1], p.vel))
-        self.assertTrue(check_close(expected[0], p.pos))
+        self.assertTrue(check_close(expected[1], p.vel.detach().numpy()))
+        self.assertTrue(check_close(expected[0], p.pos.detach().numpy()))
+        # Should not have changed
+        self.assertTrue(check_close(acc, p.acc.detach().numpy()))  
 
     def test_movement_3(self):
         """
@@ -140,9 +149,9 @@ class ParticleTestCase(unittest.TestCase):
             p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
-        self.assertTrue(check_close(acc, p.acc))
-        self.assertTrue(check_close(vel, p.vel))
-        self.assertTrue(check_close(pos, p.pos))
+        self.assertTrue(check_close(acc, p.acc.detach().numpy()))
+        self.assertTrue(check_close(vel, p.vel.detach().numpy()))
+        self.assertTrue(check_close(pos, p.pos.detach().numpy()))
 
     def test_copy(self):
         pos = np.array([-10, -100])
@@ -153,9 +162,9 @@ class ParticleTestCase(unittest.TestCase):
 
         self.assertFalse(copy is original)
 
-        self.assertTrue(check_close(acc, copy.acc))
-        self.assertTrue(check_close(vel, copy.vel))
-        self.assertTrue(check_close(pos, copy.pos))
+        self.assertTrue(check_close(acc, copy.acc.detach().numpy()))
+        self.assertTrue(check_close(vel, copy.vel.detach().numpy()))
+        self.assertTrue(check_close(pos, copy.pos.detach().numpy()))
 
 
 if __name__ == '__main__':
