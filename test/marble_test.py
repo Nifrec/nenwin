@@ -24,6 +24,7 @@ Unit-tests for Marble of node.py.
 """
 import unittest
 import numpy as np
+import torch
 
 from experiment_1.attraction_functions.attraction_functions import Gratan
 from experiment_1.node import Marble
@@ -43,9 +44,9 @@ class MarbleTestCase(unittest.TestCase):
         self.assertEqual(m.datum, datum)
 
     def test_copy(self):
-        pos = np.array([1])
-        vel = np.array([2])
-        acc = np.array([3])
+        pos = torch.tensor([1.])
+        vel = torch.tensor([2.])
+        acc = torch.tensor([3.])
         mass = 4
         datum = 5
         attraction_funct = ATTRACT_FUNCT
@@ -56,9 +57,9 @@ class MarbleTestCase(unittest.TestCase):
 
         self.assertFalse(copy is original)
 
-        self.assertTrue(check_close(acc, copy.acc))
-        self.assertTrue(check_close(vel, copy.vel))
-        self.assertTrue(check_close(pos, copy.pos))
+        self.assertTrue(torch.allclose(acc, copy.acc))
+        self.assertTrue(torch.allclose(vel, copy.vel))
+        self.assertTrue(torch.allclose(pos, copy.pos))
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
         self.assertAlmostEqual(copy.marble_stiffness,

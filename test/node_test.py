@@ -32,10 +32,9 @@ from experiment_1.particle import PhysicalParticle
 from experiment_1.auxliary import generate_stiffness_dict
 from test_aux import ATTRACT_FUNCT
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
-from test_aux import check_close
 from test_aux import ZERO
 from test_aux import check_named_parameters
-
+ZERO = torch.tensor(ZERO, dtype=torch.float)
 
 class NodeTestCase(unittest.TestCase):
 
@@ -86,7 +85,7 @@ class NodeTestCase(unittest.TestCase):
         """
         node_attraction = 0.5
         # Position -1 ensures it will be pulled towards '+' x-direction
-        node = Node(np.array([-1]), ZERO, ZERO, 0, None, 0, 0, 0, 0)
+        node = Node(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None, 0, 0, 0, 0)
         particle = create_particle(0, 0, 0, node_attraction)
 
         result = particle.compute_attraction_force_to(node)
@@ -97,7 +96,7 @@ class NodeTestCase(unittest.TestCase):
         Corner case: should not attract any node if the multiplier is 0.
         """
         node_attraction = 0
-        node = Node(np.array([-1]), ZERO, ZERO, 0, None, 0, 0, 1, 1)
+        node = Node(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None, 0, 0, 1, 1)
         particle = create_particle(0, 0, 0, node_attraction)
         result = particle.compute_attraction_force_to(node)
         self.assertEqual(result, 0)
@@ -109,7 +108,7 @@ class NodeTestCase(unittest.TestCase):
         """
         marble_attraction = 0.5
         # Position -1 ensures it will be pulled towards '+' x-direction
-        marble = Marble(np.array([-1]), ZERO, ZERO, 0, None, None)
+        marble = Marble(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None, None)
         particle = create_particle(0, 0, marble_attraction, 0)
 
         result = particle.compute_attraction_force_to(marble)
@@ -120,7 +119,7 @@ class NodeTestCase(unittest.TestCase):
         Corner case: should not attract any node if the multiplier is 0.
         """
         marble_attraction = 0
-        marble = Marble(np.array([-1]), ZERO, ZERO, 0, None, None)
+        marble = Marble(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None, None)
         particle = create_particle(0, 0, marble_attraction, 0)
         result = particle.compute_attraction_force_to(marble)
         self.assertEqual(result, 0)
@@ -129,7 +128,7 @@ class NodeTestCase(unittest.TestCase):
         """
         Corner case: can only compute attraction to Marbles and Nodes.
         """
-        other = PhysicalParticle(np.array([-1]), ZERO, ZERO, 0, None)
+        other = PhysicalParticle(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None)
         particle = create_particle(0, 0, 0, 0)
         self.assertRaises(
             ValueError, particle.compute_attraction_force_to, other)
@@ -139,7 +138,7 @@ class NodeTestCase(unittest.TestCase):
         Base case: 50% stiffness to a single Marble.
         """
         marble_stiffness = 0.5
-        marble = Marble(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        marble = Marble(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
         particle = create_particle(marble_stiffness, 0, 0, 0)
 
         expected = (1-marble_stiffness)*ATTRACT_FUNCT.value
@@ -153,7 +152,7 @@ class NodeTestCase(unittest.TestCase):
         Base case: 1% stiffness to a single Node.
         """
         node_stiffness = 0.01
-        node = Node(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
+        node = Node(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
         particle = create_particle(0, node_stiffness, 0, 0)
 
         expected = (1-node_stiffness)*ATTRACT_FUNCT.value
@@ -168,13 +167,13 @@ class NodeTestCase(unittest.TestCase):
         """
         node_stiffness = 1
         marble_stiffness = 1
-        marble = Marble(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
-        node = Node(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
+        marble = Marble(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        node = Node(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
         particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
 
         expected = ZERO
         result = particle.compute_experienced_force(set([node]))
-        self.assertTrue(check_close(expected, result),
+        self.assertTrue(torch.allclose(expected, result),
                         "zero stiffness, "
                         + f"got: {result}, exptected:{expected}")
 
@@ -198,8 +197,8 @@ class NodeTestCase(unittest.TestCase):
         """
         node_stiffness = 0.1
         marble_stiffness = 0.6
-        node = Node(np.array([1]), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 0, 0)
-        marble = Marble(np.array([-1]), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        node = Node(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 0, 0)
+        marble = Marble(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
         particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
 
         expected = node_stiffness*ATTRACT_FUNCT.value \
@@ -207,9 +206,9 @@ class NodeTestCase(unittest.TestCase):
         result = particle.compute_experienced_force(set([node, marble]))
 
     def test_copy(self):
-        pos = np.array([1])
-        vel = np.array([2])
-        acc = np.array([3])
+        pos = torch.tensor([1.], dtype=torch.float)
+        vel = torch.tensor([2.], dtype=torch.float)
+        acc = torch.tensor([3.], dtype=torch.float)
         mass = 4
         attraction_funct = ATTRACT_FUNCT
         stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
@@ -219,9 +218,9 @@ class NodeTestCase(unittest.TestCase):
 
         self.assertFalse(copy is original)
 
-        self.assertTrue(check_close(acc, copy.acc))
-        self.assertTrue(check_close(vel, copy.vel))
-        self.assertTrue(check_close(pos, copy.pos))
+        self.assertTrue(torch.allclose(acc, copy.acc))
+        self.assertTrue(torch.allclose(vel, copy.vel))
+        self.assertTrue(torch.allclose(pos, copy.pos))
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
         self.assertAlmostEqual(copy.marble_stiffness,
@@ -234,9 +233,9 @@ class NodeTestCase(unittest.TestCase):
                                stiffnesses["node_attraction"])
 
     def test_parameters(self):
-        pos = np.array([1])
-        vel = np.array([2])
-        acc = np.array([3])
+        pos = torch.tensor([1], dtype=torch.float)
+        vel = torch.tensor([2], dtype=torch.float)
+        acc = torch.tensor([3], dtype=torch.float)
         mass = 4
         attraction_funct = ATTRACT_FUNCT
         stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)

@@ -24,20 +24,20 @@ Unit-tests for PhysicalParticle of particle.py.
 """
 import unittest
 import numpy as np
+import torch
 
 from experiment_1.particle import Particle
 from experiment_1.particle import PhysicalParticle
 from experiment_1.attraction_functions.attraction_functions import Gratan
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
-from test_aux import check_close
 from test_aux import runge_kutta_4_step
 
 class PhysicalParticleTestCase(unittest.TestCase):
 
     def test_mass_setter_getter(self):
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         mass = 0
         particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
 
@@ -52,65 +52,65 @@ class PhysicalParticleTestCase(unittest.TestCase):
         """
         Base case: apply two forces in different directions.
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([10, 9, 0], dtype=torch.float)
         mass = 2
         particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
 
-        forces = np.array([[1, 2, 3], [-4, -5, -7]])
-        expected_net_force = np.array([-3, -3, -4])
+        forces = torch.tensor([[1, 2, 3], [-4, -5, -7]], dtype=torch.float)
+        expected_net_force = torch.tensor([-3, -3, -4], dtype=torch.float)
         expected_acc = expected_net_force / mass
 
         particle.update_acceleration(forces)
 
-        self.assertTrue(check_close(particle.acc, expected_acc))
+        self.assertTrue(torch.allclose(particle.acc, expected_acc))
 
     def test_update_acceleration_2(self):
         """
         Corner case: empty force set (that is allowed!)
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([10, 9, 0], dtype=torch.float)
         mass = 2
         particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
 
-        forces = np.array([])
-        expected_acc = np.zeros(3)
+        forces = torch.tensor([], dtype=torch.float)
+        expected_acc =torch.zeros(3)
 
         particle.update_acceleration(forces)
 
-        self.assertTrue(check_close(particle.acc, expected_acc))
+        self.assertTrue(torch.allclose(particle.acc, expected_acc))
 
     def test_update_acceleration_3(self):
         """
         Corner case: negative mass, should not affect direction.
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([10, 9, 0], dtype=torch.float)
         mass = -2
         particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
 
-        forces = np.array([[1, 1, 1]])
-        expected_acc = np.array([0.5, 0.5, 0.5])
+        forces = torch.tensor([[1, 1, 1]], dtype=torch.float)
+        expected_acc = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float)
 
         particle.update_acceleration(forces)
 
-        self.assertTrue(check_close(particle.acc, expected_acc))
+        self.assertTrue(torch.allclose(particle.acc, expected_acc))
 
     def test_update_acceleration_force_vector_dim_error(self):
         """
         Input [forces] does not have 2 dimensions.
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         mass = 2
         particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
 
-        forces = np.array([1, 2, 3])
+        forces = torch.tensor([1, 2, 3], dtype=torch.float)
         self.assertRaises(ValueError,
                           particle.update_acceleration,
                           forces)
@@ -120,13 +120,13 @@ class PhysicalParticleTestCase(unittest.TestCase):
         Input [forces] has 2 dimensions but wrong length force vector 
         (too long).
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         mass = 2
         particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
 
-        forces = np.array([[1, 2, 3, 4]])
+        forces = torch.tensor([[1, 2, 3, 4]], dtype=torch.float)
         self.assertRaises(ValueError,
                           particle.update_acceleration,
                           forces)
@@ -136,13 +136,13 @@ class PhysicalParticleTestCase(unittest.TestCase):
         Input [forces] has 2 dimensions but wrong length force vector 
         (too short).
         """
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         mass = 2
         particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
 
-        forces = np.array([[1, 2]])
+        forces = torch.tensor([[1, 2]], dtype=torch.float)
         self.assertRaises(ValueError,
                           particle.update_acceleration,
                           forces)
@@ -152,23 +152,23 @@ class PhysicalParticleTestCase(unittest.TestCase):
         Positive attraction direction.
         """
         attraction_funct = Gratan()
-        pos1 = np.array([1, 1, 1])
-        vel1 = np.array([0, 0, 0])
-        acc1 = np.array([0, 0, 0])
+        pos1 = torch.tensor([1, 1, 1], dtype=torch.float)
+        vel1 = torch.tensor([0, 0, 0], dtype=torch.float)
+        acc1 = torch.tensor([0, 0, 0], dtype=torch.float)
         mass1 = 2
         p1 = PhysicalParticle(pos1, vel1, acc1, mass1, attraction_funct)
 
-        pos2 = np.array([0, 0, 0])
-        vel2 = np.array([0, 0, 0])
-        acc2 = np.array([0, 0, 0])
+        pos2 = torch.tensor([0, 0, 0], dtype=torch.float)
+        vel2 = torch.tensor([0, 0, 0], dtype=torch.float)
+        acc2 = torch.tensor([0, 0, 0], dtype=torch.float)
         mass2 = 3
         p2 = PhysicalParticle(pos2, vel2, acc2, mass2, attraction_funct)
 
         # p2 is pulled towards positive all directions
-        expected = np.array([np.sqrt(3)/3, np.sqrt(3)/3, np.sqrt(3)/3]) \
-            * attraction_funct.compute_attraction(p1, p2).clone().detach().numpy()
-        result = p1.compute_attraction_force_to(p2).clone().detach().numpy()
-        self.assertTrue(check_close(result, expected))
+        expected = torch.tensor([np.sqrt(3)/3, np.sqrt(3)/3, np.sqrt(3)/3], dtype=torch.float) \
+            * attraction_funct.compute_attraction(p1, p2)
+        result = p1.compute_attraction_force_to(p2)
+        self.assertTrue(torch.allclose(result, expected))
 
 
     def test_compute_attraction_force_to_2(self):
@@ -176,53 +176,53 @@ class PhysicalParticleTestCase(unittest.TestCase):
         Negative attraction direction.
         """
         attraction_funct = Gratan()
-        pos1 = np.array([1, 0, 0])
-        vel1 = np.array([0, 0, 0])
-        acc1 = np.array([0, 0, 0])
+        pos1 = torch.tensor([1, 0, 0], dtype=torch.float)
+        vel1 = torch.tensor([0, 0, 0], dtype=torch.float)
+        acc1 = torch.tensor([0, 0, 0], dtype=torch.float)
         mass1 = 2
         p1 = PhysicalParticle(pos1, vel1, acc1, mass1, attraction_funct)
 
-        pos2 = np.array([10, 0, 0])
-        vel2 = np.array([0, 0, 0])
-        acc2 = np.array([0, 0, 0])
+        pos2 = torch.tensor([10, 0, 0], dtype=torch.float)
+        vel2 = torch.tensor([0, 0, 0], dtype=torch.float)
+        acc2 = torch.tensor([0, 0, 0], dtype=torch.float)
         mass2 = 3
         p2 = PhysicalParticle(pos2, vel2, acc2, mass2, attraction_funct)
 
         # -1 is for the direction, p2 is pulled towards negative x-direction
-        expected = np.array([-1, 0, 0]) \
-            * attraction_funct.compute_attraction(p1, p2).clone().detach().numpy()
-        result = p1.compute_attraction_force_to(p2).clone().detach().numpy()
-        self.assertTrue(check_close(result, expected))
+        expected = torch.tensor([-1, 0, 0], dtype=torch.float) \
+            * attraction_funct.compute_attraction(p1, p2)
+        result = p1.compute_attraction_force_to(p2)
+        self.assertTrue(torch.allclose(result, expected))
 
     def test_compute_attraction_force_to_3(self):
         """
         One particle with negative mass, one with positive mass.
         """
         attraction_funct = Gratan()
-        pos1 = np.array([1, 0, 0])
-        vel1 = np.array([0, 0, 0])
-        acc1 = np.array([0, 0, 0])
+        pos1 = torch.tensor([1, 0, 0], dtype=torch.float)
+        vel1 = torch.tensor([0, 0, 0], dtype=torch.float)
+        acc1 = torch.tensor([0, 0, 0], dtype=torch.float)
         mass1 = 2
         p1 = PhysicalParticle(pos1, vel1, acc1, mass1, attraction_funct)
 
-        pos2 = np.array([10, 0, 0])
-        vel2 = np.array([0, 0, 0])
-        acc2 = np.array([0, 0, 0])
+        pos2 = torch.tensor([10, 0, 0], dtype=torch.float)
+        vel2 = torch.tensor([0, 0, 0], dtype=torch.float)
+        acc2 = torch.tensor([0, 0, 0], dtype=torch.float)
         mass2 = -3
         p2 = PhysicalParticle(pos2, vel2, acc2, mass2, attraction_funct)
 
         # p2 is repelled from p1, 
         # so the force should be in the positive x-direction.
-        expected = np.array([1, 0, 0]) \
-            * attraction_funct.compute_attraction(p1, p2)\
-                .clone().detach().numpy()
-        result = p1.compute_attraction_force_to(p2).clone().detach().numpy()
-        self.assertTrue(check_close(result, expected))
+        expected = torch.tensor([1, 0, 0], dtype=torch.float) \
+            * attraction_funct.compute_attraction(p1, p2)
+                
+        result = p1.compute_attraction_force_to(p2)
+        self.assertTrue(torch.allclose(result, expected, atol=1e-4))
 
     def test_copy(self):
-        pos = np.array([1])
-        vel = np.array([2])
-        acc = np.array([3])
+        pos = torch.tensor([1], dtype=torch.float)
+        vel = torch.tensor([2], dtype=torch.float)
+        acc = torch.tensor([3], dtype=torch.float)
         mass = 4
         attraction_funct = Gratan()
         original = PhysicalParticle(pos, vel, acc, mass, attraction_funct)
@@ -230,16 +230,16 @@ class PhysicalParticleTestCase(unittest.TestCase):
 
         self.assertFalse(copy is original)
 
-        self.assertTrue(check_close(acc, copy.acc))
-        self.assertTrue(check_close(vel, copy.vel))
-        self.assertTrue(check_close(pos, copy.pos))
+        self.assertTrue(torch.allclose(acc, copy.acc))
+        self.assertTrue(torch.allclose(vel, copy.vel))
+        self.assertTrue(torch.allclose(pos, copy.pos))
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
 
     def test_parameters(self):
-        pos = np.array([1])
-        vel = np.array([2])
-        acc = np.array([3])
+        pos = torch.tensor([1], dtype=torch.float)
+        vel = torch.tensor([2], dtype=torch.float)
+        acc = torch.tensor([3], dtype=torch.float)
         mass = 4
         attraction_funct = Gratan()
         particle = PhysicalParticle(pos, vel, acc, mass, attraction_funct)
@@ -249,8 +249,7 @@ class PhysicalParticleTestCase(unittest.TestCase):
         for name, param in named_params:
             if name in set(expected_names.keys()):
                 expected_value = expected_names.pop(name)
-                param = param.clone().detach().numpy()
-                self.assertTrue(check_close(expected_value, param))
+                self.assertTrue(torch.allclose(torch.tensor(expected_value, dtype=torch.float), param))
         self.assertEqual(len(expected_names), 0)
 
 if __name__ == '__main__':

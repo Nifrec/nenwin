@@ -228,7 +228,7 @@ class PhysicalParticle(InitialValueParticle):
         forces, and the second dimension indexing the values of force vectors
         themselves.
         """
-        if forces.size == 0:
+        if forces.shape[0] == 0:
             self.acc *= 0
             return
         if (len(forces.shape) != 2) or (forces[0].shape != self.acc.shape):
@@ -244,7 +244,7 @@ class PhysicalParticle(InitialValueParticle):
         [other] paricle at the position of the other particle.
         """
         difference_vector = (self.pos - other.pos)
-        radius = np.linalg.norm(difference_vector)
+        radius = torch.norm(difference_vector)
         direction = difference_vector / radius
 
         return direction * self._attraction_function(self, other)
