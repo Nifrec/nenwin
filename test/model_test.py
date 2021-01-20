@@ -37,6 +37,7 @@ from test_aux import TEST_SIMULATION_STEP_SIZE
 from test_aux import runge_kutta_4_step
 from test_aux import ATTRACT_FUNCT
 from test_aux import ZERO
+from experiment_1.attraction_functions.attraction_functions import NewtonianGravity
 
 
 class ModelTestCase(unittest.TestCase):
@@ -171,9 +172,67 @@ class ModelTestCase(unittest.TestCase):
 
 class ModelBackpropTestCase(unittest.TestCase):
 
-    def test(self):
-        self.fail("TODO")
+    def setUp(self):
+        self.node = Node(pos=ZERO,
+                    vel=ZERO,
+                    acc=ZERO,
+                    mass=1,
+                    attraction_function=NewtonianGravity(),
+                    marble_stiffness=1,
+                    node_stiffness=1,
+                    marble_attraction=1,
+                    node_attraction=0)
+        self.marble = Marble(pos=np.array([5]),
+                        vel=ZERO,
+                        acc=ZERO,
+                        mass=1,
+                        attraction_function=ATTRACT_FUNCT,
+                        datum=None)
 
+        self.model = NenwinModel([self.node], [self.marble])
+
+    def test_particle_gradients(self):
+        """
+        Base case: a Marble being attracted by a stationary Node,
+        when using Marble's variables to compute loss,
+        also Node.pos should receive gradients 
+        when computing backprop on the loss.
+        """
+        self.model.make_timestep(1.0)
+        self.model.make_timestep(1.0)
+        loss = 2 * self.marble.pos
+        loss.backward()
+
+        self.assertIsNotNone(self.node.init_pos.grad)
+
+    def test_particle_gradients_moving_node(self):
+        """
+        Base case: Marble being attracted by a moving Node,
+        when using Marble's variables to compute loss,
+        also Node.pos should receive gradients 
+        when computing backprop on the loss.
+        """
+        self.node = Node(pos=ZERO,
+                    vel=torch.tensor([0.1]),
+                    acc=ZERO,
+                    mass=1,
+                    attraction_function=NewtonianGravity(),
+                    marble_stiffness=1,
+                    node_stiffness=1,
+                    marble_attraction=1,
+                    node_attraction=0)
+        self.model = NenwinModel([self.node], [self.marble])
+        self.model.make_timestep(1.0)
+        self.model.make_timestep(1.0)
+        self.model.make_timestep(1.0)
+        
+        loss = 2 * self.marble.acc
+        loss.backward()
+
+        self.assertIsNotNone(self.marble.init_pos.grad)
+        self.assertIsNotNone(self.node.init_pos.grad)
+        self.assertIsNotNone(self.node.init_vel.grad)
+        self.assertIsNotNone(self.node._PhysicalParticle__mass.grad)
 
 def generate_dummy_marble() -> Marble:
     """

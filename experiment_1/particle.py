@@ -211,7 +211,7 @@ class PhysicalParticle(InitialValueParticle):
 
     @property
     def mass(self) -> float:
-        return self.__mass.item()
+        return self.__mass.clone()
 
     @mass.setter
     def mass(self, new_mass: float):
