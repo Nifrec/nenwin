@@ -24,6 +24,7 @@ Unit-tests for NenwinModel class of model.py.
 """
 import unittest
 import numpy as np
+import torch
 from typing import Tuple
 
 from experiment_1.node import Node, Marble
@@ -32,7 +33,6 @@ from experiment_1.attraction_functions.attraction_functions \
     import AttractionFunction
 from experiment_1.particle import PhysicalParticle
 from experiment_1.marble_eater_node import MarbleEaterNode
-from test_aux import check_close
 from test_aux import TEST_SIMULATION_STEP_SIZE
 from test_aux import runge_kutta_4_step
 from test_aux import ATTRACT_FUNCT
@@ -114,9 +114,9 @@ class ModelTestCase(unittest.TestCase):
         model = NenwinModel([], [marble])
 
         model.make_timestep(time_passed=1)
-        expected_new_pos = np.array([10])
+        expected_new_pos = torch.tensor([10], dtype=torch.float)
 
-        self.assertTrue(check_close(marble.pos, expected_new_pos))
+        self.assertTrue(torch.allclose(marble.pos, expected_new_pos))
 
     def test_make_timestep_2(self):
         """
@@ -142,20 +142,21 @@ class ModelTestCase(unittest.TestCase):
         time_passed = 1
 
         expected_pos, expected_vel = runge_kutta_4_step(
-            marble.pos.clone().detach().numpy(),
-            marble.vel.clone().detach().numpy(),
+            marble.pos,
+            marble.vel,
             -ATTRACT_FUNCT.value,
             duration=time_passed)
         model.make_timestep(time_passed)
 
-        self.assertTrue(check_close(marble.pos, expected_pos, atol=0.01))
-        self.assertTrue(check_close(marble.vel, expected_vel, atol=0.01))
-        self.assertTrue(check_close(marble.acc, -ATTRACT_FUNCT.value,
-                                    atol=0.01))
+        self.assertTrue(torch.allclose(marble.pos, expected_pos, atol=0.01))
+        self.assertTrue(torch.allclose(marble.vel, expected_vel, atol=0.01))
+        self.assertTrue(torch.isclose(marble.acc,
+                                      torch.tensor(-ATTRACT_FUNCT.value),
+                                      atol=0.01))
 
-        self.assertTrue(check_close(node.pos, ZERO))
-        self.assertTrue(check_close(node.vel, ZERO))
-        self.assertTrue(check_close(node.acc, ZERO))
+        self.assertTrue(torch.allclose(node.pos, ZERO))
+        self.assertTrue(torch.allclose(node.vel, ZERO))
+        self.assertTrue(torch.allclose(node.acc, ZERO))
 
     def test_no_initial_marbles(self):
         """
@@ -166,6 +167,12 @@ class ModelTestCase(unittest.TestCase):
         except:
             self.fail("Initialization of NenwinModel without initial_marbles"
                       + " should not fail.")
+
+
+class ModelBackpropTestCase(unittest.TestCase):
+
+    def test(self):
+        self.fail("TODO")
 
 
 def generate_dummy_marble() -> Marble:

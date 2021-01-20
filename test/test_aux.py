@@ -32,7 +32,7 @@ from experiment_1.attraction_functions.attraction_functions \
 from experiment_1.particle import PhysicalParticle
 NUMERICAL_ABS_ACCURACY_REQUIRED = 10e-5
 TEST_SIMULATION_STEP_SIZE = 0.001
-ZERO = np.array([0])
+ZERO = torch.tensor([0], dtype=torch.float)
 
 ATTRACT_FUNCT = ConstantAttraction()
 
@@ -111,8 +111,8 @@ def runge_kutta_4_step(pos: torch.Tensor,
     High order of accuracy approximation of new position and velocity
     after [duration] of time, given constant acceleration.
     """
-    pos = pos.copy()
-    vel = vel.copy()
+    pos = pos.clone()
+    vel = vel.clone()
 
     for time_step in np.arange(0, duration, step_size):
         k1_v = acc * step_size
