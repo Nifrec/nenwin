@@ -90,7 +90,7 @@ class NewtonianGravity(AttractionFunction):
                            first_particle: PhysicalParticle,
                            second_particle: PhysicalParticle
                            ) -> float:
-        radius = np.linalg.norm(first_particle.pos - second_particle.pos)
+        radius = torch.norm(first_particle.pos - second_particle.pos)
         return first_particle.mass * second_particle.mass / radius**2
 
 
@@ -111,7 +111,7 @@ class ThresholdGravity(NewtonianGravity):
                            first_particle: PhysicalParticle,
                            second_particle: PhysicalParticle
                            ) -> float:
-        radius = np.linalg.norm(first_particle.pos - second_particle.pos)
+        radius = torch.norm(first_particle.pos - second_particle.pos)
 
         if (radius <= self.threshold):
             return super().compute_attraction(first_particle, second_particle)
