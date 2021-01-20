@@ -67,7 +67,7 @@ class InitialValueParticleTestCase(unittest.TestCase):
         loss = torch.sum(loss)
         
         loss.backward()
-        self.assertIsNotNone(self.particle._InitialValueParticle__init_pos.grad)
+        self.assertIsNotNone(self.particle.init_pos.grad)
 
 
     def test_gradients_vel(self):
@@ -79,7 +79,7 @@ class InitialValueParticleTestCase(unittest.TestCase):
         loss = vel - torch.tensor([1, 1, 1], dtype=torch.float, requires_grad=True)
         loss = torch.sum(loss)
         loss.backward()
-        self.assertIsNotNone(self.particle._InitialValueParticle__init_vel.grad)
+        self.assertIsNotNone(self.particle.init_vel.grad)
 
     def test_gradients_acc(self):
         """
@@ -90,8 +90,7 @@ class InitialValueParticleTestCase(unittest.TestCase):
         loss = torch.sum(loss)
 
         loss.backward()
-
-        self.assertIsNotNone(self.particle._InitialValueParticle__init_acc.grad)
+        self.assertIsNotNone(self.particle.init_acc.grad)
 
     def test_reset(self):
         pos = np.array([1, 3, 2])
