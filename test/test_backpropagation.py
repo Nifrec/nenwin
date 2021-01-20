@@ -38,26 +38,43 @@ from test_aux import ATTRACT_FUNCT
 
 class BackPropTestCase(unittest.TestCase):
 
+
+    def setUp(self):
+        pos = torch.tensor([0], dtype=torch.float)
+        vel = pos.clone().detach()
+        acc = pos.clone().detach()
+        self.marble = Marble(pos, vel, acc, mass=1,
+                        attraction_function=ATTRACT_FUNCT,
+                        datum=None)
+
     def test_backprop_single_marble(self):
         """
         Base case: run backward() on a single Marble, and check if any errors
         occur, and if the gradient is set.
         """
-        pos = torch.tensor([0], dtype=torch.float)
-        vel = pos.clone().detach()
-        acc = pos.clone().detach()
-        marble = Marble(pos, vel, acc, mass=1,
-                        attraction_function=ATTRACT_FUNCT,
-                        datum=None)
-        marble.update_acceleration(torch.tensor([[.5]]))
-        marble.update_movement(time_passed=1)
-        loss = torch.tensor([1]) - marble._Particle__pos
+        self.marble.update_acceleration(torch.tensor([[.5]]))
+        self.marble.update_movement(time_passed=1)
+        loss = torch.tensor([1]) - self.marble.pos
         loss.backward()
 
         not_expected = torch.tensor([0], dtype=torch.float)
         self.assertFalse(torch.isclose(not_expected,
-                                       marble._Particle__pos.grad))
+                                       self.marble.init_pos.grad))
 
+    # def test_backprop_clone(self):
+    #     """
+    #     Base case: run backward() on a clone of a Marble, 
+    #     and check if also the gradient of the original is set.
+    #     """
+    #     marble = self.marble
+    #     marble.update_acceleration(torch.tensor([[.5]]))
+    #     marble.update_movement(time_passed=1)
+    #     loss = torch.tensor([1]) - marble._Particle__pos
+    #     loss.backward()
+
+    #     not_expected = torch.tensor([0], dtype=torch.float)
+    #     self.assertFalse(torch.isclose(not_expected,
+    #                                    marble._Particle__pos.grad))    
 
 if __name__ == "__main__":
     unittest.main()
