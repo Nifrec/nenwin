@@ -66,13 +66,13 @@ class Particle(abc.ABC, nn.Module):
         """
         Convert input arguments for pos, vel and acc to right datatype.
         """
-        if isinstance(vector, np.ndarray):
+        if isinstance(vector, torch.Tensor):
+            return vector.to(dtype=torch.float, device=self.device)
+        else:
             return torch.tensor(vector,
                                 dtype=torch.float,
                                 device=self.device,
                                 requires_grad=True)
-        else:
-            return vector.to(dtype=torch.float, device=self.device)
 
     def __init_prev_value(self,
                           vector: Union[np.ndarray, torch.Tensor]
@@ -86,6 +86,11 @@ class Particle(abc.ABC, nn.Module):
         else:
             return torch.tensor(vector, dtype=torch.float,
                                 device=self.device, requires_grad=False)
+
+    def __repr__(self) -> str:
+        output = f"Particle({repr(self.pos)},{repr(self.vel)},{repr(self.acc)},"
+        output += f"{repr(self.__device)})"
+        return output
 
     @property
     def device(self) -> torch.device:

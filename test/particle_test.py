@@ -116,11 +116,11 @@ class ParticleTestCase(unittest.TestCase):
             p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
-        
+
         self.assertTrue(check_close(p.pos, expected[0]))
         self.assertTrue(check_close(p.vel, expected[1]))
         # Should not have changed
-        self.assertTrue(check_close(p.acc, acc))  
+        self.assertTrue(check_close(p.acc, acc))
 
     def test_movement_2(self):
         """
@@ -137,7 +137,7 @@ class ParticleTestCase(unittest.TestCase):
         self.assertTrue(check_close(expected[1], p.vel))
         self.assertTrue(check_close(expected[0], p.pos))
         # Should not have changed
-        self.assertTrue(check_close(acc, p.acc))  
+        self.assertTrue(check_close(acc, p.acc))
 
     def test_movement_3(self):
         """
@@ -167,6 +167,17 @@ class ParticleTestCase(unittest.TestCase):
         self.assertTrue(check_close(acc, copy.acc))
         self.assertTrue(check_close(vel, copy.vel))
         self.assertTrue(check_close(pos, copy.pos))
+
+    def test_repr(self):
+        pos = torch.tensor([0], dtype=torch.float)
+        vel = torch.tensor([1], dtype=torch.float)
+        acc = torch.tensor([2], dtype=torch.float)
+
+        expected = f"Particle({repr(pos)},{repr(vel)},"\
+            + f"{repr(acc)},{repr(DEVICE)})"
+        result = repr(Particle(pos, vel, acc))
+        self.assertEqual(expected, result)
+
 
 if __name__ == '__main__':
     unittest.main()
