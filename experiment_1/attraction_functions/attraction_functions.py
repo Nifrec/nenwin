@@ -93,6 +93,9 @@ class NewtonianGravity(AttractionFunction):
         radius = torch.norm(first_particle.pos - second_particle.pos)
         return first_particle.mass * second_particle.mass / radius**2
 
+    def __repr__(self) -> str:
+        return "NewtonianGravity()"
+
 
 class ThresholdGravity(NewtonianGravity):
     """
@@ -118,6 +121,9 @@ class ThresholdGravity(NewtonianGravity):
         else:
             return 0
 
+    def __repr__(self) -> str:
+        return f"ThresholdGravity({self.__threshold})"
+
 
 class TrainableThresholdGravity(ThresholdGravity, nn.Module):
     def __init__(self, threshold: float):
@@ -130,6 +136,9 @@ class TrainableThresholdGravity(ThresholdGravity, nn.Module):
     @property
     def threshold(self):
         return self.__threshold.item()
+
+    def __repr__(self) -> str:
+        return f"ThresholdGravity({self.__threshold.item()})"
 
 class ConstantAttraction(AttractionFunction):
     """
