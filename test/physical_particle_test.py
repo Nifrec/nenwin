@@ -257,21 +257,15 @@ class PhysicalParticleTestCase(unittest.TestCase):
         self.assertEqual(len(expected_names), 0)
 
     def test_repr(self):
-        """
-        repr() should return a representation that 
-        shows the *initial* values without gradiens.
-
-        Base case: initial motion values equal current values.
-        """
         pos = torch.tensor([0], dtype=torch.float)
         vel = torch.tensor([1], dtype=torch.float)
         acc = torch.tensor([2], dtype=torch.float)
         mass = 3.0
-        activation_funct = NewtonianGravity()
+        attraction_funct = NewtonianGravity()
 
         expected = f"PhysicalParticle({repr(pos)},{repr(vel)},"\
             + f"{repr(acc)},{mass},NewtonianGravity(),{repr(DEVICE)})"
-        result = repr(PhysicalParticle(pos, vel, acc, mass, activation_funct))
+        result = repr(PhysicalParticle(pos, vel, acc, mass, attraction_funct))
         self.assertEqual(expected, result)
 
 
