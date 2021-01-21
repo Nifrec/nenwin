@@ -29,6 +29,7 @@ import torch
 
 from experiment_1.particle import InitialValueParticle, PhysicalParticle
 from experiment_1.attraction_functions.attraction_functions import Gratan
+from experiment_1.constants import DEVICE
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import runge_kutta_4_step
 from test_aux import check_named_parameters
@@ -105,6 +106,40 @@ class InitialValueParticleTestCase(unittest.TestCase):
         self.assertTrue(torch.allclose(particle.pos, pos))
         self.assertTrue(torch.allclose(particle.vel, vel))
         self.assertTrue(torch.allclose(particle.acc, acc))
+
+    def test_repr_1(self):
+        """
+        repr() should return a representation that 
+        shows the *initial* values without gradiens.
+
+        Base case: initial motion values equal current values.
+        """
+        pos = torch.tensor([0], dtype=torch.float)
+        vel = torch.tensor([1], dtype=torch.float)
+        acc = torch.tensor([2], dtype=torch.float)
+
+        expected = f"InitialValueParticle({repr(pos)},{repr(vel)},"\
+            + f"{repr(acc)},{repr(DEVICE)})"
+        result = repr(InitialValueParticle(pos, vel, acc))
+        self.assertEqual(expected, result)
+
+    def test_repr_2(self):
+        """
+        repr() should return a representation that 
+        shows the *initial* values without gradiens.
+
+        Corner case: initial motion differ from current values.
+        """
+        pos = torch.tensor([0], dtype=torch.float)
+        vel = torch.tensor([1], dtype=torch.float)
+        acc = torch.tensor([2], dtype=torch.float)
+        particle = InitialValueParticle(pos, vel, acc)
+        particle.update_movement(2)
+
+        expected = f"InitialValueParticle({repr(pos)},{repr(vel)},"\
+            + f"{repr(acc)},{repr(DEVICE)})"
+        result = repr(particle)
+        self.assertEqual(expected, result)
 
 if __name__ == '__main__':
     unittest.main()

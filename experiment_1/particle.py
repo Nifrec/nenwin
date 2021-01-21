@@ -89,7 +89,7 @@ class Particle(abc.ABC, nn.Module):
 
     def __repr__(self) -> str:
         output = f"Particle({repr(self.pos)},{repr(self.vel)},{repr(self.acc)},"
-        output += f"{repr(self.__device)})"
+        output += f"{repr(self.device)})"
         return output
 
     @property
@@ -178,6 +178,17 @@ class InitialValueParticle(Particle):
         self.pos = 1 * self.__init_pos
         self.vel = 1 * self.__init_vel
         self.acc = 1 * self.__init_acc
+
+    def __repr__(self):
+
+        pos_as_str = repr(self.init_pos.clone().detach())
+        vel_as_str = repr(self.init_vel.clone().detach())
+        acc_as_str = repr(self.init_acc.clone().detach())
+
+        output = f"InitialValueParticle({pos_as_str}"
+        output += f",{vel_as_str},{acc_as_str},"
+        output += f"{repr(self.device)})"
+        return output
 
     @property
     def init_pos(self):
