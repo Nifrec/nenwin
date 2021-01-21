@@ -25,13 +25,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Unit-tests for InitialValueParticle of particle.py.
 """
 import unittest
-import numpy as np
 import torch
 
 from experiment_1.particle import InitialValueParticle, PhysicalParticle
 from experiment_1.attraction_functions.attraction_functions import Gratan
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
-from test_aux import check_close
 from test_aux import runge_kutta_4_step
 from test_aux import check_named_parameters
 
@@ -39,15 +37,15 @@ from test_aux import check_named_parameters
 class InitialValueParticleTestCase(unittest.TestCase):
 
     def setUp(self):
-        pos = np.array([1, 3, 2])
-        vel = np.array([5, 5, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([5, 5, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         self.particle = InitialValueParticle(pos, vel, acc)
 
     def test_parameters(self):
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         particle = InitialValueParticle(pos, vel, acc)
 
         named_params = particle.named_parameters()
@@ -76,7 +74,7 @@ class InitialValueParticleTestCase(unittest.TestCase):
         """
         # Not a real loss function, just some random differentiable operations
         vel = self.particle.vel
-        loss = vel - torch.tensor([1, 1, 1], dtype=torch.float, requires_grad=True)
+        loss = vel - torch.tensor([1, 1, 1], dtype=torch.float)
         loss = torch.sum(loss)
         loss.backward()
         self.assertIsNotNone(self.particle.init_vel.grad)
@@ -93,20 +91,20 @@ class InitialValueParticleTestCase(unittest.TestCase):
         self.assertIsNotNone(self.particle.init_acc.grad)
 
     def test_reset(self):
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         particle = InitialValueParticle(pos, vel, acc)
 
-        particle.pos = np.array([9, 9, 9])
-        particle.vel = np.array([9, 9, 9])
-        particle.acc = np.array([9, 9, 9])
+        particle.pos = torch.tensor([9, 9, 9], dtype=torch.float)
+        particle.vel = torch.tensor([9, 9, 9], dtype=torch.float)
+        particle.acc = torch.tensor([9, 9, 9], dtype=torch.float)
 
         particle.reset()
 
-        self.assertTrue(check_close(particle.pos.detach().numpy(), pos))
-        self.assertTrue(check_close(particle.vel.detach().numpy(), vel))
-        self.assertTrue(check_close(particle.acc.detach().numpy(), acc))
+        self.assertTrue(torch.allclose(particle.pos, pos))
+        self.assertTrue(torch.allclose(particle.vel, vel))
+        self.assertTrue(torch.allclose(particle.acc, acc))
 
 if __name__ == '__main__':
     unittest.main()
