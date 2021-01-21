@@ -24,10 +24,12 @@ Unit-tests for Particle of particle.py.
 """
 import unittest
 import numpy as np
+import torch
 
 from experiment_1.particle import Particle
 from experiment_1.particle import PhysicalParticle
 from experiment_1.attraction_functions.attraction_functions import Gratan
+from experiment_1.constants import DEVICE
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import check_close
 from test_aux import runge_kutta_4_step
@@ -37,48 +39,48 @@ from test_aux import check_named_parameters
 class ParticleTestCase(unittest.TestCase):
 
     def test_particle_getters(self):
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         particle = Particle(pos, vel, acc)
 
-        self.assertTrue(np.allclose(particle.pos.detach().numpy(), pos),
+        self.assertTrue(torch.allclose(particle.pos, pos),
                         "Pos getter")
-        self.assertTrue(np.allclose(particle.vel.detach().numpy(), vel),
+        self.assertTrue(torch.allclose(particle.vel, vel),
                         "Vel getter")
-        self.assertTrue(np.allclose(particle.acc.detach().numpy(), acc),
+        self.assertTrue(torch.allclose(particle.acc, acc),
                         "Acc getter")
 
     def test_particle_setters(self):
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         particle = Particle(pos, vel, acc)
 
-        pos2 = np.array([1, 2, 3])
-        vel2 = np.array([4, 5, 6])
-        acc2 = np.array([7, 8, 9])
+        pos2 = torch.tensor([1, 2, 3], dtype=torch.float)
+        vel2 = torch.tensor([4, 5, 6], dtype=torch.float)
+        acc2 = torch.tensor([7, 8, 9], dtype=torch.float)
 
         particle.pos = pos2
         particle.vel = vel2
         particle.acc = acc2
 
-        self.assertTrue(np.allclose(particle.pos.detach().numpy(), pos2),
+        self.assertTrue(torch.allclose(particle.pos, pos2),
                         "Pos setter")
-        self.assertTrue(np.allclose(particle.vel.detach().numpy(), vel2),
+        self.assertTrue(torch.allclose(particle.vel, vel2),
                         "Vel setter")
-        self.assertTrue(np.allclose(particle.acc.detach().numpy(), acc2),
+        self.assertTrue(torch.allclose(particle.acc, acc2),
                         "Acc setter")
 
     def test_particle_setters_dim_check(self):
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([0, 0, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([0, 0, 0], dtype=torch.float)
         particle = Particle(pos, vel, acc)
 
-        pos2 = np.array([1, 2, 3, 2])
-        vel2 = np.array([])
-        acc2 = np.array([7, 8])
+        pos2 = torch.tensor([1, 2, 3, 2], dtype=torch.float)
+        vel2 = torch.tensor([], dtype=torch.float)
+        acc2 = torch.tensor([7, 8], dtype=torch.float)
 
         def set_pos(pos):
             particle.pos = pos
@@ -94,9 +96,9 @@ class ParticleTestCase(unittest.TestCase):
         self.assertRaises(RuntimeError, set_acc, acc2)
 
     def test_particle_init_dim_check(self):
-        ok1 = np.array([1, 3, 2])
-        nok = np.array([1, 1, 1, 1])
-        ok2 = np.array([0, 0, 0])
+        ok1 = torch.tensor([1, 3, 2], dtype=torch.float)
+        nok = torch.tensor([1, 1, 1, 1], dtype=torch.float)
+        ok2 = torch.tensor([0, 0, 0], dtype=torch.float)
 
         self.assertRaises(ValueError, Particle, ok1, nok, ok2)
         self.assertRaises(ValueError, Particle, nok, ok1, ok2)
@@ -106,66 +108,65 @@ class ParticleTestCase(unittest.TestCase):
         """
         Base case: positive acceleration.
         """
-        pos = np.array([10, 20])
-        vel = np.array([0, 0])
-        acc = np.array([1, 1])
+        pos = torch.tensor([10, 20], dtype=torch.float)
+        vel = torch.tensor([0, 0], dtype=torch.float)
+        acc = torch.tensor([1, 1], dtype=torch.float)
         p = Particle(pos, vel, acc)
         for _ in range(100):
             p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
         
-        self.assertTrue(check_close(p.pos.detach().numpy(), expected[0]))
-        self.assertTrue(check_close(p.vel.detach().numpy(), expected[1]))
+        self.assertTrue(check_close(p.pos, expected[0]))
+        self.assertTrue(check_close(p.vel, expected[1]))
         # Should not have changed
-        self.assertTrue(check_close(p.acc.detach().numpy(), acc))  
+        self.assertTrue(check_close(p.acc, acc))  
 
     def test_movement_2(self):
         """
         Base case: deacceleration.
         """
-        pos = np.array([-10, -100])
-        vel = np.array([100, 1000])
-        acc = np.array([0, -91])
+        pos = torch.tensor([-10, -100], dtype=torch.float)
+        vel = torch.tensor([100, 1000], dtype=torch.float)
+        acc = torch.tensor([0, -91], dtype=torch.float)
         p = Particle(pos, vel, acc)
         for _ in range(100):
             p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
-        self.assertTrue(check_close(expected[1], p.vel.detach().numpy()))
-        self.assertTrue(check_close(expected[0], p.pos.detach().numpy()))
+        self.assertTrue(check_close(expected[1], p.vel))
+        self.assertTrue(check_close(expected[0], p.pos))
         # Should not have changed
-        self.assertTrue(check_close(acc, p.acc.detach().numpy()))  
+        self.assertTrue(check_close(acc, p.acc))  
 
     def test_movement_3(self):
         """
         Corner case: no vel and no acc => no movement.
         """
-        pos = np.array([-10, -100])
-        vel = np.array([0, 0])
-        acc = np.array([0, 0])
+        pos = torch.tensor([-10, -100], dtype=torch.float)
+        vel = torch.tensor([0, 0], dtype=torch.float)
+        acc = torch.tensor([0, 0], dtype=torch.float)
         p = Particle(pos, vel, acc)
         for _ in range(100):
             p.update_movement(0.01)
 
         expected = runge_kutta_4_step(pos, vel, acc)
-        self.assertTrue(check_close(acc, p.acc.detach().numpy()))
-        self.assertTrue(check_close(vel, p.vel.detach().numpy()))
-        self.assertTrue(check_close(pos, p.pos.detach().numpy()))
+        self.assertTrue(check_close(acc, p.acc))
+        self.assertTrue(check_close(vel, p.vel))
+        self.assertTrue(check_close(pos, p.pos))
 
     def test_copy(self):
-        pos = np.array([-10, -100])
-        vel = np.array([0, 0])
-        acc = np.array([0, 0])
+        pos = torch.tensor([-10, -100], dtype=torch.float)
+        vel = torch.tensor([0, 0], dtype=torch.float)
+        acc = torch.tensor([0, 0], dtype=torch.float)
         original = Particle(pos, vel, acc)
         copy = original.copy()
 
         self.assertFalse(copy is original)
 
-        self.assertTrue(check_close(acc, copy.acc.detach().numpy()))
-        self.assertTrue(check_close(vel, copy.vel.detach().numpy()))
-        self.assertTrue(check_close(pos, copy.pos.detach().numpy()))
-
+        self.assertTrue(check_close(acc, copy.acc))
+        self.assertTrue(check_close(vel, copy.vel))
+        self.assertTrue(check_close(pos, copy.pos))
 
 if __name__ == '__main__':
     unittest.main()
