@@ -179,7 +179,7 @@ class InitialValueParticle(Particle):
         self.vel = 1 * self.__init_vel
         self.acc = 1 * self.__init_acc
 
-    def __repr__(self):
+    def __repr__(self) -> str:
 
         pos_as_str = repr(self.init_pos.clone().detach())
         vel_as_str = repr(self.init_vel.clone().detach())
@@ -224,6 +224,14 @@ class PhysicalParticle(InitialValueParticle):
         super().__init__(pos, vel, acc, device)
         self._attraction_function = attraction_function
         self.__mass = create_param(mass, device)
+
+    def __repr__(self) -> str:
+        output = super().__repr__()
+        output = output.replace("InitialValue", "Physical")
+        output = output.replace(",device",
+                                f",{self.mass.item()},"
+                                +f"{repr(self._attraction_function)},device")
+        return output
 
     @property
     def mass(self) -> float:

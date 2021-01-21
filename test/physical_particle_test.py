@@ -28,9 +28,13 @@ import torch
 
 from experiment_1.particle import Particle
 from experiment_1.particle import PhysicalParticle
+from experiment_1.attraction_functions.attraction_functions \
+    import NewtonianGravity
 from experiment_1.attraction_functions.attraction_functions import Gratan
+from experiment_1.constants import DEVICE
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import runge_kutta_4_step
+
 
 class PhysicalParticleTestCase(unittest.TestCase):
 
@@ -77,7 +81,7 @@ class PhysicalParticleTestCase(unittest.TestCase):
         particle = PhysicalParticle(pos, vel, acc, mass, lambda: None)
 
         forces = torch.tensor([], dtype=torch.float)
-        expected_acc =torch.zeros(3)
+        expected_acc = torch.zeros(3)
 
         particle.update_acceleration(forces)
 
@@ -170,7 +174,6 @@ class PhysicalParticleTestCase(unittest.TestCase):
         result = p1.compute_attraction_force_to(p2)
         self.assertTrue(torch.allclose(result, expected))
 
-
     def test_compute_attraction_force_to_2(self):
         """
         Negative attraction direction.
@@ -211,11 +214,11 @@ class PhysicalParticleTestCase(unittest.TestCase):
         mass2 = -3
         p2 = PhysicalParticle(pos2, vel2, acc2, mass2, attraction_funct)
 
-        # p2 is repelled from p1, 
+        # p2 is repelled from p1,
         # so the force should be in the positive x-direction.
         expected = torch.tensor([1, 0, 0], dtype=torch.float) \
             * attraction_funct.compute_attraction(p1, p2)
-                
+
         result = p1.compute_attraction_force_to(p2)
         self.assertTrue(torch.allclose(result, expected, atol=1e-4))
 
@@ -245,12 +248,32 @@ class PhysicalParticleTestCase(unittest.TestCase):
         particle = PhysicalParticle(pos, vel, acc, mass, attraction_funct)
 
         named_params = particle.named_parameters()
-        expected_names = {'_PhysicalParticle__mass':mass}
+        expected_names = {'_PhysicalParticle__mass': mass}
         for name, param in named_params:
             if name in set(expected_names.keys()):
                 expected_value = expected_names.pop(name)
-                self.assertTrue(torch.allclose(torch.tensor(expected_value, dtype=torch.float), param))
+                self.assertTrue(torch.allclose(torch.tensor(
+                    expected_value, dtype=torch.float), param))
         self.assertEqual(len(expected_names), 0)
+
+    def test_repr(self):
+        """
+        repr() should return a representation that 
+        shows the *initial* values without gradiens.
+
+        Base case: initial motion values equal current values.
+        """
+        pos = torch.tensor([0], dtype=torch.float)
+        vel = torch.tensor([1], dtype=torch.float)
+        acc = torch.tensor([2], dtype=torch.float)
+        mass = 3.0
+        activation_funct = NewtonianGravity()
+
+        expected = f"PhysicalParticle({repr(pos)},{repr(vel)},"\
+            + f"{repr(acc)},{mass},NewtonianGravity(),{repr(DEVICE)})"
+        result = repr(PhysicalParticle(pos, vel, acc, mass, activation_funct))
+        self.assertEqual(expected, result)
+
 
 if __name__ == '__main__':
     unittest.main()
