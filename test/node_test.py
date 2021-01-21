@@ -27,6 +27,8 @@ import numpy as np
 import torch
 
 from experiment_1.attraction_functions.attraction_functions import Gratan
+from experiment_1.attraction_functions.attraction_functions \
+    import NewtonianGravity
 from experiment_1.node import Node, Marble
 from experiment_1.particle import PhysicalParticle
 from experiment_1.auxliary import generate_stiffness_dict
@@ -34,7 +36,7 @@ from test_aux import ATTRACT_FUNCT
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import ZERO
 from test_aux import check_named_parameters
-ZERO = torch.tensor(ZERO, dtype=torch.float)
+
 
 class NodeTestCase(unittest.TestCase):
 
@@ -85,7 +87,8 @@ class NodeTestCase(unittest.TestCase):
         """
         node_attraction = 0.5
         # Position -1 ensures it will be pulled towards '+' x-direction
-        node = Node(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None, 0, 0, 0, 0)
+        node = Node(torch.tensor([-1.], dtype=torch.float),
+                    ZERO, ZERO, 0, None, 0, 0, 0, 0)
         particle = create_particle(0, 0, 0, node_attraction)
 
         result = particle.compute_attraction_force_to(node)
@@ -96,7 +99,8 @@ class NodeTestCase(unittest.TestCase):
         Corner case: should not attract any node if the multiplier is 0.
         """
         node_attraction = 0
-        node = Node(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None, 0, 0, 1, 1)
+        node = Node(torch.tensor([-1.], dtype=torch.float),
+                    ZERO, ZERO, 0, None, 0, 0, 1, 1)
         particle = create_particle(0, 0, 0, node_attraction)
         result = particle.compute_attraction_force_to(node)
         self.assertEqual(result, 0)
@@ -108,7 +112,8 @@ class NodeTestCase(unittest.TestCase):
         """
         marble_attraction = 0.5
         # Position -1 ensures it will be pulled towards '+' x-direction
-        marble = Marble(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None, None)
+        marble = Marble(torch.tensor(
+            [-1.], dtype=torch.float), ZERO, ZERO, 0, None, None)
         particle = create_particle(0, 0, marble_attraction, 0)
 
         result = particle.compute_attraction_force_to(marble)
@@ -119,7 +124,8 @@ class NodeTestCase(unittest.TestCase):
         Corner case: should not attract any node if the multiplier is 0.
         """
         marble_attraction = 0
-        marble = Marble(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None, None)
+        marble = Marble(torch.tensor(
+            [-1.], dtype=torch.float), ZERO, ZERO, 0, None, None)
         particle = create_particle(0, 0, marble_attraction, 0)
         result = particle.compute_attraction_force_to(marble)
         self.assertEqual(result, 0)
@@ -128,7 +134,8 @@ class NodeTestCase(unittest.TestCase):
         """
         Corner case: can only compute attraction to Marbles and Nodes.
         """
-        other = PhysicalParticle(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, None)
+        other = PhysicalParticle(torch.tensor(
+            [-1.], dtype=torch.float), ZERO, ZERO, 0, None)
         particle = create_particle(0, 0, 0, 0)
         self.assertRaises(
             ValueError, particle.compute_attraction_force_to, other)
@@ -138,7 +145,8 @@ class NodeTestCase(unittest.TestCase):
         Base case: 50% stiffness to a single Marble.
         """
         marble_stiffness = 0.5
-        marble = Marble(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        marble = Marble(torch.tensor(
+            [1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
         particle = create_particle(marble_stiffness, 0, 0, 0)
 
         expected = (1-marble_stiffness)*ATTRACT_FUNCT.value
@@ -152,7 +160,8 @@ class NodeTestCase(unittest.TestCase):
         Base case: 1% stiffness to a single Node.
         """
         node_stiffness = 0.01
-        node = Node(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
+        node = Node(torch.tensor([1.], dtype=torch.float),
+                    ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
         particle = create_particle(0, node_stiffness, 0, 0)
 
         expected = (1-node_stiffness)*ATTRACT_FUNCT.value
@@ -167,8 +176,10 @@ class NodeTestCase(unittest.TestCase):
         """
         node_stiffness = 1
         marble_stiffness = 1
-        marble = Marble(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
-        node = Node(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
+        marble = Marble(torch.tensor(
+            [1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        node = Node(torch.tensor([1.], dtype=torch.float),
+                    ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
         particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
 
         expected = ZERO
@@ -197,8 +208,10 @@ class NodeTestCase(unittest.TestCase):
         """
         node_stiffness = 0.1
         marble_stiffness = 0.6
-        node = Node(torch.tensor([1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 0, 0)
-        marble = Marble(torch.tensor([-1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+        node = Node(torch.tensor([1.], dtype=torch.float),
+                    ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 0, 0)
+        marble = Marble(torch.tensor(
+            [-1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
         particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
 
         expected = node_stiffness*ATTRACT_FUNCT.value \
@@ -240,7 +253,7 @@ class NodeTestCase(unittest.TestCase):
         attraction_funct = ATTRACT_FUNCT
         stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
         node = Node(pos, vel, acc, mass, attraction_funct,
-                        **stiffnesses)
+                    **stiffnesses)
 
         named_params = node.named_parameters()
         expected_names = {
@@ -250,6 +263,37 @@ class NodeTestCase(unittest.TestCase):
             '_Node__node_attraction': stiffnesses["node_attraction"]}
         self.assertTrue(check_named_parameters(expected_names,
                                                tuple(named_params)))
+
+    def test_repr(self):
+        pos = torch.tensor([0], dtype=torch.float)
+        vel = torch.tensor([1], dtype=torch.float)
+        acc = torch.tensor([2], dtype=torch.float)
+        mass = 3.0
+        attraction_function = NewtonianGravity()
+        marble_stiffness = 0.4
+        node_stiffness = 0.5
+        marble_attraction = 0.6
+        node_attraction = 0.7
+
+        node = Node(pos, vel, acc, mass, attraction_function, marble_stiffness,
+                    node_stiffness, marble_attraction, node_attraction)
+
+        # Some numerical errors occurs when converting from float to FloatTensor
+        marble_stiffness_float_repr = str(
+            torch.tensor([marble_stiffness]).item())
+        node_stiffness_float_repr = str(
+            torch.tensor([node_stiffness]).item())
+        marble_attraction_float_repr = str(
+            torch.tensor([marble_attraction]).item())
+        node_attraction_float_repr = str(
+            torch.tensor([node_attraction]).item())
+        expected = f"Node({repr(pos)},{repr(vel)},"\
+            + f"{repr(acc)},{mass},NewtonianGravity(),"\
+            + f"{marble_stiffness_float_repr}," \
+            + f"{node_stiffness_float_repr},{marble_attraction_float_repr}," \
+            + f"{node_attraction_float_repr})"
+        result = repr(node)
+        self.assertEqual(expected, result)
 
 
 def create_particle(marble_stiffness,

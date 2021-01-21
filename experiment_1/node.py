@@ -27,6 +27,7 @@ import abc
 import numpy as np
 import torch
 import torch.nn as nn
+import re
 from typing import Union
 from experiment_1.particle import PhysicalParticle
 
@@ -86,6 +87,16 @@ class Node(PhysicalParticle):
                                        device=self.device)
         return nn.Parameter(value_as_tensor)
 
+    def __repr__(self) -> str:
+        output = super().__repr__()
+        output = output.replace("PhysicalParticle", "Node")
+        output = re.sub(r',device\(.*\)', '', output)
+        output += f",{self.marble_stiffness}"
+        output += f",{self.node_stiffness}"
+        output += f",{self.marble_attraction}"
+        output += f",{self.node_attraction})"
+        return output
+    
     @property
     def marble_stiffness(self) -> float:
         return self.__marble_stiffness.item()
