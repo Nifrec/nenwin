@@ -140,7 +140,7 @@ class MarbleEmitter(Emitter):
 
     def __init__(self,
                  prototype: Marble,
-                 delay: flat,
+                 delay: float,
                  stored_mass: Optional[float] = 0,
                  initial_time_passed: Optional[float] = 0):
         if not isinstance(prototype, Marble):
