@@ -171,23 +171,27 @@ class ModelTestCase(unittest.TestCase):
 
 
 class ModelBackpropTestCase(unittest.TestCase):
+    """
+    Testcase tests if backpropagation correctly behaves for particle
+    interaction within a model.
+    """
 
     def setUp(self):
         self.node = Node(pos=ZERO,
-                    vel=ZERO,
-                    acc=ZERO,
-                    mass=1,
-                    attraction_function=NewtonianGravity(),
-                    marble_stiffness=1,
-                    node_stiffness=1,
-                    marble_attraction=1,
-                    node_attraction=0)
+                         vel=ZERO,
+                         acc=ZERO,
+                         mass=1,
+                         attraction_function=NewtonianGravity(),
+                         marble_stiffness=1,
+                         node_stiffness=1,
+                         marble_attraction=1,
+                         node_attraction=0)
         self.marble = Marble(pos=np.array([5]),
-                        vel=ZERO,
-                        acc=ZERO,
-                        mass=1,
-                        attraction_function=ATTRACT_FUNCT,
-                        datum=None)
+                             vel=ZERO,
+                             acc=ZERO,
+                             mass=1,
+                             attraction_function=ATTRACT_FUNCT,
+                             datum=None)
 
         self.model = NenwinModel([self.node], [self.marble])
 
@@ -213,19 +217,19 @@ class ModelBackpropTestCase(unittest.TestCase):
         when computing backprop on the loss.
         """
         self.node = Node(pos=ZERO,
-                    vel=torch.tensor([0.1]),
-                    acc=ZERO,
-                    mass=1,
-                    attraction_function=NewtonianGravity(),
-                    marble_stiffness=1,
-                    node_stiffness=1,
-                    marble_attraction=1,
-                    node_attraction=0)
+                         vel=torch.tensor([0.1]),
+                         acc=ZERO,
+                         mass=1,
+                         attraction_function=NewtonianGravity(),
+                         marble_stiffness=1,
+                         node_stiffness=1,
+                         marble_attraction=1,
+                         node_attraction=0)
         self.model = NenwinModel([self.node], [self.marble])
         self.model.make_timestep(1.0)
         self.model.make_timestep(1.0)
         self.model.make_timestep(1.0)
-        
+
         loss = 2 * self.marble.acc
         loss.backward()
 
@@ -233,6 +237,52 @@ class ModelBackpropTestCase(unittest.TestCase):
         self.assertIsNotNone(self.node.init_pos.grad)
         self.assertIsNotNone(self.node.init_vel.grad)
         self.assertIsNotNone(self.node._PhysicalParticle__mass.grad)
+
+
+class ModelToStringTestCase(unittest.TestCase):
+    """
+    Test if a NenwinModel (including stored particles)
+    can successfully be converted to a string,
+    and also be reloaded from a string.
+    """
+
+    def setUp(self):
+        self.maxDiff = None
+
+    def test_repr_1(self):
+        """
+        Base case: no Nodes, empty set initial Marbles given.
+        """
+        expected = "NenwinModel(set(),set())"
+        result = repr(NenwinModel([], []))
+        self.assertEqual(expected, result)
+
+    def test_repr_2(self):
+        """
+        Base case: no Nodes, no set initial Marbles given.
+        """
+        expected = "NenwinModel(set(),set())"
+        result = repr(NenwinModel([]))
+        self.assertEqual(expected, result)
+
+    def test_repr_3(self):
+        """
+        Base case: Nodes and Marbles given.
+        """
+        marble_pos = torch.tensor([1.])
+        marble_vel = torch.tensor([2.])
+        marble_acc = torch.tensor([3.])
+        marble = Marble(marble_pos, marble_vel, marble_acc, 8,
+                        None, None, 0.4, 0.5, 0.6, 0.7)
+        marble_2 = marble.copy
+        node = Node(ZERO, ZERO, ZERO, 0, None, 0, 0, 0, 0)
+        node_2 = Node(torch.tensor([11.]), torch.tensor([12.]),
+                      torch.tensor([13.]), 14, None, 0, 0, 0, 0)
+        expected = f"NenwinModel({repr(set([node, node_2]))}," \
+            + f"{repr(set([marble, marble_2]))})"
+        result = repr(NenwinModel([node, node_2], [marble, marble_2]))
+        self.assertEqual(expected, result)
+
 
 def generate_dummy_marble() -> Marble:
     """

@@ -62,6 +62,9 @@ class NenwinModel():
             self.__marbles = set([])
         self.__all_particles = self.__nodes.union(self.__marbles)
 
+    def __repr__(self) -> str:
+        return f"NenwinModel({repr(self.__nodes)},{repr(self.__marbles)})"
+
     @property
     def nodes(self) -> Set[Node]:
         """
