@@ -36,6 +36,7 @@ from test_aux import ATTRACT_FUNCT
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import ZERO
 from test_aux import check_named_parameters
+from test_aux import convert_scalar_param_to_repr
 
 
 class NodeTestCase(unittest.TestCase):
@@ -279,14 +280,13 @@ class NodeTestCase(unittest.TestCase):
                     node_stiffness, marble_attraction, node_attraction)
 
         # Some numerical errors occurs when converting from float to FloatTensor
-        marble_stiffness_float_repr = str(
-            torch.tensor([marble_stiffness]).item())
-        node_stiffness_float_repr = str(
-            torch.tensor([node_stiffness]).item())
-        marble_attraction_float_repr = str(
-            torch.tensor([marble_attraction]).item())
-        node_attraction_float_repr = str(
-            torch.tensor([node_attraction]).item())
+        marble_stiffness_float_repr = \
+            convert_scalar_param_to_repr(marble_stiffness)
+        node_stiffness_float_repr = convert_scalar_param_to_repr(node_stiffness)
+        marble_attraction_float_repr = \
+            convert_scalar_param_to_repr(marble_attraction)
+        node_attraction_float_repr = \
+            convert_scalar_param_to_repr(node_attraction)
         expected = f"Node({repr(pos)},{repr(vel)},"\
             + f"{repr(acc)},{mass},NewtonianGravity(),"\
             + f"{marble_stiffness_float_repr}," \

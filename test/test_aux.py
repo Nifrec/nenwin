@@ -53,7 +53,6 @@ def check_close(result: torch.Tensor,
     else:
         return True
 
-
 def check_named_parameters(expected: Dict[str, object],
                        named_parameters: Tuple[Tuple[str, torch.Tensor]]
                        ) -> bool:
@@ -100,6 +99,15 @@ def high_accuracy_forward_euler_step(pos: torch.Tensor,
         pos = pos + step_size * (acc * t)
         t += step_size
     return pos, vel
+
+def convert_scalar_param_to_repr(scalar: float) -> str:
+    """
+    When converting a scalar to a single-element torch.Tensor,
+    the last digits may change a little because of conversion.
+    Hence the repr() of the torch.Tensor version is a little
+    different than the repr() of the float itself.
+    """
+    return repr(torch.tensor(scalar, dtype=torch.float).item())
 
 
 def runge_kutta_4_step(pos: torch.Tensor,
