@@ -27,6 +27,8 @@ import numpy as np
 import torch
 
 from experiment_1.attraction_functions.attraction_functions import Gratan
+from experiment_1.attraction_functions.attraction_functions \
+    import NewtonianGravity
 from experiment_1.node import Marble
 from experiment_1.particle import PhysicalParticle
 from experiment_1.auxliary import generate_stiffness_dict
@@ -34,6 +36,7 @@ from test_aux import ATTRACT_FUNCT
 from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import check_close
 from test_aux import ZERO
+from test_aux import convert_scalar_param_to_repr
 
 
 class MarbleTestCase(unittest.TestCase):
@@ -71,6 +74,41 @@ class MarbleTestCase(unittest.TestCase):
         self.assertAlmostEqual(copy.node_attraction,
                                stiffnesses["node_attraction"])
         self.assertEqual(copy.datum, datum)
+
+    def test_repr(self):
+        pos = torch.tensor([0], dtype=torch.float)
+        vel = torch.tensor([1], dtype=torch.float)
+        acc = torch.tensor([2], dtype=torch.float)
+        mass = 3.0
+        attraction_function = NewtonianGravity()
+        marble_stiffness = 0.4
+        node_stiffness = 0.5
+        marble_attraction = 0.6
+        node_attraction = 0.7
+        datum = {"some_key": "some_value"}
+        # Some numerical errors occurs when converting from float to FloatTensor
+        marble_stiffness_float_repr = \
+            convert_scalar_param_to_repr(marble_stiffness)
+        node_stiffness_float_repr = convert_scalar_param_to_repr(
+            node_stiffness)
+        marble_attraction_float_repr = \
+            convert_scalar_param_to_repr(marble_attraction)
+        node_attraction_float_repr = \
+            convert_scalar_param_to_repr(node_attraction)
+
+        marble = Marble(pos, vel, acc, mass, attraction_function,
+                        datum,
+                        marble_stiffness, node_stiffness,
+                        marble_attraction, node_attraction)
+
+        expected = f"Marble({repr(pos)},{repr(vel)},"\
+            + f"{repr(acc)},{mass},NewtonianGravity(),"\
+            + f"{repr(datum)}," \
+            + f"{marble_stiffness_float_repr}," \
+            + f"{node_stiffness_float_repr},{marble_attraction_float_repr}," \
+            + f"{node_attraction_float_repr})"
+        result = repr(marble)
+        self.assertEqual(expected, result)
 
 
 if __name__ == '__main__':

@@ -198,6 +198,13 @@ class Marble(Node):
                          marble_stiffness, node_stiffness, marble_attraction, node_attraction)
         self.__datum = datum
 
+    def __repr__(self):
+        output = super().__repr__()
+        output = output.replace("Node", "Marble")
+        output = re.sub(r'(([0-9]\.[0-9]*,?){4})', f'{self.datum},\\1', output)
+        return output
+
+
     @property
     def datum(self):
         return self.__datum
