@@ -23,15 +23,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Unit-tests for marble_eater_node.py.
 """
 import unittest
+import torch
 import numpy as np
 from typing import Tuple
 
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.node import Marble
 from experiment_1.attraction_functions.attraction_functions import Gratan
+from experiment_1.attraction_functions.attraction_functions \
+    import NewtonianGravity
 from experiment_1.auxliary import generate_stiffness_dict
-from test_aux import check_close, ZERO, ATTRACT_FUNCT
+from test_aux import ZERO, ATTRACT_FUNCT
 from test_aux import check_named_parameters
+from test_aux import convert_scalar_param_to_repr
 
 
 class MarbleEaterNodeTestCase(unittest.TestCase):
@@ -41,9 +45,9 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
         Base case: eat a Marble, test if stored correctly.
         """
         # Irrelevant parameters
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([10, 9, 0], dtype=torch.float)
         mass = 1
         radius = 0
 
@@ -64,9 +68,9 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
         Corner case: no Marbles eaten.
         """
         # Irrelevant parameters
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([10, 9, 0], dtype=torch.float)
         mass = 1
         stiffness = 0.5
         radius = 0
@@ -82,9 +86,9 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
         Base case: eat 2 Marbles, test if stored correctly in right order.
         """
         # Irrelevant parameters
-        pos = np.array([1, 3, 2])
-        vel = np.array([1, 1, 1])
-        acc = np.array([10, 9, 0])
+        pos = torch.tensor([1, 3, 2], dtype=torch.float)
+        vel = torch.tensor([1, 1, 1], dtype=torch.float)
+        acc = torch.tensor([10, 9, 0], dtype=torch.float)
         mass = 1
         stiffness = 0.5
         radius = 0
@@ -107,9 +111,9 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
         self.assertListEqual(node.marble_data_eaten, [datum1, datum2])
 
     def test_copy(self):
-        pos = np.array([1])
-        vel = np.array([2])
-        acc = np.array([3])
+        pos = torch.tensor([1], dtype=torch.float)
+        vel = torch.tensor([2], dtype=torch.float)
+        acc = torch.tensor([3], dtype=torch.float)
         mass = 4
         attraction_funct = ATTRACT_FUNCT
         stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
@@ -125,9 +129,9 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
 
         self.assertFalse(copy is original)
 
-        self.assertTrue(check_close(acc, copy.acc))
-        self.assertTrue(check_close(vel, copy.vel))
-        self.assertTrue(check_close(pos, copy.pos))
+        self.assertTrue(torch.allclose(acc, copy.acc))
+        self.assertTrue(torch.allclose(vel, copy.vel))
+        self.assertTrue(torch.allclose(pos, copy.pos))
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
         self.assertAlmostEqual(copy.marble_stiffness,
@@ -143,9 +147,9 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
 
     def test_named_parameters(self):
 
-        pos = np.array([1])
-        vel = np.array([2])
-        acc = np.array([3])
+        pos = torch.tensor([1], dtype=torch.float)
+        vel = torch.tensor([2], dtype=torch.float)
+        acc = torch.tensor([3], dtype=torch.float)
         mass = 4
         attraction_funct = ATTRACT_FUNCT
         stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
@@ -159,6 +163,42 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
         expected_names = {'_MarbleEaterNode__radius': radius}
         self.assertTrue(check_named_parameters(expected_names,
                                                tuple(named_params)))
+
+    def test_repr(self):
+        pos = torch.tensor([0], dtype=torch.float)
+        vel = torch.tensor([1], dtype=torch.float)
+        acc = torch.tensor([2], dtype=torch.float)
+        mass = 3.0
+        attraction_function = NewtonianGravity()
+        marble_stiffness = 0.4
+        node_stiffness = 0.5
+        marble_attraction = 0.6
+        node_attraction = 0.7
+        radius = 8.0
+        # Some numerical errors occurs when converting from float to FloatTensor
+        marble_stiffness_float_repr = \
+            convert_scalar_param_to_repr(marble_stiffness)
+        node_stiffness_float_repr = convert_scalar_param_to_repr(
+            node_stiffness)
+        marble_attraction_float_repr = \
+            convert_scalar_param_to_repr(marble_attraction)
+        node_attraction_float_repr = \
+            convert_scalar_param_to_repr(node_attraction)
+
+        expected = f"MarbleEaterNode({repr(pos)},{repr(vel)},"\
+            + f"{repr(acc)},{mass},NewtonianGravity(),"\
+            + f"{marble_stiffness_float_repr}," \
+            + f"{node_stiffness_float_repr},{marble_attraction_float_repr}," \
+            + f"{node_attraction_float_repr},"\
+            + f"{radius})"
+
+        eater = MarbleEaterNode(pos, vel, acc, mass, attraction_function,
+                                marble_stiffness, node_stiffness,
+                                marble_attraction, node_attraction,
+                                radius)
+
+        result = repr(eater)
+        self.assertEqual(expected, result)
 
 
 if __name__ == '__main__':

@@ -23,9 +23,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 A variant of the Node that can 'consume' Marbles if they come close.
 """
 from __future__ import annotations
-import numpy as np
 import torch
 import torch.nn as nn
+import re
 
 from experiment_1.node import Marble, Node
 
@@ -61,6 +61,12 @@ class MarbleEaterNode(Node):
         self.__radius = nn.Parameter(radius_as_tensor)
         self.__num_marbles_eaten: int = 0
         self.__marble_data_eaten = []
+
+    def __repr__(self):
+        output = super().__repr__()
+        output = "MarbleEater" + output
+        output = re.sub(r"\)$", f",{self.radius})", output)
+        return output
 
     @property
     def radius(self) -> float:
