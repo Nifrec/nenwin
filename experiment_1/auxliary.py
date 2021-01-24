@@ -31,7 +31,7 @@ from experiment_1.particle import Particle
 
 def distance(p1: Particle, p2: Particle) -> float:
     difference = p1.pos - p2.pos
-    return np.linalg.norm(difference)
+    return torch.norm(difference)
 
 
 def generate_stiffness_dict(marble_stiffness: float,
