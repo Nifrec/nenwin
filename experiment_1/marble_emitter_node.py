@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Optional
 import torch
 import abc
+import re
 
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.node import Marble, Node
@@ -51,6 +52,12 @@ class MarbleEmitterNode(MarbleEaterNode):
         if distance_to_prototype > self.radius + MAX_EMITTER_SPAWN_DIST:
             raise ValueError("prototype to emit further than "
                 + "MAX_EMITTER_SPAWN_DIST from border of radius")
+
+    def __repr__(self) -> str:
+        output = super().__repr__()
+        output = re.sub("Eater", "Emitter", output)
+        output = re.sub("\)$", f",{repr(self.__emitter)})", output)
+        return output
 
     def eat(self, marble: Marble):
         self.__emitter.eat_mass(marble.mass)
@@ -101,6 +108,11 @@ class Emitter(abc.ABC):
         self.__stored_mass = stored_mass
         self.__time_since_last_emit = initial_time_passed
 
+    def __repr__(self) -> str:
+        output = f"Emitter({repr(self.prototype)},{self.__delay},"\
+            +f"{self.__stored_mass},{self.__time_since_last_emit})"
+        return output
+
     @property
     def prototype(self):
         return self.__prototype
@@ -146,6 +158,9 @@ class MarbleEmitter(Emitter):
         if not isinstance(prototype, Marble):
             raise ValueError("Prototype of MarbleEmitter must be a Marble")
         super().__init__(prototype, delay, stored_mass, initial_time_passed)
+
+    def __repr__(self) -> str:
+        return "Marble" + super().__repr__()
 
     def _create_particle(self) -> Marble:
         return self.prototype.copy()
