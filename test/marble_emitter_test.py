@@ -25,10 +25,11 @@ Unit-tests for marble_emitter_node.py.
 
 import unittest
 import numpy as np
-from typing import Optional
+from typing import Optional, Tuple
 import torch
 
 from test_aux import ZERO, ATTRACT_FUNCT, convert_scalar_param_to_repr
+from test_aux import check_named_parameters
 from experiment_1.attraction_functions.attraction_functions \
     import NewtonianGravity
 from experiment_1.auxliary import generate_stiffness_dict
@@ -37,7 +38,6 @@ from experiment_1.node import Marble
 from experiment_1.marble_emitter_node import MarbleEmitter, \
     Emitter, MarbleEmitterNode
 from experiment_1.constants import MAX_EMITTER_SPAWN_DIST
-
 
 class MockEmitter(Emitter):
     def _create_particle(self):
@@ -57,6 +57,7 @@ class MockPrototype(Marble):
 
 class MarbleEmitterTestCase(unittest.TestCase):
     def setUp(self):
+        self.maxDiff = None
         self.__mock_prototype = MockPrototype()
         self.__mass = 1
         self.__massfull_prototype = MockPrototype(self.__mass)
@@ -232,7 +233,78 @@ class MarbleEmitterTestCase(unittest.TestCase):
         neg_mass_prototype = MockPrototype(-1)
         emitter = MarbleEmitter(neg_mass_prototype, 0, stored_mass=-1)
 
-    def test_repr(self):
+    def test_repr_1(self):
+        """
+        Base case: no mass absorbed or time passed.
+        """
+        emitter, prototype, delay, stored_mass, initial_time_passed = \
+            self.setup_full_emitter()
+
+        expected = f"MarbleEmitter({repr(prototype)}," \
+            +f"{convert_scalar_param_to_repr(delay)},"\
+            +f"{convert_scalar_param_to_repr(stored_mass)},"\
+            +f"{convert_scalar_param_to_repr(initial_time_passed)})"
+
+        emitter = MarbleEmitter(prototype, delay,
+                                stored_mass, initial_time_passed)
+        result = repr(emitter)
+
+        self.assertEqual(expected, result)
+
+    def test_repr_2(self):
+        """
+        Base case: if mass absorbed and/or time passed,
+        do still return the initial values (these can be trained).
+        """
+        emitter, prototype, delay, stored_mass, initial_time_passed = \
+            self.setup_full_emitter()
+
+        expected = f"MarbleEmitter({repr(prototype)}," \
+            +f"{convert_scalar_param_to_repr(delay)},"\
+            +f"{convert_scalar_param_to_repr(stored_mass)},"\
+            +f"{convert_scalar_param_to_repr(initial_time_passed)})"
+
+        emitter = MarbleEmitter(prototype, delay,
+                                stored_mass, initial_time_passed)
+
+        # These should not affect the output
+        emitter.eat_mass(10)
+        emitter.register_time_passed(10)
+
+        result = repr(emitter)
+
+        self.assertEqual(expected, result)
+
+
+    def test_named_params(self):
+        emitter, prototype, delay, stored_mass, initial_time_passed = \
+            self.setup_full_emitter()
+
+        emitter = MarbleEmitter(prototype, delay,
+                                stored_mass, initial_time_passed)
+
+        named_params = emitter.named_parameters()
+        expected_names = {
+            '_Emitter__delay': delay,
+            '_Emitter__init_stored_mass': stored_mass,
+            '_Emitter__inital_time_passed': initial_time_passed}
+        self.assertTrue(check_named_parameters(expected_names,
+                                               tuple(named_params)))
+
+    def setup_full_emitter(self) -> Tuple[Emitter, Marble, float, float, float]:
+        """
+        Create an instance of a MarbleEmitter with a full prototype Marble
+        (not a mock Marble). Also returns the delay, stored_mass
+        and initial_time_passed, 
+        which have arbitrary nonzero floating-point values.
+
+        Returns:
+        * A MarbleEmitter instance
+        * A Marble, the prototype associated with the emitter
+        * The delay of the emitter
+        * The initally stored mass of the emitter
+        * The initial time passed of the emitter
+        """
         pos = torch.tensor([0], dtype=torch.float)
         vel = torch.tensor([1], dtype=torch.float)
         acc = torch.tensor([2], dtype=torch.float)
@@ -250,15 +322,10 @@ class MarbleEmitterTestCase(unittest.TestCase):
         stored_mass = 9.1
         initial_time_passed = 11.1
 
-        expected = f"MarbleEmitter({repr(prototype)},{delay},"\
-            +f"{stored_mass},{initial_time_passed})"
-
         emitter = MarbleEmitter(prototype, delay,
                                 stored_mass, initial_time_passed)
-        result = repr(emitter)
 
-        self.assertEqual(expected, result)
-        
+        return emitter, prototype, delay, stored_mass, initial_time_passed
 
 
 class MarbleEmitterNodeTestCase(unittest.TestCase):

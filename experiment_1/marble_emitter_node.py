@@ -13,11 +13,13 @@ from typing import Optional
 import torch
 import abc
 import re
+import torch.nn as nn
 
 from experiment_1.marble_eater_node import MarbleEaterNode
 from experiment_1.node import Marble, Node
 from experiment_1.auxliary import distance
 from experiment_1.constants import MAX_EMITTER_SPAWN_DIST
+from experiment_1.particle import create_param
 
 
 class MarbleEmitterNode(MarbleEaterNode):
@@ -51,7 +53,7 @@ class MarbleEmitterNode(MarbleEaterNode):
         distance_to_prototype = distance(self, prototype)
         if distance_to_prototype > self.radius + MAX_EMITTER_SPAWN_DIST:
             raise ValueError("prototype to emit further than "
-                + "MAX_EMITTER_SPAWN_DIST from border of radius")
+                             + "MAX_EMITTER_SPAWN_DIST from border of radius")
 
     def __repr__(self) -> str:
         output = super().__repr__()
@@ -86,7 +88,7 @@ class MarbleEmitterNode(MarbleEaterNode):
                                  self.emitter)
 
 
-class Emitter(abc.ABC):
+class Emitter(abc.ABC, nn.Module):
 
     def __init__(self,
                  prototype: Node,
@@ -103,14 +105,18 @@ class Emitter(abc.ABC):
         * initial_time_passed: how much time since the last delay is
             initially counted, used to set time until first real emit.
         """
+        nn.Module.__init__(self)
         self.__prototype = prototype.copy()
-        self.__delay = delay
-        self.__stored_mass = stored_mass
-        self.__time_since_last_emit = initial_time_passed
+        self.__delay = create_param(delay)
+        self.__init_stored_mass = create_param(stored_mass)
+        self.__stored_mass = 1 * self.__init_stored_mass
+        self.__inital_time_passed = create_param(initial_time_passed)
+        self.__time_since_last_emit = 1 * self.__inital_time_passed
 
     def __repr__(self) -> str:
-        output = f"Emitter({repr(self.prototype)},{self.__delay},"\
-            +f"{self.__stored_mass},{self.__time_since_last_emit})"
+        output = f"Emitter({repr(self.prototype)},{self.__delay.item()},"\
+            + f"{self.__init_stored_mass.item()},"\
+            + f"{self.__inital_time_passed.item()})"
         return output
 
     @property
