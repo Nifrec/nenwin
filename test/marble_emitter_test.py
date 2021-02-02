@@ -39,6 +39,7 @@ from experiment_1.marble_emitter_node import MarbleEmitter, \
     Emitter, MarbleEmitterNode
 from experiment_1.constants import MAX_EMITTER_SPAWN_DIST
 
+
 class MockEmitter(Emitter):
     def _create_particle(self):
         pass
@@ -232,6 +233,28 @@ class MarbleEmitterTestCase(unittest.TestCase):
         """
         neg_mass_prototype = MockPrototype(-1)
         emitter = MarbleEmitter(neg_mass_prototype, 0, stored_mass=-1)
+        result = emitter.emit()
+
+        expected = neg_mass_prototype
+        self.assertIs(expected, result)
+
+    def test_emit_with_location(self):
+        """
+        MarbleEmitterNodes typically do not emit Marbles at their own position,
+        but at the boundary of their radius. 
+        Since MarbleEmitterNodes can move, also the position of the emitted
+        Marble may vary with time, hence MarbleEmitters should be able
+        to set the position of the emitted Marble.
+        """
+        mass = 10
+        prototype = Marble(ZERO, ZERO, ZERO, mass, None, None, 0, 0, 0, 0)
+        emitter = MarbleEmitter(prototype,
+                                0,
+                                stored_mass=mass)
+        spawn_pos= torch.tensor([1, 2, 3], dtype=torch.float)
+        result = emitter.emit(spawn_pos)
+
+        self.assertTrue(torch.allclose(spawn_pos, result.pos))
 
     def test_repr_1(self):
         """
@@ -241,9 +264,9 @@ class MarbleEmitterTestCase(unittest.TestCase):
             self.setup_full_emitter()
 
         expected = f"MarbleEmitter({repr(prototype)}," \
-            +f"{convert_scalar_param_to_repr(delay)},"\
-            +f"{convert_scalar_param_to_repr(stored_mass)},"\
-            +f"{convert_scalar_param_to_repr(initial_time_passed)})"
+            + f"{convert_scalar_param_to_repr(delay)},"\
+            + f"{convert_scalar_param_to_repr(stored_mass)},"\
+            + f"{convert_scalar_param_to_repr(initial_time_passed)})"
 
         emitter = MarbleEmitter(prototype, delay,
                                 stored_mass, initial_time_passed)
@@ -260,12 +283,9 @@ class MarbleEmitterTestCase(unittest.TestCase):
             self.setup_full_emitter()
 
         expected = f"MarbleEmitter({repr(prototype)}," \
-            +f"{convert_scalar_param_to_repr(delay)},"\
-            +f"{convert_scalar_param_to_repr(stored_mass)},"\
-            +f"{convert_scalar_param_to_repr(initial_time_passed)})"
-
-        emitter = MarbleEmitter(prototype, delay,
-                                stored_mass, initial_time_passed)
+            + f"{convert_scalar_param_to_repr(delay)},"\
+            + f"{convert_scalar_param_to_repr(stored_mass)},"\
+            + f"{convert_scalar_param_to_repr(initial_time_passed)})"
 
         # These should not affect the output
         emitter.eat_mass(10)
@@ -275,13 +295,9 @@ class MarbleEmitterTestCase(unittest.TestCase):
 
         self.assertEqual(expected, result)
 
-
     def test_named_params(self):
         emitter, prototype, delay, stored_mass, initial_time_passed = \
             self.setup_full_emitter()
-
-        emitter = MarbleEmitter(prototype, delay,
-                                stored_mass, initial_time_passed)
 
         named_params = emitter.named_parameters()
         expected_names = {
@@ -290,6 +306,25 @@ class MarbleEmitterTestCase(unittest.TestCase):
             '_Emitter__inital_time_passed': initial_time_passed}
         self.assertTrue(check_named_parameters(expected_names,
                                                tuple(named_params)))
+
+    def test_grads(self):
+        emitter, prototype, delay, stored_mass, initial_time_passed = \
+            self.setup_full_emitter()
+
+        eaten_marble = Marble(ZERO, ZERO, ZERO, 10, None, None, 0, 0, 0, 0)
+
+        emitter.eat_mass(eaten_marble.mass)
+        emitter.register_time_passed(20)
+        output_marble = emitter.emit()
+        output_marble.update_movement(30)
+
+        output_marble.pos.backward()
+
+        self.assertIsNotNone(emitter._Emitter__stored_mass.grad)
+        # self.assertIsNotNone(emitter._Emitter__delay.grad)
+        # self.assertIsNotNone(emitter._Emitter__init_stored_mass.grad)
+        # self.assertIsNotNone(emitter._Emitter__inital_time_passed.grad)
+        # self.assertIsNotNone(eaten_marble.mass.grad)
 
     def setup_full_emitter(self) -> Tuple[Emitter, Marble, float, float, float]:
         """
@@ -343,10 +378,25 @@ class MarbleEmitterNodeTestCase(unittest.TestCase):
         other_settings.update(generate_stiffness_dict(0, 0, 0, 0))
         prototype_marble = Marble(pos=marble_pos, datum=None, **other_settings)
         emitter = MockEmitter(prototype_marble, 0)
+
         def gen_node(): return MarbleEmitterNode(pos=node_pos, emitter=emitter,
                                                  radius=radius, **other_settings)
 
         self.assertRaises(ValueError, gen_node)
+
+    def test_spawn_location_1(self):
+        """
+        Base case: stationary Node.
+        """
+        radius = 10
+        prototype = Marble(ZERO, ZERO, ZERO, 0, None, None, 0, 0, 0, 0)
+        emitter = MarbleEmitter(prototype, 0, 10)
+        emitter_node = MarbleEmitterNode(ZERO, ZERO, ZERO, 0, None,
+                                            0, 0, 0, 0,
+                                            radius=radius, emitter=emitter)
+        self.fail("TODO")
+
+            
 
     def test_copy(self):
         pos = torch.tensor([1], dtype=torch.float)
@@ -375,11 +425,13 @@ class MarbleEmitterNodeTestCase(unittest.TestCase):
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
         self.assertAlmostEqual(copy.marble_stiffness,
-                         stiffnesses["marble_stiffness"])
-        self.assertAlmostEqual(copy.node_stiffness, stiffnesses["node_stiffness"])
+                               stiffnesses["marble_stiffness"])
+        self.assertAlmostEqual(copy.node_stiffness,
+                               stiffnesses["node_stiffness"])
         self.assertAlmostEqual(copy.marble_attraction,
-                         stiffnesses["marble_attraction"])
-        self.assertAlmostEqual(copy.node_attraction, stiffnesses["node_attraction"])
+                               stiffnesses["marble_attraction"])
+        self.assertAlmostEqual(copy.node_attraction,
+                               stiffnesses["node_attraction"])
         self.assertEqual(copy.radius, radius)
         self.assertEqual(copy.num_marbles_eaten, 0)
         self.assertIs(emitter, copy.emitter)
