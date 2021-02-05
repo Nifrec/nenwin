@@ -24,25 +24,31 @@ Architecture implementing the simulation of a semi-stable orbit.
 """
 import numpy as np
 from typing import Tuple, Optional, Dict
+import torch
+
 from experiment_1.node import Node, Marble
 from experiment_1.attraction_functions.attraction_functions import NewtonianGravity
 from experiment_1.architectures.run_and_visualize import run
 from experiment_1.auxliary import generate_stiffness_dict
-ZERO = np.array([0, 0])
+ZERO = torch.tensor([0, 0], dtype=torch.float)
 
 NODE_STIFFNESS = generate_stiffness_dict(marble_stiffness=0,
+                                         node_stiffness=0,
+                                         marble_attraction=1,
+                                         node_attraction=0)
+MARBLE_STIFFNESS = generate_stiffness_dict(marble_stiffness=0,
                                            node_stiffness=0,
                                            marble_attraction=1,
                                            node_attraction=0)
-MARBLE_STIFFNESS = generate_stiffness_dict(marble_stiffness=0,
-                                               node_stiffness=0,
-                                               marble_attraction=1,
-                                               node_attraction=0)
 
-#masses modelled afte respective masses of earth and moon
-satellite = Marble(np.array([110, 150]), np.array([2, -2]), ZERO, 1.2, NewtonianGravity(), None, **MARBLE_STIFFNESS)
-planet = Node(np.array([80, 110]), ZERO, ZERO, 500, NewtonianGravity(), **NODE_STIFFNESS)
-planet2 = Node(np.array([200, 190]), ZERO, ZERO, 800, NewtonianGravity(), **NODE_STIFFNESS)
+# masses modelled afte respective masses of earth and moon
+satellite = Marble(torch.tensor([110, 150], dtype=torch.float),
+                   torch.tensor([2, -2], dtype=torch.float),
+                   ZERO, 1.2, NewtonianGravity(), None, **MARBLE_STIFFNESS)
+planet = Node(torch.tensor([80, 110], dtype=torch.float),
+              ZERO, ZERO, 500, NewtonianGravity(), **NODE_STIFFNESS)
+planet2 = Node(torch.tensor([200, 190], dtype=torch.float),
+               ZERO, ZERO, 800, NewtonianGravity(), **NODE_STIFFNESS)
 
 marbles = [satellite]
 nodes = [planet, planet2]
