@@ -101,7 +101,7 @@ class NenwinVisualization():
             pygame.draw.circle(surf,
                                MARBLE_COLOR,
                                np.round(self.__scale_factor *
-                                        marble.pos).numpy().astype(int),
+                                        marble.pos.detach().numpy()).astype(int),
                                MARBLE_RADIUS)
 
         return surf
@@ -111,7 +111,7 @@ class NenwinVisualization():
         pygame.draw.circle(surf,
                            color,
                            np.round(self.__scale_factor *
-                                    node.pos).numpy().astype(int),
+                                    node.pos.detach().numpy()).astype(int),
                            int(np.round(self.__scale_factor*radius).flatten()))
 
     def __find_radius_of_node(self, node: Node) -> float:
