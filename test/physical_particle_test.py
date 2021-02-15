@@ -284,7 +284,7 @@ class PhysicalParticleTestCase(unittest.TestCase):
         loss = torch.sum(v + particle.mass)
         loss.backward()
         self.assertIsNotNone(v.grad)
-        self.assertIsNotNone(particle.mass.grad)
+        self.assertIsNotNone(particle.real_mass.grad)
 
 
 if __name__ == '__main__':

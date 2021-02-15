@@ -223,7 +223,8 @@ class PhysicalParticle(InitialValueParticle):
                  device: Optional[Union[torch.device, str]] = DEVICE):
         super().__init__(pos, vel, acc, device)
         self._attraction_function = attraction_function
-        self.__mass = create_param(mass, device)
+        self.__mass = create_param(mass, device=self.device)
+        self.__work_mass = 1 * self.__mass
 
     def __repr__(self) -> str:
         output = super().__repr__()
@@ -234,13 +235,17 @@ class PhysicalParticle(InitialValueParticle):
         return output
 
     @property
-    def mass(self) -> float:
-        return self.__mass.clone()
+    def mass(self) -> torch.Tensor:
+        return 1 * self.__work_mass
+
+    @property
+    def real_mass(self):
+        return self.__mass
 
     @mass.setter
     def mass(self, new_mass: float):
-        self.__mass = create_param(new_mass,
-                                   device=self.device)
+        self.__mass = create_param(new_mass, device=self.device)
+        self.__work_mass = 1 * self.__mass
 
     def update_acceleration(self, forces: torch.Tensor):
         """
