@@ -268,6 +268,24 @@ class PhysicalParticleTestCase(unittest.TestCase):
         result = repr(PhysicalParticle(pos, vel, acc, mass, attraction_funct))
         self.assertEqual(expected, result)
 
+    def test_mass_gradients_1(self):
+        """
+        The mass of a PhysicalParticle should collect gradients
+        when computing any arbitrary loss whose computation uses
+        the mass.
+        """
+        pos = torch.tensor([10, 10], dtype=torch.float)
+        vel = torch.tensor([0, 0], dtype=torch.float)
+        acc = torch.tensor([0, 0], dtype=torch.float)
+        mass = 10
+        particle = PhysicalParticle(pos, vel, acc, mass, None)
+
+        v = torch.tensor([1.0, 1.0], requires_grad=True)
+        loss = torch.sum(v + particle.mass)
+        loss.backward()
+        self.assertIsNotNone(v.grad)
+        self.assertIsNotNone(particle.mass.grad)
+
 
 if __name__ == '__main__':
     unittest.main()
