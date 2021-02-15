@@ -56,7 +56,7 @@ class InitialValueParticleTestCase(unittest.TestCase):
         self.assertTrue(check_named_parameters(expected_names,
                                                tuple(named_params)))
 
-    def test_gradients_pos(self):
+    def test_gradients_pos_1(self):
         """
         Test if the gradients flow back from the pos to the initial_pos.
         """
@@ -67,6 +67,23 @@ class InitialValueParticleTestCase(unittest.TestCase):
         
         loss.backward()
         self.assertIsNotNone(self.particle.init_pos.grad)
+
+    def test_gradients_pos_2(self):
+        """
+        Basic test: see if the init_pos of a Particle collectes gradients
+        when computing any arbitrary loss whose computation uses
+        the pos.
+        """
+        pos = torch.tensor([10, 10], dtype=torch.float)
+        vel = torch.tensor([0, 0], dtype=torch.float)
+        acc = torch.tensor([0, 0], dtype=torch.float)
+        particle = InitialValueParticle(pos, vel, acc)
+
+        v = torch.tensor([1.0, 1.0], requires_grad=True)
+        loss = torch.sum(v + particle.pos)
+        loss.backward()
+        self.assertIsNotNone(v.grad)
+        self.assertIsNotNone(particle.init_pos.grad)
 
 
     def test_gradients_vel(self):
@@ -90,6 +107,8 @@ class InitialValueParticleTestCase(unittest.TestCase):
 
         loss.backward()
         self.assertIsNotNone(self.particle.init_acc.grad)
+
+    
 
     def test_reset(self):
         pos = torch.tensor([1, 3, 2], dtype=torch.float)
