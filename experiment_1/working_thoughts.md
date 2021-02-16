@@ -27,3 +27,33 @@ then `self.__working_mass` will also not collect any gradients,
 I do not understand this behavior. 
 At least it is a workaround,
 but I should probably ask this on the PyTorch forum tomorrow.
+
+### Update 16-02-2021
+I have narrowed the inconsistency down. When having two variables,
+one 'loose' variable and another an attribute of a nn.Module, 
+and applying copy() and some operations to both, then after backpropagation
+only the gradient of the loose variable will be set. 
+I asked a question on the PyTorch forum for this.
+
+```python
+import torch
+import torch.nn as nn
+class MyModule(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.__my_parameter = nn.Parameter(torch.tensor([1.0], requires_grad=True))
+
+    @property
+    def my_parameter(self) -> torch.Tensor:
+        return self.__my_parameter.clone()
+
+v = torch.tensor([1.0], requires_grad=True)
+my_module = MyModule()
+loss = torch.sum(v.clone() + my_module.my_parameter)
+loss.backward()
+print(v.grad, my_module.my_parameter.grad)
+```
+output:
+```python
+tensor([1.]) None
+```
