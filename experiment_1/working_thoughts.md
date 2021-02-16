@@ -57,3 +57,26 @@ output:
 ```python
 tensor([1.]) None
 ```
+
+Well, I discovered it works when writing instead:
+```python
+print(v.grad, my_module._MyModule__my_parameter.grad)
+```
+This seems as the situation where I started, but it works now.
+Rather confusion but 'Eind goed, al goed'?
+
+## Emitter backprop problem (16-02-2021)
+**Observation**: using torchviz, it becomes clear that:
+* The mass of the output Marbles does not have the supposed gradient tree
+* The stored_mass of the Emitter does.
+So it seems that it goes wrong at the creation of the new Marble.
+
+The expression
+```python
+(self.__stored_mass/self.__stored_mass.item())*self.prototype.mass.item()
+```
+does seem to have the correct gradient dependency graph.
+
+Indeed, further experimentation revealed the location of the bug:
+
+**The copy() method of Marbles does discard the computational graph!**
