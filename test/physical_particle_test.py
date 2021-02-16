@@ -47,8 +47,9 @@ class PhysicalParticleTestCase(unittest.TestCase):
 
         self.assertEqual(particle.mass, mass)
 
-        mass2 = torch.tensor(10, dtype=torch.float)
-        particle.mass = torch.nn.Parameter(mass2)
+        # mass2 = torch.tensor(10, dtype=torch.float)
+        mass2 = 10
+        particle.mass = mass2
 
         self.assertEqual(particle.mass, mass2)
 
@@ -248,7 +249,7 @@ class PhysicalParticleTestCase(unittest.TestCase):
         particle = PhysicalParticle(pos, vel, acc, mass, attraction_funct)
 
         named_params = particle.named_parameters()
-        expected_names = {'mass': mass}
+        expected_names = {'_PhysicalParticle__mass': mass}
         for name, param in named_params:
             if name in set(expected_names.keys()):
                 expected_value = expected_names.pop(name)
@@ -284,7 +285,7 @@ class PhysicalParticleTestCase(unittest.TestCase):
         loss = torch.sum(v + particle.mass)
         loss.backward()
         self.assertIsNotNone(v.grad)
-        self.assertIsNotNone(particle.mass.grad)
+        self.assertIsNotNone(particle._PhysicalParticle__mass.grad)
 
 
 if __name__ == '__main__':

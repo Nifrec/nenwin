@@ -223,7 +223,15 @@ class PhysicalParticle(InitialValueParticle):
                  device: Optional[Union[torch.device, str]] = DEVICE):
         super().__init__(pos, vel, acc, device)
         self._attraction_function = attraction_function
-        self.mass = create_param(mass, device=self.device)
+        self.__mass = create_param(mass, device=self.device)
+
+    @property
+    def mass(self) -> torch.Tensor:
+        return self.__mass.clone()
+
+    @mass.setter
+    def mass(self, new_mass)-> torch.Tensor:
+        self.__mass = create_param(new_mass, device=self.device)
 
     def __repr__(self) -> str:
         output = super().__repr__()
