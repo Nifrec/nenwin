@@ -60,10 +60,10 @@ class InitialValueParticleTestCase(unittest.TestCase):
         Test if the gradients flow back from the pos to the initial_pos.
         """
         # Not a real loss function, just some random differentiable operations
-        loss = torch.tensor([1, 1, 1], dtype=torch.float, requires_grad=True) 
+        loss = torch.tensor([1, 1, 1], dtype=torch.float, requires_grad=True)
         loss = loss / self.particle.pos
         loss = torch.sum(loss)
-        
+
         loss.backward()
         self.assertIsNotNone(self.particle.init_pos.grad)
 
@@ -83,7 +83,6 @@ class InitialValueParticleTestCase(unittest.TestCase):
         loss.backward()
         self.assertIsNotNone(v.grad)
         self.assertIsNotNone(particle.init_pos.grad)
-
 
     def test_gradients_vel(self):
         """
@@ -106,8 +105,6 @@ class InitialValueParticleTestCase(unittest.TestCase):
 
         loss.backward()
         self.assertIsNotNone(self.particle.init_acc.grad)
-
-    
 
     def test_reset(self):
         pos = torch.tensor([1, 3, 2], dtype=torch.float)
@@ -168,28 +165,114 @@ class InitialValueParticleTestCase(unittest.TestCase):
         vel = torch.tensor([1, 10], dtype=torch.float)
         acc = torch.tensor([10, 1], dtype=torch.float)
         original = InitialValueParticle(pos, vel, acc)
+
         original.update_movement(time_passed=10)
+
         copy = original.copy()
 
         self.assertFalse(copy is original)
-
         self.assertTrue(check_close(acc, copy.acc))
         self.assertTrue(check_close(vel, copy.vel))
         self.assertTrue(check_close(pos, copy.pos))
 
-
     def test_copy_pos_with_grad(self):
+        """
+        Gradients of initial positions should be copied as well.
+        """
+        some_particle = setup_simple_particle()
+
+        some_tensor = torch.tensor([4.0], requires_grad=True)
+        loss = torch.sum(some_particle.pos + some_tensor)
+        loss.backward()
+        self.assertIsNotNone(some_particle.init_pos.grad)
+        self.assertIsNotNone(some_tensor.grad)
+
+        another_particle = some_particle.copy()
+        self.assertTrue(check_close(some_particle.init_pos.grad,
+                                    another_particle.init_pos.grad))
+
+    def test_copy_vel_with_grad(self):
+        """
+        Gradients of initial velocities should be copied as well.
+        """
+        some_particle = setup_simple_particle()
+
+        some_tensor = torch.tensor([4.0], requires_grad=True)
+        loss = torch.sum(some_particle.vel + some_tensor)
+        loss.backward()
+        self.assertIsNotNone(some_particle.init_vel.grad)
+        self.assertIsNotNone(some_tensor.grad)
+
+        another_particle = some_particle.copy()
+        self.assertTrue(check_close(some_particle.init_vel.grad,
+                                    another_particle.init_vel.grad))
+
+    def test_copy_acc_with_grad(self):
+        """
+        Gradients of initial accelerations should be copied as well.
+        """
+        some_particle = setup_simple_particle()
+
+        some_tensor = torch.tensor([4.0], requires_grad=True)
+        loss = torch.sum(some_particle.acc + some_tensor)
+        loss.backward()
+        self.assertIsNotNone(some_particle.init_acc.grad)
+        self.assertIsNotNone(some_tensor.grad)
+
+        another_particle = some_particle.copy()
+        self.assertTrue(check_close(some_particle.init_acc.grad,
+                                    another_particle.init_acc.grad))
+
+    def test_init_with_grad_in_pos(self):
+        """
+        The __init__ method should copy the gradients to the 
+        init_pos attribute, but not to the pos attribute.
+        """
+        pos = torch.tensor([1], dtype=torch.float)
+        pos_grad = torch.tensor([2.])
+        pos.grad = pos_grad
+        vel = torch.tensor([2], dtype=torch.float)
+        acc = torch.tensor([3], dtype=torch.float)
+
+        particle = InitialValueParticle(pos, vel, acc)
+        self.assertIsNotNone(particle._InitialValueParticle__init_pos.grad)
+        self.assertIsNone(particle._Particle__pos.grad)
+    
+    def test_init_with_grad_in_vel(self):
+        """
+        The __init__ method should copy the gradients to the 
+        init_vel attribute, but not to the vel attribute.
+        """
+        pos = torch.tensor([1], dtype=torch.float)
+        vel = torch.tensor([2], dtype=torch.float)
+        vel_grad = torch.tensor([2.])
+        vel.grad = vel_grad
+        acc = torch.tensor([3], dtype=torch.float)
+
+        particle = InitialValueParticle(pos, vel, acc)
+        self.assertIsNotNone(particle._InitialValueParticle__init_vel.grad)
+        self.assertIsNone(particle._Particle__vel.grad)
+
+    def test_init_with_grad_in_acc(self):
+        """
+        The __init__ method should copy the gradients to the 
+        init_acc attribute, but not to the acc attribute.
+        """
         pos = torch.tensor([1], dtype=torch.float)
         vel = torch.tensor([2], dtype=torch.float)
         acc = torch.tensor([3], dtype=torch.float)
-        some_particle = InitialValueParticle(pos, vel, acc)
-        some_tensor = torch.tensor([4.0], requires_grad=True)
-        loss = torch.sum(some_particle.pos + some_tensor)
-        self.assertIsNotNone(some_particle.pos.grad)
-        self.assertIsNotNone(some_tensor.pos.grad)
+        acc_grad = torch.tensor([2.])
+        acc.grad = acc_grad
 
-        another_particle = some_particle.copy()
-        self.assertTrue(
-            check_close(some_particle.pos.grad, another_particle.pos.grad))
+        particle = InitialValueParticle(pos, vel, acc)
+        self.assertIsNotNone(particle._InitialValueParticle__init_acc.grad)
+        self.assertIsNone(particle._Particle__acc.grad)
+
+def setup_simple_particle() -> InitialValueParticle:
+    pos = torch.tensor([1], dtype=torch.float)
+    vel = torch.tensor([2], dtype=torch.float)
+    acc = torch.tensor([3], dtype=torch.float)
+    return InitialValueParticle(pos, vel, acc)
+
 if __name__ == '__main__':
     unittest.main()
