@@ -27,11 +27,10 @@ Unit-tests for InitialValueParticle of particle.py.
 import unittest
 import torch
 
-from experiment_1.particle import InitialValueParticle, PhysicalParticle
-from experiment_1.attraction_functions.attraction_functions import Gratan
+from experiment_1.particle import InitialValueParticle
+# from experiment_1.attraction_functions.attraction_functions import Gratan
 from experiment_1.constants import DEVICE
-from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
-from test_aux import runge_kutta_4_step
+from test_aux import check_close
 from test_aux import check_named_parameters
 
 
@@ -160,5 +159,37 @@ class InitialValueParticleTestCase(unittest.TestCase):
         result = repr(particle)
         self.assertEqual(expected, result)
 
+    def test_copy(self):
+        """
+        Copy should use the initial values for position, 
+        velocity and acceleration.
+        """
+        pos = torch.tensor([-10, -100], dtype=torch.float)
+        vel = torch.tensor([1, 10], dtype=torch.float)
+        acc = torch.tensor([10, 1], dtype=torch.float)
+        original = InitialValueParticle(pos, vel, acc)
+        original.update_movement(time_passed=10)
+        copy = original.copy()
+
+        self.assertFalse(copy is original)
+
+        self.assertTrue(check_close(acc, copy.acc))
+        self.assertTrue(check_close(vel, copy.vel))
+        self.assertTrue(check_close(pos, copy.pos))
+
+
+    def test_copy_pos_with_grad(self):
+        pos = torch.tensor([1], dtype=torch.float)
+        vel = torch.tensor([2], dtype=torch.float)
+        acc = torch.tensor([3], dtype=torch.float)
+        some_particle = InitialValueParticle(pos, vel, acc)
+        some_tensor = torch.tensor([4.0], requires_grad=True)
+        loss = torch.sum(some_particle.pos + some_tensor)
+        self.assertIsNotNone(some_particle.pos.grad)
+        self.assertIsNotNone(some_tensor.pos.grad)
+
+        another_particle = some_particle.copy()
+        self.assertTrue(
+            check_close(some_particle.pos.grad, another_particle.pos.grad))
 if __name__ == '__main__':
     unittest.main()
