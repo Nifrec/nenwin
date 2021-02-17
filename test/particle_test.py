@@ -27,13 +27,9 @@ import numpy as np
 import torch
 
 from experiment_1.particle import Particle
-from experiment_1.particle import PhysicalParticle
-from experiment_1.attraction_functions.attraction_functions import Gratan
 from experiment_1.constants import DEVICE
-from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
 from test_aux import check_close
 from test_aux import runge_kutta_4_step
-from test_aux import check_named_parameters
 
 
 class ParticleTestCase(unittest.TestCase):
