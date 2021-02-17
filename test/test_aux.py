@@ -47,7 +47,7 @@ def check_close(result: torch.Tensor,
                 expected: torch.Tensor,
                 atol=NUMERICAL_ABS_ACCURACY_REQUIRED
                 ) -> bool:
-    if not np.allclose(result, expected, atol=atol):
+    if not torch.allclose(result, expected, atol=atol):
         print(f"expected:{expected}, result:{result}")
         return False
     else:
@@ -66,8 +66,7 @@ def check_named_parameters(expected: Dict[str, object],
     for name, param in named_parameters:
             if name in set(expected.keys()):
                 expected_value = expected.pop(name)
-                param = param.clone().detach().numpy()
-                output = True and check_close(expected_value, param)
+                output = output and check_close(expected_value, param)
     output = output and (len(expected) == 0)
 
     if not output:
