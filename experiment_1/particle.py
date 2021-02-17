@@ -46,10 +46,11 @@ class Particle(abc.ABC, nn.Module):
         nn.Module.__init__(self)
         self.__device = device
         self.__check_input_dims(pos, vel, acc)
-        self.__pos = self.__init_motion_tensor(pos)
-        self.__prev_pos = self.__init_prev_value(pos)
-        self.__vel = self.__init_motion_tensor(vel)
-        self.__acc = self.__init_motion_tensor(acc)
+
+        self.__pos = create_param(pos, device, only_tensor = True)
+        self.__vel = create_param(vel, device, only_tensor = True)
+        self.__acc = create_param(acc, device, only_tensor = True)
+
         # Previous value of self.acc (updated when self.acc changes)
         self._prev_acc = self.__init_prev_value(acc)
         # The value of self.acc that came *before* prev_acc
@@ -59,20 +60,6 @@ class Particle(abc.ABC, nn.Module):
         if (pos.shape != vel.shape) or (pos.shape != acc.shape):
             raise ValueError("Input values have mismatching dimensions: "
                              + f"{pos.shape}, {vel.shape}, {acc.shape}")
-
-    def __init_motion_tensor(self,
-                             vector: Union[np.ndarray, torch.Tensor]
-                             ) -> torch.Tensor:
-        """
-        Convert input arguments for pos, vel and acc to right datatype.
-        """
-        if isinstance(vector, torch.Tensor):
-            return vector.to(dtype=torch.float, device=self.device)
-        else:
-            return torch.tensor(vector,
-                                dtype=torch.float,
-                                device=self.device,
-                                requires_grad=True)
 
     def __init_prev_value(self,
                           vector: Union[np.ndarray, torch.Tensor]
@@ -88,7 +75,10 @@ class Particle(abc.ABC, nn.Module):
                                 device=self.device, requires_grad=False)
 
     def __repr__(self) -> str:
-        output = f"Particle({repr(self.pos)},{repr(self.vel)},{repr(self.acc)},"
+        pos_str = repr(self.pos.detach())
+        vel_str = repr(self.vel.detach())
+        acc_str = repr(self.acc.detach())
+        output = f"Particle({pos_str},{vel_str},{acc_str},"
         output += f"{repr(self.device)})"
         return output
 
@@ -112,13 +102,13 @@ class Particle(abc.ABC, nn.Module):
     def pos(self, new_pos: torch.Tensor):
         if (new_pos.shape != self.__pos.shape):
             raise RuntimeError("New position particle has different dimension")
-        self.__pos = self.__init_motion_tensor(new_pos)
+        self.__pos = create_param(new_pos, self.device, only_tensor = True)
 
     @vel.setter
     def vel(self, new_vel: torch.Tensor):
         if (new_vel.shape != self.__vel.shape):
             raise RuntimeError("New velocity particle has different dimension")
-        self.__vel = self.__init_motion_tensor(new_vel)
+        self.__vel = create_param(new_vel, self.device, only_tensor = True)
 
     @acc.setter
     def acc(self, new_acc: torch.Tensor):
@@ -126,7 +116,7 @@ class Particle(abc.ABC, nn.Module):
             raise RuntimeError(
                 "New acceleration particle has different dimension")
         self._set_prev_accs()
-        self.__acc = self.__init_motion_tensor(new_acc)
+        self.__acc = create_param(new_acc, self.device, only_tensor = True)
 
     def _set_prev_accs(self):
         """
@@ -169,9 +159,9 @@ class InitialValueParticle(Particle):
                  acc: Union[np.ndarray, torch.Tensor],
                  device: Optional[Union[torch.device, str]] = DEVICE):
         Particle.__init__(self, pos, vel, acc, device)
-        self.__init_pos = create_param(pos, device=device)
-        self.__init_vel = create_param(vel, device=device)
-        self.__init_acc = create_param(acc, device=device)
+        self.__init_pos = create_param(pos, device)
+        self.__init_vel = create_param(vel, device)
+        self.__init_acc = create_param(acc, device)
 
         # Note: detach() is intentionally *not* used,
         # the initial values need to be optimized
@@ -192,20 +182,23 @@ class InitialValueParticle(Particle):
 
     @property
     def init_pos(self):
-        return self.__init_pos
+        return self.__init_pos.clone()
 
     @property
     def init_vel(self):
-        return self.__init_vel
+        return self.__init_vel.clone()
 
     @property
     def init_acc(self):
-        return self.__init_acc
+        return self.__init_acc.clone()
 
     def reset(self):
         self.pos = self.__init_pos.clone()
         self.vel = self.__init_vel.clone()
         self.acc = self.__init_acc.clone()
+
+    def copy(self) -> InitialValueParticle:
+        return InitialValueParticle(self.init_pos, self.init_vel, self.init_acc)
 
 
 class PhysicalParticle(InitialValueParticle):
@@ -278,7 +271,14 @@ class PhysicalParticle(InitialValueParticle):
 
 
 def create_param(vector: Union[np.ndarray, torch.Tensor, float],
-                 device: torch.device = DEVICE) -> nn.Parameter:
+                 device: torch.device = DEVICE,
+                 only_tensor:bool = False) -> nn.Parameter:
+    """
+    Convert a vector (either torch.Tensor or np.ndarray) 
+    to the right format to be an attribute of a Particle.
+    By default converted to a torch.nn.Parameter.
+    Does preserve grad and grad_fn.
+    """
     if isinstance(vector, torch.Tensor):
         output = vector.clone().requires_grad_(True)
     else:
@@ -286,4 +286,6 @@ def create_param(vector: Union[np.ndarray, torch.Tensor, float],
                               dtype=torch.float,
                               device=device,
                               requires_grad=True)
+    if only_tensor:
+        return output
     return nn.Parameter(output)
