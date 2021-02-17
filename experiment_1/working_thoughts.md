@@ -88,3 +88,31 @@ does seem to have the correct gradient dependency graph.
 Indeed, further experimentation revealed the location of the bug:
 
 **The copy() method of Marbles does discard the computational graph!**
+
+### Update 17-02-2021
+
+The following should print `True` but it raises an error instead:
+
+```python
+some_marble = Marble(ZERO, ZERO, ZERO, 10, None, None, 0, 0, 0, 0)
+
+
+v = torch.tensor([1.0], requires_grad=True)
+
+loss = torch.sum(v + some_marble.mass)
+loss.backward()
+
+another_marble = some_marble.copy()
+
+print(torch.allclose(some_marble.mass.grad, another_marble.mass.grad))
+```
+The best approach is to add similar scripts as testcases 
+to all types of particles 
+(except `Particle` which does not have learnable parameters).
+
+`InitialValueParticle.copy()` does pass values containing gradients into
+the `__init__()` of the new object. It seems they are discarded during init?
+Let's add a testcase for that.
+
+Found where it goed wrong: `torch.nn.Parameter(input)` discards 
+`input.grad`, and returns a clone with `None` as grad.
