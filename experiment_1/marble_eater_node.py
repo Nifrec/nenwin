@@ -23,6 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 A variant of the Node that can 'consume' Marbles if they come close.
 """
 from __future__ import annotations
+from typing import List
 import torch
 import torch.nn as nn
 import re
@@ -89,9 +90,9 @@ class MarbleEaterNode(Node):
         Create copy of this MarbleEaterNode,
         but reset the number of marbles eaten of the copy to 0.
         """
-        return MarbleEaterNode(self.pos,
-                               self.vel,
-                               self.acc,
+        return MarbleEaterNode(self.init_pos,
+                               self.init_vel,
+                               self.init_acc,
                                self.mass,
                                self._attraction_function,
                                self.marble_stiffness,
