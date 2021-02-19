@@ -223,50 +223,6 @@ class InitialValueParticleTestCase(unittest.TestCase):
         self.assertTrue(check_close(some_particle.init_acc.grad,
                                     another_particle.init_acc.grad))
 
-    def test_init_with_grad_in_pos(self):
-        """
-        The __init__ method should copy the gradients to the 
-        init_pos attribute, but not to the pos attribute.
-        """
-        pos = torch.tensor([1], dtype=torch.float)
-        pos_grad = torch.tensor([2.])
-        pos.grad = pos_grad
-        vel = torch.tensor([2], dtype=torch.float)
-        acc = torch.tensor([3], dtype=torch.float)
-
-        particle = InitialValueParticle(pos, vel, acc)
-        self.assertIsNotNone(particle._InitialValueParticle__init_pos.grad)
-        self.assertIsNone(particle._Particle__pos.grad)
-
-    def test_init_with_grad_in_vel(self):
-        """
-        The __init__ method should copy the gradients to the 
-        init_vel attribute, but not to the vel attribute.
-        """
-        pos = torch.tensor([1], dtype=torch.float)
-        vel = torch.tensor([2], dtype=torch.float)
-        vel_grad = torch.tensor([2.])
-        vel.grad = vel_grad
-        acc = torch.tensor([3], dtype=torch.float)
-
-        particle = InitialValueParticle(pos, vel, acc)
-        self.assertIsNotNone(particle._InitialValueParticle__init_vel.grad)
-        self.assertIsNone(particle._Particle__vel.grad)
-
-    def test_init_with_grad_in_acc(self):
-        """
-        The __init__ method should copy the gradients to the 
-        init_acc attribute, but not to the acc attribute.
-        """
-        pos = torch.tensor([1], dtype=torch.float)
-        vel = torch.tensor([2], dtype=torch.float)
-        acc = torch.tensor([3], dtype=torch.float)
-        acc_grad = torch.tensor([2.])
-        acc.grad = acc_grad
-
-        particle = InitialValueParticle(pos, vel, acc)
-        self.assertIsNotNone(particle._InitialValueParticle__init_acc.grad)
-        self.assertIsNone(particle._Particle__acc.grad)
 
     def test_init_pos_setter(self):
         """
