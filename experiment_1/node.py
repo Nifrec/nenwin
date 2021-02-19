@@ -28,7 +28,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import re
-from typing import Union
+from typing import Iterable, Set, Union
 from experiment_1.particle import PhysicalParticle
 
 
@@ -99,19 +99,19 @@ class Node(PhysicalParticle):
     
     @property
     def marble_stiffness(self) -> float:
-        return self.__marble_stiffness.item()
+        return self.__marble_stiffness
 
     @property
     def node_stiffness(self) -> float:
-        return self.__node_stiffness.item()
+        return self.__node_stiffness
 
     @property
     def marble_attraction(self) -> float:
-        return self.__marble_attraction.item()
+        return self.__marble_attraction
 
     @property
     def node_attraction(self) -> float:
-        return self.__node_attraction.item()
+        return self.__node_attraction
 
     def compute_attraction_force_to(
             self, other: Union[Marble, Node]) -> torch.Tensor:
@@ -129,9 +129,9 @@ class Node(PhysicalParticle):
         return multiplier * super().compute_attraction_force_to(other)
 
     def copy(self) -> Node:
-        return Node(self.pos,
-                    self.vel,
-                    self.acc,
+        return Node(self.init_pos,
+                    self.init_vel,
+                    self.init_acc,
                     self.mass,
                     self._attraction_function,
                     self.marble_stiffness,
@@ -210,9 +210,9 @@ class Marble(Node):
         return self.__datum
 
     def copy(self) -> Marble:
-        return Marble(self.pos,
-                      self.vel,
-                      self.acc,
+        return Marble(self.init_pos,
+                      self.init_vel,
+                      self.init_acc,
                       self.mass,
                       self._attraction_function,
                       self.datum,
