@@ -47,9 +47,9 @@ class Particle(abc.ABC, nn.Module):
         self.__device = device
         self.__check_input_dims(pos, vel, acc)
 
-        self.__pos = create_param(pos, device, only_tensor = True)
-        self.__vel = create_param(vel, device, only_tensor = True)
-        self.__acc = create_param(acc, device, only_tensor = True)
+        self.__pos = create_param(pos, device, only_tensor=True)
+        self.__vel = create_param(vel, device, only_tensor=True)
+        self.__acc = create_param(acc, device, only_tensor=True)
 
         # Previous value of self.acc (updated when self.acc changes)
         self._prev_acc = self.__init_prev_value(acc)
@@ -102,13 +102,13 @@ class Particle(abc.ABC, nn.Module):
     def pos(self, new_pos: torch.Tensor):
         if (new_pos.shape != self.__pos.shape):
             raise RuntimeError("New position particle has different dimension")
-        self.__pos = create_param(new_pos, self.device, only_tensor = True)
+        self.__pos = create_param(new_pos, self.device, only_tensor=True)
 
     @vel.setter
     def vel(self, new_vel: torch.Tensor):
         if (new_vel.shape != self.__vel.shape):
             raise RuntimeError("New velocity particle has different dimension")
-        self.__vel = create_param(new_vel, self.device, only_tensor = True)
+        self.__vel = create_param(new_vel, self.device, only_tensor=True)
 
     @acc.setter
     def acc(self, new_acc: torch.Tensor):
@@ -116,7 +116,7 @@ class Particle(abc.ABC, nn.Module):
             raise RuntimeError(
                 "New acceleration particle has different dimension")
         self._set_prev_accs()
-        self.__acc = create_param(new_acc, self.device, only_tensor = True)
+        self.__acc = create_param(new_acc, self.device, only_tensor=True)
 
     def _set_prev_accs(self):
         """
@@ -223,7 +223,7 @@ class PhysicalParticle(InitialValueParticle):
         return self.__mass.clone()
 
     @mass.setter
-    def mass(self, new_mass)-> torch.Tensor:
+    def mass(self, new_mass) -> torch.Tensor:
         self.__mass = create_param(new_mass, device=self.device)
 
     def __repr__(self) -> str:
@@ -231,7 +231,7 @@ class PhysicalParticle(InitialValueParticle):
         output = output.replace("InitialValue", "Physical")
         output = output.replace(",device",
                                 f",{self.mass.item()},"
-                                +f"{repr(self._attraction_function)},device")
+                                + f"{repr(self._attraction_function)},device")
         return output
 
     def update_acceleration(self, forces: torch.Tensor):
@@ -266,13 +266,16 @@ class PhysicalParticle(InitialValueParticle):
         return direction * self._attraction_function(self, other)
 
     def copy(self) -> PhysicalParticle:
-        return PhysicalParticle(self.pos, self.vel, self.acc, self.mass,
+        return PhysicalParticle(self.init_pos,
+                                self.init_vel,
+                                self.init_acc,
+                                self.mass,
                                 self._attraction_function)
 
 
 def create_param(vector: Union[np.ndarray, torch.Tensor, float],
                  device: torch.device = DEVICE,
-                 only_tensor:bool = False) -> nn.Parameter:
+                 only_tensor: bool = False) -> nn.Parameter:
     """
     Convert a vector (either torch.Tensor or np.ndarray) 
     to the right format to be an attribute of a Particle.
@@ -291,5 +294,5 @@ def create_param(vector: Union[np.ndarray, torch.Tensor, float],
     else:
         output = nn.Parameter(output)
         if vector.grad is not None:
-                output.grad = vector.grad.clone()
+            output.grad = vector.grad.clone()
         return output
