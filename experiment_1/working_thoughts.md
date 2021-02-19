@@ -156,3 +156,22 @@ How could I be so naiv?
 
 Either way, time to remove the cheats and add better testcases, 
 and start over again...
+
+*Actually the testcases do not pass, I am confused now. Did I run the wrong ones?*
+
+**At least the way to proceed is clear**: the only method of preserving
+grads is to use `clone()`, initializing a new `Parameter` deleted the grads.
+Hence only the initial values of `pos`, `vel`, `acc`
+ and `mass` should be `Parameter`s,
+the working versions just be normal Tensors.
+This is needed because `Parameter` attributes 
+can only be assigned new `Parameter` instances, which I cannot when I change
+the position and the mass etc.
+
+Well, for the mass it is not needed. The specification of Nenwin
+does not require the mass to be changeable at runtime,
+so I could simply remove the setter altogether.
+
+Plan:
+* Change `pos`, `vel`, `acc` setters to not return a `Parameter`
+* Remove `mass` getter.
