@@ -32,8 +32,7 @@ from experiment_1.attraction_functions.attraction_functions \
     import NewtonianGravity
 from experiment_1.attraction_functions.attraction_functions import Gratan
 from experiment_1.constants import DEVICE
-from test_aux import NUMERICAL_ABS_ACCURACY_REQUIRED
-from test_aux import runge_kutta_4_step
+from test_aux import check_close
 
 
 class PhysicalParticleTestCase(unittest.TestCase):
@@ -47,9 +46,8 @@ class PhysicalParticleTestCase(unittest.TestCase):
 
         self.assertEqual(particle.mass, mass)
 
-        # mass2 = torch.tensor(10, dtype=torch.float)
-        mass2 = 10
-        particle.mass = mass2
+        mass2 = torch.nn.Parameter(torch.tensor([10.0]), requires_grad=True)
+        particle.set_mass(mass2)
 
         self.assertEqual(particle.mass, mass2)
 
@@ -239,6 +237,26 @@ class PhysicalParticleTestCase(unittest.TestCase):
         self.assertTrue(torch.allclose(pos, copy.pos))
         self.assertEqual(mass, copy.mass)
         self.assertTrue(attraction_funct is copy._attraction_function)
+
+    def test_copy_with_mass_grad(self):
+        """
+        Gradients of mass should be copied as well.
+        """
+        pos = torch.tensor([1], dtype=torch.float)
+        vel = torch.tensor([2], dtype=torch.float)
+        acc = torch.tensor([3], dtype=torch.float)
+        mass = 4
+        attraction_funct = Gratan()
+        some_particle = PhysicalParticle(pos, vel, acc, mass, attraction_funct)
+
+        some_tensor = torch.tensor([4.0], requires_grad=True)
+        loss = torch.sum(some_particle.mass + some_tensor)
+        loss.backward()
+        self.assertIsNotNone(some_particle.mass.grad)
+        self.assertIsNotNone(some_tensor.grad)
+
+        another_particle = some_particle.copy()
+        self.assertIs(some_particle.mass.grad, another_particle.mass.grad)
 
     def test_parameters(self):
         pos = torch.tensor([1], dtype=torch.float)

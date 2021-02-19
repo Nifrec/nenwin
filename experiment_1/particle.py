@@ -228,11 +228,19 @@ class InitialValueParticle(Particle):
 
     def copy(self) -> InitialValueParticle:
         output = InitialValueParticle(self.init_pos, self.init_vel, self.init_acc)
-        output.init_pos = self.__init_pos
-        output.init_vel = self.__init_vel
-        output.init_acc = self.__init_acc
+        output.adopt_parameters(self)
 
-        return 
+        return output
+
+    def adopt_parameters(self, source: InitialValueParticle):
+        """
+        Sets the initial position, velocity and acceleration
+        to the same object (so by reference) to the init pos, vel and acc
+        of [source].
+        """
+        self.set_init_pos(source.init_pos)
+        self.set_init_vel(source.init_vel)
+        self.set_init_acc(source.init_acc)
 
 class PhysicalParticle(InitialValueParticle):
     """
@@ -253,11 +261,16 @@ class PhysicalParticle(InitialValueParticle):
 
     @property
     def mass(self) -> torch.Tensor:
-        return self.__mass.clone()
+        return self.__mass
 
-    @mass.setter
-    def mass(self, new_mass) -> torch.Tensor:
-        self.__mass = create_param(new_mass, device=self.device)
+    def set_mass(self, new_mass) -> torch.Tensor:
+        """
+        Directly change the mass *by reference*.
+        This is the only way to ensure compuational graphs will also be set.
+        """
+        if not isinstance(new_mass, nn.Parameter):
+            raise ValueError("New mass should be a torch.nn.Paratemer")
+        self.__mass = new_mass
 
     def __repr__(self) -> str:
         output = super().__repr__()
@@ -299,11 +312,17 @@ class PhysicalParticle(InitialValueParticle):
         return direction * self._attraction_function(self, other)
 
     def copy(self) -> PhysicalParticle:
-        return PhysicalParticle(self.init_pos,
+        output = PhysicalParticle(self.init_pos,
                                 self.init_vel,
                                 self.init_acc,
                                 self.mass,
                                 self._attraction_function)
+        output.adopt_parameters(self)
+        return output
+
+    def adopt_parameters(self, source: PhysicalParticle):
+        super().adopt_parameters(source)
+        self.set_mass(source.mass)
 
 
 def create_param(vector: Union[np.ndarray, torch.Tensor, float],
