@@ -116,3 +116,43 @@ Let's add a testcase for that.
 
 Found where it goed wrong: `torch.nn.Parameter(input)` discards 
 `input.grad`, and returns a clone with `None` as grad.
+
+## Update 19-02-2021
+A simple fix is the roughly following 
+(for copying a vector to a param and keeping grad):
+```python
+    output = nn.Parameter(input_vect.clone())
+    output.grad = input_vect.grad
+```
+This works and passes all my tests.
+
+The MarbleEmitter is still not working, but I see I made the same mistake
+(using `Parameter` without coping the grad manually).
+
+### Wait a moment
+I am coping grads during forward propagation. 
+But they will only be defined during backpropagation.
+That does not sound useful, `grad_fn` needs to be copied instead? 
+But that is not possible in PyTorch.
+
+An illustration:
+```python
+a = torch.tensor([1.0], requires_grad=True)
+b = nn.Parameter(a, requires_grad=True)
+b.grad = a.grad
+
+loss = torch.tensor([2.0]) * b
+b.backward()
+print(b.grad, a.grad, sep="\n")
+```
+output:
+```python
+tensor([1.])
+None
+```
+So I've basically been cheating my own testcases without being aware of it
+(and been using bad testcases in the first place).
+How could I be so naiv?
+
+Either way, time to remove the cheats and add better testcases, 
+and start over again...
