@@ -182,15 +182,15 @@ class InitialValueParticle(Particle):
 
     @property
     def init_pos(self):
-        return self.__init_pos.clone()
+        return self.__init_pos
 
     @property
     def init_vel(self):
-        return self.__init_vel.clone()
+        return self.__init_vel
 
     @property
     def init_acc(self):
-        return self.__init_acc.clone()
+        return self.__init_acc
 
     def reset(self):
         self.pos = self.__init_pos.clone()
@@ -288,4 +288,8 @@ def create_param(vector: Union[np.ndarray, torch.Tensor, float],
                               requires_grad=True)
     if only_tensor:
         return output
-    return nn.Parameter(output)
+    else:
+        output = nn.Parameter(output)
+        if vector.grad is not None:
+                output.grad = vector.grad.clone()
+        return output
