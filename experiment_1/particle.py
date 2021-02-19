@@ -282,8 +282,11 @@ def create_param(vector: Union[np.ndarray, torch.Tensor, float],
     By default converted to a torch.nn.Parameter.
     Does preserve grad and grad_fn.
     """
+    grad = None
     if isinstance(vector, torch.Tensor):
         output = vector.clone().requires_grad_(True)
+        if vector.grad is not None:
+            output.grad = vector.grad.clone()
     else:
         output = torch.tensor(vector,
                               dtype=torch.float,
@@ -293,6 +296,5 @@ def create_param(vector: Union[np.ndarray, torch.Tensor, float],
         return output
     else:
         output = nn.Parameter(output)
-        if vector.grad is not None:
-            output.grad = vector.grad.clone()
+        output.grad = grad
         return output
