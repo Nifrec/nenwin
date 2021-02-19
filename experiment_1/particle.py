@@ -280,13 +280,10 @@ def create_param(vector: Union[np.ndarray, torch.Tensor, float],
     Convert a vector (either torch.Tensor or np.ndarray) 
     to the right format to be an attribute of a Particle.
     By default converted to a torch.nn.Parameter.
-    Does preserve grad and grad_fn.
+    Does *NOT* preserve grad and grad_fn.
     """
-    grad = None
     if isinstance(vector, torch.Tensor):
         output = vector.clone().requires_grad_(True)
-        if vector.grad is not None:
-            output.grad = vector.grad.clone()
     else:
         output = torch.tensor(vector,
                               dtype=torch.float,
@@ -295,6 +292,4 @@ def create_param(vector: Union[np.ndarray, torch.Tensor, float],
     if only_tensor:
         return output
     else:
-        output = nn.Parameter(output)
-        output.grad = grad
-        return output
+        return nn.Parameter(output)
