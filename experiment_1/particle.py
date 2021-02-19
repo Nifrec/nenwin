@@ -25,6 +25,7 @@ Most fundamental pieces for building Nenwin-networks.
 from __future__ import annotations
 import abc
 import numpy as np
+from numpy.lib.arraysetops import isin
 import torch
 import torch.nn as nn
 from typing import Optional, Union
@@ -192,14 +193,46 @@ class InitialValueParticle(Particle):
     def init_acc(self):
         return self.__init_acc
 
+    def set_init_pos(self, new_init_pos: nn.Parameter):
+        """
+        Directly change the init_pos *by reference*.
+        This is the only way to ensure compuational graphs will also be set.
+        """
+        if not isinstance(new_init_pos, nn.Parameter):
+            raise ValueError("Initial position should be a torch.nn.Paratemer")
+        self.__init_pos = new_init_pos
+
+    def set_init_vel(self, new_init_vel: nn.Parameter):
+        """
+        Directly change the init_vel *by reference*.
+        This is the only way to ensure compuational graphs will also be set.
+        """
+        if not isinstance(new_init_vel, nn.Parameter):
+            raise ValueError("Initial velition should be a torch.nn.Paratemer")
+        self.__init_vel = new_init_vel
+
+    def set_init_acc(self, new_init_acc: nn.Parameter):
+        """
+        Directly change the init_acc *by reference*.
+        This is the only way to ensure compuational graphs will also be set.
+        """
+        if not isinstance(new_init_acc, nn.Parameter):
+            raise ValueError("Initial accition should be a torch.nn.Paratemer")
+        self.__init_acc = new_init_acc
+
+
     def reset(self):
         self.pos = self.__init_pos.clone()
         self.vel = self.__init_vel.clone()
         self.acc = self.__init_acc.clone()
 
     def copy(self) -> InitialValueParticle:
-        return InitialValueParticle(self.init_pos, self.init_vel, self.init_acc)
+        output = InitialValueParticle(self.init_pos, self.init_vel, self.init_acc)
+        output.init_pos = self.__init_pos
+        output.init_vel = self.__init_vel
+        output.init_acc = self.__init_acc
 
+        return 
 
 class PhysicalParticle(InitialValueParticle):
     """
@@ -283,7 +316,7 @@ def create_param(vector: Union[np.ndarray, torch.Tensor, float],
     Does *NOT* preserve grad and grad_fn.
     """
     if isinstance(vector, torch.Tensor):
-        output = vector.clone().requires_grad_(True)
+        output = vector.clone()
     else:
         output = torch.tensor(vector,
                               dtype=torch.float,

@@ -237,7 +237,7 @@ class InitialValueParticleTestCase(unittest.TestCase):
         particle = InitialValueParticle(pos, vel, acc)
         self.assertIsNotNone(particle._InitialValueParticle__init_pos.grad)
         self.assertIsNone(particle._Particle__pos.grad)
-    
+
     def test_init_with_grad_in_vel(self):
         """
         The __init__ method should copy the gradients to the 
@@ -268,11 +268,49 @@ class InitialValueParticleTestCase(unittest.TestCase):
         self.assertIsNotNone(particle._InitialValueParticle__init_acc.grad)
         self.assertIsNone(particle._Particle__acc.grad)
 
+    def test_init_pos_setter(self):
+        """
+        Should set reference, not only value.
+        This to keep gradients!
+        """
+        particle = setup_simple_particle()
+        new_init_pos = torch.nn.Parameter(
+            torch.tensor([1.0],requires_grad=True))
+        particle.set_init_pos(new_init_pos)
+
+        self.assertIs(particle.init_pos, new_init_pos)
+
+    def test_init_vel_setter(self):
+        """
+        Should set reference, not only value.
+        This to keep gradients!
+        """
+        particle = setup_simple_particle()
+        new_init_vel = torch.nn.Parameter(
+            torch.tensor([1.0],requires_grad=True))
+        particle.set_init_vel(new_init_vel)
+
+        self.assertIs(particle.init_vel, new_init_vel)
+
+    def test_init_acc_setter(self):
+        """
+        Should set reference, not only value.
+        This to keep gradients!
+        """
+        particle = setup_simple_particle()
+        new_init_acc = torch.nn.Parameter(
+            torch.tensor([1.0],requires_grad=True))
+        particle.set_init_acc(new_init_acc)
+
+        self.assertIs(particle.init_acc, new_init_acc)
+
+
 def setup_simple_particle() -> InitialValueParticle:
     pos = torch.tensor([1], dtype=torch.float)
     vel = torch.tensor([2], dtype=torch.float)
     acc = torch.tensor([3], dtype=torch.float)
     return InitialValueParticle(pos, vel, acc)
+
 
 if __name__ == '__main__':
     unittest.main()
