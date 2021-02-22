@@ -210,16 +210,22 @@ class NodeTestCase(unittest.TestCase):
         node_stiffness = 0.1
         marble_stiffness = 0.6
         node = Node(torch.tensor([1.], dtype=torch.float),
-                    ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 0, 0)
+                    ZERO, ZERO, 0, ATTRACT_FUNCT, 0, 0, 1, 1)
         marble = Marble(torch.tensor(
-            [-1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None)
+            [-1.], dtype=torch.float), ZERO, ZERO, 0, ATTRACT_FUNCT, None, 0, 0, 1, 1)
         particle = create_particle(marble_stiffness, node_stiffness, 0, 0)
 
-        expected = node_stiffness*ATTRACT_FUNCT.value \
-            - marble_stiffness*ATTRACT_FUNCT.value
+        expected = (1 - node_stiffness)*ATTRACT_FUNCT.value \
+            - (1 - marble_stiffness)*ATTRACT_FUNCT.value
         result = particle.compute_experienced_force(set([node, marble]))
 
-    def test_copy(self):
+        self.assertAlmostEqual(expected, result.item(), delta=1e-5)
+
+    def test_copy_1(self):
+        """
+        Basic test: the copy should have similarly valued 
+        attribute values as the original.
+        """
         pos = torch.tensor([1.], dtype=torch.float)
         vel = torch.tensor([2.], dtype=torch.float)
         acc = torch.tensor([3.], dtype=torch.float)
@@ -245,6 +251,16 @@ class NodeTestCase(unittest.TestCase):
                                stiffnesses["marble_attraction"])
         self.assertAlmostEqual(copy.node_attraction,
                                stiffnesses["node_attraction"])
+
+    def test_copy_2(self):
+        """
+        Implementation test: the copy should have exactly the same
+        learnable parameters as the original. 
+        This ensures backpropagation will propagate from the copies to the
+        original.
+        """
+        pass
+
 
     def test_parameters(self):
         pos = torch.tensor([1], dtype=torch.float)

@@ -66,6 +66,8 @@ def check_named_parameters(expected: Dict[str, object],
     for name, param in named_parameters:
             if name in set(expected.keys()):
                 expected_value = expected.pop(name)
+                if not isinstance(expected_value, torch.Tensor):
+                    expected_value = torch.Tensor([expected_value])
                 output = output and check_close(expected_value, param)
     output = output and (len(expected) == 0)
 
