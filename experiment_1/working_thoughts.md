@@ -186,3 +186,9 @@ I decided the following:
     same result if required.
 The disadvantage is that all `Particle` subclasses require modification and
 additional testcases.
+
+## Update 22-02-2021
+I dropped the constraint (and adapted implementation) that 
+`MarbleEaterNode.radius` must be a learnable parameter.
+There currently was no way for it to collect gradients.
+This is probably something to add later though!
