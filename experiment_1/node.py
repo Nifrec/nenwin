@@ -231,7 +231,7 @@ class Marble(Node):
         return self.__datum
 
     def copy(self) -> Marble:
-        return Marble(self.init_pos,
+        output =  Marble(self.init_pos,
                       self.init_vel,
                       self.init_acc,
                       self.mass,
@@ -241,6 +241,8 @@ class Marble(Node):
                       self.node_stiffness,
                       self.marble_attraction,
                       self.node_attraction)
+        output.adopt_parameters(self)
+        return output
 
 
 def raise_error_if_any_not_in_range(values: Iterable[float],

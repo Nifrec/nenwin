@@ -46,7 +46,7 @@ class MarbleTestCase(unittest.TestCase):
         m = Marble(ZERO, ZERO, ZERO, 0, None, datum, 0, 0, 0, 0)
         self.assertEqual(m.datum, datum)
 
-    def test_copy(self):
+    def test_copy_values(self):
         pos = torch.tensor([1.])
         vel = torch.tensor([2.])
         acc = torch.tensor([3.])
@@ -74,6 +74,43 @@ class MarbleTestCase(unittest.TestCase):
         self.assertAlmostEqual(copy.node_attraction,
                                stiffnesses["node_attraction"])
         self.assertEqual(copy.datum, datum)
+
+    def test_copy_same_reference(self):
+        """
+        Implementation test: the copy should have exactly the same
+        learnable parameters as the original. 
+        This ensures backpropagation will propagate from the copies to the
+        original.
+        """
+        pos = torch.tensor([1.], dtype=torch.float)
+        vel = torch.tensor([2.], dtype=torch.float)
+        acc = torch.tensor([3.], dtype=torch.float)
+        mass = 4
+        datum = 5
+        attraction_funct = ATTRACT_FUNCT
+        stiffnesses = generate_stiffness_dict(0.6, 0.7, 0.8, 0.9)
+        original = Marble(pos, vel, acc, mass, attraction_funct,
+                          datum=datum, **stiffnesses)
+        copy = original.copy()
+
+        self.assertIsInstance(copy, Marble)
+        self.assertIsNot(copy, original)
+        self.assertIs(copy.init_pos, original.init_pos)
+        self.assertIs(copy.init_vel, original.init_vel)
+        self.assertIs(copy.init_acc, original.init_acc)
+        self.assertIs(copy.marble_stiffness, original.marble_stiffness)
+        self.assertIs(copy.node_stiffness, original.node_stiffness)
+        self.assertIs(copy.marble_attraction, original.marble_attraction)
+        self.assertIs(copy.node_attraction, original.node_attraction)
+
+    def test_copy_type(self):
+        """
+        The copy should be an instance of a Marble.
+        """
+        original = Marble(ZERO, ZERO, ZERO, ZERO, None, None)
+        copy = original.copy()
+
+        self.assertIsInstance(copy, Marble)
 
     def test_repr(self):
         pos = torch.tensor([0], dtype=torch.float)
