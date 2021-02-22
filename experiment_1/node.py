@@ -113,6 +113,18 @@ class Node(PhysicalParticle):
     def node_attraction(self) -> float:
         return self.__node_attraction
 
+    def set_marble_stiffness(self, new_stiffness: nn.Parameter):
+        self.__marble_stiffness = new_stiffness
+
+    def set_node_stiffness(self, new_stiffness: nn.Parameter):
+        self.__node_stiffness = new_stiffness
+
+    def set_marble_attraction(self, new_attraction: nn.Parameter):
+        self.__marble_attraction = new_attraction
+
+    def set_node_attraction(self, new_attraction: nn.Parameter):
+        self.__node_attraction = new_attraction
+
     def compute_attraction_force_to(
             self, other: Union[Marble, Node]) -> torch.Tensor:
         """
@@ -129,7 +141,7 @@ class Node(PhysicalParticle):
         return multiplier * super().compute_attraction_force_to(other)
 
     def copy(self) -> Node:
-        return Node(self.init_pos,
+        output = Node(self.init_pos,
                     self.init_vel,
                     self.init_acc,
                     self.mass,
@@ -138,6 +150,15 @@ class Node(PhysicalParticle):
                     self.node_stiffness,
                     self.marble_attraction,
                     self.node_attraction)
+        output.adopt_parameters(self)
+        return output
+
+    def adopt_parameters(self, source: Node):
+        super().adopt_parameters(source)
+        self.set_marble_stiffness(source.marble_stiffness)
+        self.set_node_stiffness(source.node_stiffness)
+        self.set_marble_attraction(source.marble_attraction)
+        self.set_node_attraction(source.node_attraction)
 
     def compute_experienced_force(self,
                                   other_particles: Set[Union[Marble, Node]]

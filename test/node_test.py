@@ -259,7 +259,26 @@ class NodeTestCase(unittest.TestCase):
         This ensures backpropagation will propagate from the copies to the
         original.
         """
-        pass
+        pos = torch.tensor([1.], dtype=torch.float)
+        vel = torch.tensor([2.], dtype=torch.float)
+        acc = torch.tensor([3.], dtype=torch.float)
+        mass = 4
+        attraction_funct = ATTRACT_FUNCT
+        stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
+        original = Node(pos, vel, acc, mass, attraction_funct,
+                        **stiffnesses)
+        copy = original.copy()
+
+        self.assertIsNot(copy, original)
+        self.assertIs(copy.init_pos, original.init_pos)
+        self.assertIs(copy.init_vel, original.init_vel)
+        self.assertIs(copy.init_acc, original.init_acc)
+        self.assertIs(copy.marble_stiffness, original.marble_stiffness)
+        self.assertIs(copy.node_stiffness, original.node_stiffness)
+        self.assertIs(copy.marble_attraction, original.marble_attraction)
+        self.assertIs(copy.node_attraction, original.node_attraction)
+
+
 
 
     def test_parameters(self):
