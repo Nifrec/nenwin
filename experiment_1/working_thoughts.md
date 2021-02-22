@@ -175,3 +175,14 @@ so I could simply remove the setter altogether.
 Plan:
 * Change `pos`, `vel`, `acc` setters to not return a `Parameter`
 * Remove `mass` getter.
+
+I decided the following:
+* I added a method `adopt_parameters()` to adopt parameters 
+    from another particle into a `InitialValueParticle`.
+    This copies references to the initial values,
+    hence gradients will flow back to the original.
+* I dropped the requirement for coping grads and dependency graphs during
+    init. One can use the new method `adopt_parameters()` to get the
+    same result if required.
+The disadvantage is that all `Particle` subclasses require modification and
+additional testcases.
