@@ -221,7 +221,7 @@ class NodeTestCase(unittest.TestCase):
 
         self.assertAlmostEqual(expected, result.item(), delta=1e-5)
 
-    def test_copy_1(self):
+    def test_copy_same_values(self):
         """
         Basic test: the copy should have similarly valued 
         attribute values as the original.
@@ -252,7 +252,7 @@ class NodeTestCase(unittest.TestCase):
         self.assertAlmostEqual(copy.node_attraction,
                                stiffnesses["node_attraction"])
 
-    def test_copy_2(self):
+    def test_copy_same_reference(self):
         """
         Implementation test: the copy should have exactly the same
         learnable parameters as the original. 
@@ -278,7 +278,14 @@ class NodeTestCase(unittest.TestCase):
         self.assertIs(copy.marble_attraction, original.marble_attraction)
         self.assertIs(copy.node_attraction, original.node_attraction)
 
+    def test_copy_type(self):
+        """
+        The copy should be an instance of a Node.
+        """
+        original = create_particle(0, 0, 0, 0)
+        copy = original.copy()
 
+        self.assertIsInstance(copy, Node)
 
 
     def test_parameters(self):
