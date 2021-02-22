@@ -145,24 +145,53 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
         self.assertEqual(copy.radius, radius)
         self.assertEqual(copy.num_marbles_eaten, 0)
 
-    def test_named_parameters(self):
+    def test_copy_same_reference(self):
+        """
+        Implementation test: the copy should have exactly the same
+        learnable parameters as the original. 
+        This ensures backpropagation will propagate from the copies to the
+        original.
+        """
+        original = create_particle()
+        copy = original.copy()
 
-        pos = torch.tensor([1], dtype=torch.float)
-        vel = torch.tensor([2], dtype=torch.float)
-        acc = torch.tensor([3], dtype=torch.float)
-        mass = 4
-        attraction_funct = ATTRACT_FUNCT
-        stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
-        radius = 9
-        eater = MarbleEaterNode(pos, vel, acc, mass,
-                                attraction_funct,
-                                radius=radius,
-                                ** stiffnesses)
+        self.assertIsInstance(copy, MarbleEaterNode)
+        self.assertIsNot(copy, original)
+        self.assertIs(copy.init_pos, original.init_pos)
+        self.assertIs(copy.init_vel, original.init_vel)
+        self.assertIs(copy.init_acc, original.init_acc)
+        self.assertIs(copy.marble_stiffness, original.marble_stiffness)
+        self.assertIs(copy.node_stiffness, original.node_stiffness)
+        self.assertIs(copy.marble_attraction, original.marble_attraction)
+        self.assertIs(copy.node_attraction, original.node_attraction)
 
-        named_params = eater.named_parameters()
-        expected_names = {'_MarbleEaterNode__radius': radius}
-        self.assertTrue(check_named_parameters(expected_names,
-                                               tuple(named_params)))
+    def test_copy_type(self):
+        """
+        The copy should be an instance of a MarbleEaterNode.
+        """
+        original = create_particle()
+        copy = original.copy()
+
+        self.assertIsInstance(copy, MarbleEaterNode)
+
+    # def test_named_parameters(self):
+
+    #     pos = torch.tensor([1], dtype=torch.float)
+    #     vel = torch.tensor([2], dtype=torch.float)
+    #     acc = torch.tensor([3], dtype=torch.float)
+    #     mass = 4
+    #     attraction_funct = ATTRACT_FUNCT
+    #     stiffnesses = generate_stiffness_dict(0.5, 0.6, 0.7, 0.8)
+    #     radius = 9
+    #     eater = MarbleEaterNode(pos, vel, acc, mass,
+    #                             attraction_funct,
+    #                             radius=radius,
+    #                             ** stiffnesses)
+
+    #     named_params = eater.named_parameters()
+    #     expected_names = {'_MarbleEaterNode__radius': radius}
+    #     self.assertTrue(check_named_parameters(expected_names,
+    #                                            tuple(named_params)))
 
     def test_repr(self):
         pos = torch.tensor([0], dtype=torch.float)
@@ -200,6 +229,13 @@ class MarbleEaterNodeTestCase(unittest.TestCase):
         result = repr(eater)
         self.assertEqual(expected, result)
 
+def create_particle() -> MarbleEaterNode:
+    """
+    Simply attempt to create a MarbleEaterNode with given parameters,
+    and 0 or None for all other parameter values.
+    """
+    return MarbleEaterNode(ZERO, ZERO, ZERO, 0, ATTRACT_FUNCT,
+                0, 0, 0, 0, 0)
 
 if __name__ == '__main__':
     unittest.main()

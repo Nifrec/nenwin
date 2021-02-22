@@ -56,10 +56,8 @@ class MarbleEaterNode(Node):
                          node_stiffness,
                          marble_attraction,
                          node_attraction)
-        radius_as_tensor = torch.tensor(radius,
-                                        dtype=torch.float,
-                                        device=self.device)
-        self.__radius = nn.Parameter(radius_as_tensor)
+
+        self.__radius = radius
         self.__num_marbles_eaten: int = 0
         self.__marble_data_eaten = []
 
@@ -71,7 +69,7 @@ class MarbleEaterNode(Node):
 
     @property
     def radius(self) -> float:
-        return self.__radius.item()
+        return self.__radius
 
     @property
     def num_marbles_eaten(self) -> int:
@@ -90,7 +88,7 @@ class MarbleEaterNode(Node):
         Create copy of this MarbleEaterNode,
         but reset the number of marbles eaten of the copy to 0.
         """
-        return MarbleEaterNode(self.init_pos,
+        output = MarbleEaterNode(self.init_pos,
                                self.init_vel,
                                self.init_acc,
                                self.mass,
@@ -100,3 +98,5 @@ class MarbleEaterNode(Node):
                                self.marble_attraction,
                                self.node_attraction,
                                self.radius)
+        output.adopt_parameters(self)
+        return output
