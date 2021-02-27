@@ -90,9 +90,10 @@ class PhiInputPlacer(InputPlacer):
         exists = False
         for i in range(0, number_of_data):
             if not exists:
-                possible_points = divmod(dimension_vector,1)[1]
+                possible_points = [divmod(dimension_vector,1)[1]]
                 exists = True
             else:    
-                possible_points = np.append(possible_points, [divmod((i+1)*dimension_vector, 1)[1]])
-            print("possible points", possible_points)
+                possible_points = np.append(possible_points, [divmod((i+1)*dimension_vector, 1)[1]], axis = 0)
+            print("possible points", list(possible_points))
+        
         pass
