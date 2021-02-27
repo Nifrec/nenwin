@@ -192,3 +192,19 @@ I dropped the constraint (and adapted implementation) that
 `MarbleEaterNode.radius` must be a learnable parameter.
 There currently was no way for it to collect gradients.
 This is probably something to add later though!
+
+## Update 27-02-2021
+One of the difficulties with the `Emitter` is that the mass of the
+emitted Marble should propagate back to the `stored_mass` of the `Emitter`.
+However, the mass of a Marble is a `torch.nn.Parameter()`, and creating
+a new parameter for a tensor resets the computational graph.
+Hence it is not possible to both
+1. Keep the mass of the Marble trainable (i.e. keep it a Parameter).
+2. Propagate back to the `stored_mass` and the `prototype`'s mass.
+At first it seemed that the only solution is to give a Marble an `init_mass`,
+which is a Parameter, and a 'working' mass, and only set the working mass
+when emitting a new Marble. However, 
+**The emitted Marble does not need to be trainable!**. 
+It does not exist at the start of the algorithm, and when optimizing the other
+particles it may even never come into existance. So I am confusing goal
+of different parts of the software with each other.
