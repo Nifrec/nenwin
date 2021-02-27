@@ -2,8 +2,8 @@
 Nenwin-project (NEural Networks WIthout Neurons) for
 the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 
-Author: Lulof Pirée
-October 2020
+Author: Teun Schilperoort
+Feb 2021
 
 Copyright (C) 2020 Lulof Pirée, Teun Schilperoort
 
@@ -62,9 +62,29 @@ class InputPlacer(abc.ABC):
         """
         pass
 
-class NewtonRaphsonInputPlacer(InputPlacer):
-    #TODO: docstring
+class PhiInputPlacer(InputPlacer):
+    """
+    Given a set of data, create the marbles and place them from the bottomleft
+    to topright according to a pseudorandom sequence
+    """
 
     def marblize_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
-        #TODO: docstring
+        list_phi = [0, 1.618033988749895, 1.324717957244746, 1.2207440846057596, 
+                    1.1673039782614187, 1.1347241384015194, 1.1127756842787055, 
+                    1.0969815577985598, 1.085070245491451, 1.0757660660868371, 
+                    1.0682971889208412, 1.062169167864255, 1.0570505752212285, 
+                    1.0527109201475582, 1.0489849347570344, 1.0457510241563417, 
+                    1.0429177323017866, 1.0404149477818474, 1.03818801943645, 
+                    1.0361937171306834, 1.034397396133807]
+        input_list = list(input_data)
+        dimension = len(input_list[0])
+        dimension_vector = np.array([])
+        for i in range(1, dimension + 1):
+            dimension_vector = np.append(dimension_vector, np.divide(1, list_phi[dimension]**i))
+        print("dimension_vector", dimension_vector)
+        
+        number_of_data = len(input_list)
+        possible_points = np.array()
+        for i in range(0, number_of_data - 1):
+            point = (i+1)*dimension_vector
         pass
