@@ -208,3 +208,11 @@ when emitting a new Marble. However,
 It does not exist at the start of the algorithm, and when optimizing the other
 particles it may even never come into existance. So I am confusing goal
 of different parts of the software with each other.
+
+To remove `Parameter`s from a module I needed a newer PyTorch version.
+So waiting a lot of time before things to install -- \*sigh\*.
+
+Apparently that module does something different. All the updating effort for nothing... Ah well it needed updating anyway, but preferable while I was working on something else...
+
+The good news is that registered Parameters
+can be removed from a module simply with `del`.
