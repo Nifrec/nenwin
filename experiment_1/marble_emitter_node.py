@@ -67,25 +67,27 @@ class MarbleEmitterNode(MarbleEaterNode):
 
     @property
     def emitter(self):
-        return self.__emitter
+        return self.__emitter.copy()
 
     def copy(self) -> MarbleEmitterNode:
         """
         Create copy of this MarbleEmitterNode,
         but reset the number of marbles eaten of the copy to 0.
-        The copy will use the same emitter instance.
+        The copy will use a different emitter instance.
         """
-        return MarbleEmitterNode(self.pos,
-                                 self.vel,
-                                 self.acc,
-                                 self.mass,
-                                 self._attraction_function,
-                                 self.marble_stiffness,
-                                 self.node_stiffness,
-                                 self.marble_attraction,
-                                 self.node_attraction,
-                                 self.radius,
-                                 self.emitter)
+        output = MarbleEmitterNode(self.init_pos,
+                                   self.init_vel,
+                                   self.init_acc,
+                                   self.mass,
+                                   self._attraction_function,
+                                   self.marble_stiffness,
+                                   self.node_stiffness,
+                                   self.marble_attraction,
+                                   self.node_attraction,
+                                   self.radius,
+                                   self.emitter.copy())
+        output.adopt_parameters(self)
+        return output
 
 
 class Emitter(abc.ABC, nn.Module):
@@ -137,8 +139,9 @@ class Emitter(abc.ABC, nn.Module):
     def emit(self) -> Node:
         if self.can_emit():
             self.__time_since_last_emit = 0
+            particle = self._create_particle()
             self.__stored_mass -= self.__prototype.mass
-            return self._create_particle()
+            return particle
         else:
             raise RuntimeError(
                 "Cannot emit, delay not passed or too little mass stored")
@@ -148,10 +151,67 @@ class Emitter(abc.ABC, nn.Module):
         pass
 
     def eat_mass(self, mass: float):
-        self.__stored_mass += mass
+        self.__stored_mass = mass + self.__stored_mass
 
     def register_time_passed(self, time_passed: float):
         self.__time_since_last_emit += time_passed
+
+    @property
+    def delay(self):
+        return self.__delay
+
+    def set_delay(self, new_delay: nn.Parameter):
+        """
+        Set the learnable delay to equal (by reference!)
+        the given delay. 
+        """
+        assert isinstance(new_delay, nn.Parameter), \
+            "new_delay should be a torch.nn.Parameter"
+        self.__delay = new_delay
+
+    @property
+    def init_time_passed(self):
+        return self.__inital_time_passed
+
+    def set_init_time_passed(self, new_time_passed: nn.Parameter):
+        """
+        Set the learnable init_time_passed to equal (by reference!)
+        the given init_time_passed. 
+        Also updates the current time since last emit to equal this value.
+        """
+        assert isinstance(new_time_passed, nn.Parameter), \
+            "new_time_passed should be a torch.nn.Parameter"
+        self.__inital_time_passed = new_time_passed
+        self.__time_since_last_emit = 1 * new_time_passed
+
+    @property
+    def stored_mass(self):
+        return self.__stored_mass
+
+    @property
+    def init_stored_mass(self):
+        return self.__init_stored_mass
+
+    def set_init_stored_mass(self, new_stored_mass: nn.Parameter):
+        """
+        Set the learnable init_stored_mass to equal (by reference!)
+        the given stored mass. Also update the current stored mass
+        to equal this amount (not by reference).
+        """
+        assert isinstance(new_stored_mass, nn.Parameter), \
+            "new_stored_mass should be a torch.nn.Parameter"
+        self.__init_stored_mass = new_stored_mass
+        self.__stored_mass = 1 * self.__init_stored_mass
+
+    def copy(self) -> Emitter:
+        output = self.__class__(self.prototype,
+                               self.delay,
+                               self.stored_mass,
+                               self.init_time_passed)
+        output.set_delay(self.delay)
+        output.set_init_time_passed(self.init_time_passed)
+        output.set_init_stored_mass(self.init_stored_mass)
+        return output
 
 
 class MarbleEmitter(Emitter):
@@ -169,4 +229,33 @@ class MarbleEmitter(Emitter):
         return "Marble" + super().__repr__()
 
     def _create_particle(self) -> Marble:
-        return self.prototype.copy()
+        output = self.prototype.copy()
+        # The mass should not be a torch.nn.Parameter.
+        # It should not be a leaf node in the computational graph,
+        # but propagate back to the stored_mass and prototype.mass
+        del output._PhysicalParticle__mass
+        output._PhysicalParticle__mass = \
+            (self.stored_mass/self.stored_mass.item())*self.prototype.mass
+        return output
+
+    
+
+
+class MarbleEmitterVariablePosition(MarbleEmitter):
+    """
+    Subclass of MarbleEmitter that takes an optional
+    new position for the emitted Marble in the method emit().
+    """
+
+    def __init__(self,
+                 prototype: Marble,
+                 delay: float,
+                 stored_mass: Optional[float] = 0,
+                 initial_time_passed: Optional[float] = 0):
+        super().__init__(prototype, delay, stored_mass, initial_time_passed)
+
+    def emit(self, new_pos: Optional[torch.Tensor] = None) -> Node:
+        output = super().emit()
+        output.set_init_pos(nn.Parameter(new_pos))
+        output.pos = 1 * output.init_pos
+        return output
