@@ -94,6 +94,18 @@ class PhiInputPlacer(InputPlacer):
                 exists = True
             else:    
                 possible_points = np.append(possible_points, [divmod((i+1)*dimension_vector, 1)[1]], axis = 0)
-            print("possible points", list(possible_points))
+        print("possible points", list(possible_points))
+        """
+        Works, step 1 and 2 for the algorithm in latex, possible_point is array of points op to i
+        """
+        #find point closest to bottom_left point = input_pos, is equal to entry of possible 
+        #points with shortest length
+        length_possible_points_squared = []
+        for entry in possible_points:
+            length = 0
+            for dimension in entry:
+                length = length + dimension**2  
+            length_possible_points_squared.append(length)
+            print(length_possible_points_squared)
         
         pass
