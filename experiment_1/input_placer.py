@@ -76,6 +76,8 @@ class PhiInputPlacer(InputPlacer):
                     1.0527109201475582, 1.0489849347570344, 1.0457510241563417, 
                     1.0429177323017866, 1.0404149477818474, 1.03818801943645, 
                     1.0361937171306834, 1.034397396133807]
+        
+        print(input_data)
         input_list = list(input_data)
         dimension = len(input_list[0])
         dimension_vector = np.array([])
@@ -84,7 +86,13 @@ class PhiInputPlacer(InputPlacer):
         print("dimension_vector", dimension_vector)
         
         number_of_data = len(input_list)
-        possible_points = np.array()
-        for i in range(0, number_of_data - 1):
-            point = (i+1)*dimension_vector
+        
+        exists = False
+        for i in range(0, number_of_data):
+            if not exists:
+                possible_points = divmod(dimension_vector,1)[1]
+                exists = True
+            else:    
+                possible_points = np.append(possible_points, [divmod((i+1)*dimension_vector, 1)[1]])
+            print("possible points", possible_points)
         pass
