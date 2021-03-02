@@ -495,14 +495,18 @@ class MarbleEmitterNodeTestCase(unittest.TestCase):
 
     def test_spawn_location_1(self):
         """
-        Base case: moving Node. Also the prototype should follow the movement.
+        Base case: moving Node. 
+        Also the prototype should follow the movement.
+        This should be done automatically when calling MarbleEmitterNode.emit().
+        Using a MarbleEmitterVariablePosition.
         """
         vel = torch.tensor([1.0])
         radius = 10
         eps = 10e-5
-        prototype = Marble(ZERO + radius + eps, ZERO, ZERO, 0,
+        prototype = Marble(ZERO, ZERO, ZERO, 0,
                            None, None, 0, 0, 0, 0)
-        emitter = MarbleEmitter(prototype, 0, 10)
+        emitter = MarbleEmitterVariablePosition(
+            prototype, 0, 10, rel_prototype_pos= torch.tensor([radius + eps]))
         emitter_node = MarbleEmitterNode(ZERO, vel, ZERO, 0, None,
                                          0, 0, 0, 0,
                                          radius=radius, emitter=emitter)
@@ -510,11 +514,13 @@ class MarbleEmitterNodeTestCase(unittest.TestCase):
 
         self.assertTrue(check_close(emitter_node.pos, torch.tensor([1.0])))
         expected_marble_pos = torch.tensor([1.0]) + radius + eps
-        self.assertTrue(check_close(emitter.emit().pos, expected_marble_pos))
+        self.assertTrue(check_close(
+            emitter_node.emit().pos, expected_marble_pos))
 
     def test_spawn_location_2(self):
         """
         Base case: stationary Node.
+        Using a normal MarbleEmitter.
         """
         vel = torch.tensor([1.0])
         radius = 10

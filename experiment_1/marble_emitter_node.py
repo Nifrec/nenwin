@@ -67,7 +67,12 @@ class MarbleEmitterNode(MarbleEaterNode):
 
     def emit(self) -> Node:
         if self.__emitter.can_emit():
-            return self.__emitter.emit(self.__pos)
+            if isinstance(self.emitter, MarbleEmitterVariablePosition):
+                return self.__emitter.emit(self.pos)
+            else:
+                return self.__emitter.emit()
+        else:
+            raise RuntimeError("Unable to emit a Marble")
 
     @property
     def emitter(self):
@@ -279,8 +284,8 @@ class MarbleEmitterVariablePosition(MarbleEmitter):
 
     def emit(self, new_pos: Optional[torch.Tensor]) -> Node:
         output = super().emit()
-        output.set_init_pos(nn.Parameter(new_pos))
-        output.pos = 1 * output.init_pos + self.__rel_prototype_pos
+        output.set_init_pos(nn.Parameter(new_pos + self.__rel_prototype_pos))
+        output.pos = 1 * output.init_pos 
         return output
 
     def __repr__(self) -> str:
