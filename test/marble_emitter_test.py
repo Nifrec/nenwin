@@ -37,6 +37,7 @@ from experiment_1.node import Marble
 from experiment_1.marble_emitter_node import MarbleEmitter, \
     Emitter, MarbleEmitterNode, MarbleEmitterVariablePosition
 from experiment_1.constants import MAX_EMITTER_SPAWN_DIST
+from test_aux import check_close
 
 
 class MockEmitter(Emitter):
@@ -433,6 +434,26 @@ class MarbleEmitterVariablePositionTestCase(unittest.TestCase):
         self.assertTrue(torch.allclose(spawn_pos, result.pos),
                         f"{spawn_pos} != {result.pos}")
 
+    def test_repr(self):
+        prototype = Marble(ZERO, ZERO, ZERO, 0, None, None, 0, 0, 0, 0)
+        delay = 1.1
+        stored_mass = 1.2
+        initial_time_passed = 1.3
+        relative_prototype_pos = torch.tensor([1.4])
+
+        expected = f"MarbleEmitterVariablePosition({repr(prototype)}," \
+            + f"{convert_scalar_param_to_repr(delay)},"\
+            + f"{convert_scalar_param_to_repr(stored_mass)},"\
+            + f"{convert_scalar_param_to_repr(initial_time_passed)},"\
+            + f"{relative_prototype_pos})"
+
+        emitter = MarbleEmitterVariablePosition(prototype, delay,
+                                stored_mass, initial_time_passed, relative_prototype_pos)
+        result = repr(emitter)
+
+        self.assertEqual(expected, result)
+
+
 
 class MarbleEmitterNodeTestCase(unittest.TestCase):
 
@@ -457,15 +478,39 @@ class MarbleEmitterNodeTestCase(unittest.TestCase):
 
     def test_spawn_location_1(self):
         """
-        Base case: stationary Node.
+        Base case: moving Node. Also the prototype should follow the movement.
         """
+        vel = torch.tensor([1.0])
         radius = 10
-        prototype = Marble(ZERO, ZERO, ZERO, 0, None, None, 0, 0, 0, 0)
+        eps = 10e-5
+        prototype = Marble(ZERO + radius + eps, ZERO, ZERO, 0,
+                           None, None, 0, 0, 0, 0)
         emitter = MarbleEmitter(prototype, 0, 10)
-        emitter_node = MarbleEmitterNode(ZERO, ZERO, ZERO, 0, None,
+        emitter_node = MarbleEmitterNode(ZERO, vel, ZERO, 0, None,
                                          0, 0, 0, 0,
                                          radius=radius, emitter=emitter)
-        self.fail("TODO")
+        emitter_node.update_movement(1)
+
+        self.assertTrue(check_close(emitter_node.pos, torch.tensor([1.0])))
+        expected_marble_pos = torch.tensor([1.0]) + radius + eps
+        self.assertTrue(check_close(emitter.emit().pos, expected_marble_pos))
+
+    def test_spawn_location_2(self):
+        """
+        Base case: stationary Node.
+        """
+        vel = torch.tensor([1.0])
+        radius = 10
+        eps = 10e-5
+        prototype = Marble(ZERO + radius + eps, ZERO, ZERO, 0,
+                           None, None, 0, 0, 0, 0)
+        emitter = MarbleEmitter(prototype, 0, 10)
+        emitter_node = MarbleEmitterNode(ZERO, vel, ZERO, 0, None,
+                                         0, 0, 0, 0,
+                                         radius=radius, emitter=emitter)
+
+        self.assertTrue(check_close(emitter_node.pos, ZERO))
+        self.assertTrue(check_close(emitter.emit().pos, ZERO + radius + eps))
 
     def test_copy(self):
         """

@@ -65,6 +65,10 @@ class MarbleEmitterNode(MarbleEaterNode):
         self.__emitter.eat_mass(marble.mass)
         super().eat(marble)
 
+    def emit(self) -> Node:
+        if self.__emitter.can_emit():
+            return self.__emitter.emit(self.__pos)
+
     @property
     def emitter(self):
         return self.__emitter.copy()
@@ -205,9 +209,9 @@ class Emitter(abc.ABC, nn.Module):
 
     def copy(self) -> Emitter:
         output = self.__class__(self.prototype,
-                               self.delay,
-                               self.stored_mass,
-                               self.init_time_passed)
+                                self.delay,
+                                self.stored_mass,
+                                self.init_time_passed)
         output.set_delay(self.delay)
         output.set_init_time_passed(self.init_time_passed)
         output.set_init_stored_mass(self.init_stored_mass)
@@ -238,8 +242,6 @@ class MarbleEmitter(Emitter):
             (self.stored_mass/self.stored_mass.item())*self.prototype.mass
         return output
 
-    
-
 
 class MarbleEmitterVariablePosition(MarbleEmitter):
     """
@@ -251,11 +253,40 @@ class MarbleEmitterVariablePosition(MarbleEmitter):
                  prototype: Marble,
                  delay: float,
                  stored_mass: Optional[float] = 0,
-                 initial_time_passed: Optional[float] = 0):
-        super().__init__(prototype, delay, stored_mass, initial_time_passed)
+                 initial_time_passed: Optional[float] = 0,
+                 rel_prototype_pos: torch.Tensor = torch.tensor([0.])):
+        """
+        Arguments:
+        * Prototype: instance of object to be copied when emitting a new
+            instance.
+        * delay: amount of time between consecutive emits are allowed.
+        * stored_mass: initial amount of mass stored, that is depleted when
+            emitting.
+        * initial_time_passed: how much time since the last delay is
+            initially counted, used to set time until first real emit.
+        * rel_prototype_pos: when emitting a new Marble,
+            the new position of the emitter is given.
+            This, plus the rel_prototype_pos, will become
+            the position of the emitted Marble.
+        """
+        if rel_prototype_pos.shape != prototype.pos.shape:
+            raise ValueError("relative prototype position different"
+                             + "shape than prototype position")
 
-    def emit(self, new_pos: Optional[torch.Tensor] = None) -> Node:
+        super().__init__(prototype, delay, stored_mass, initial_time_passed)
+        self.__rel_prototype_pos = rel_prototype_pos
+        
+
+    def emit(self, new_pos: Optional[torch.Tensor]) -> Node:
         output = super().emit()
         output.set_init_pos(nn.Parameter(new_pos))
-        output.pos = 1 * output.init_pos
+        output.pos = 1 * output.init_pos + self.__rel_prototype_pos
         return output
+
+    def __repr__(self) -> str:
+        output= super().__repr__()
+        output = re.sub("MarbleEmitter", "MarbleEmitterVariablePosition", output)
+        output = re.sub("\)$", f",{repr(self.__rel_prototype_pos)})", output)
+
+        return output
+        
