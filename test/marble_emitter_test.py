@@ -415,6 +415,7 @@ class MarbleEmitterTestCase(unittest.TestCase):
 
 
 class MarbleEmitterVariablePositionTestCase(unittest.TestCase):
+
     def test_emit_with_location(self):
         """
         MarbleEmitterNodes typically do not emit Marbles at their own position,
@@ -434,6 +435,23 @@ class MarbleEmitterVariablePositionTestCase(unittest.TestCase):
         self.assertTrue(torch.allclose(spawn_pos, result.pos),
                         f"{spawn_pos} != {result.pos}")
 
+    def test_emit_with_rel_pos(self):
+        """
+        Emitted Marbles can have a fixed initial pos set.
+        """
+        mass = 10
+        prototype = Marble(ZERO, ZERO, ZERO, mass, None, None, 0, 0, 0, 0)
+        rel_prototype_pos = torch.tensor([11.3])
+        emitter = MarbleEmitterVariablePosition(
+            prototype, 0, stored_mass=mass, rel_prototype_pos=rel_prototype_pos)
+
+        spawn_pos = torch.tensor([1], dtype=torch.float)
+        result = emitter.emit(spawn_pos)
+
+        self.assertTrue(torch.allclose(
+            spawn_pos + rel_prototype_pos, result.pos),
+            f"{spawn_pos} != {result.pos}")
+
     def test_repr(self):
         prototype = Marble(ZERO, ZERO, ZERO, 0, None, None, 0, 0, 0, 0)
         delay = 1.1
@@ -448,11 +466,10 @@ class MarbleEmitterVariablePositionTestCase(unittest.TestCase):
             + f"{relative_prototype_pos})"
 
         emitter = MarbleEmitterVariablePosition(prototype, delay,
-                                stored_mass, initial_time_passed, relative_prototype_pos)
+                                                stored_mass, initial_time_passed, relative_prototype_pos)
         result = repr(emitter)
 
         self.assertEqual(expected, result)
-
 
 
 class MarbleEmitterNodeTestCase(unittest.TestCase):
