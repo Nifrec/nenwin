@@ -263,7 +263,7 @@ class PhysicalParticle(InitialValueParticle):
     def mass(self) -> torch.Tensor:
         return self.__mass
 
-    def set_mass(self, new_mass) -> torch.Tensor:
+    def set_mass(self, new_mass):
         """
         Directly change the mass *by reference*.
         This is the only way to ensure compuational graphs will also be set.
