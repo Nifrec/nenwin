@@ -117,7 +117,7 @@ class Emitter(abc.ABC, nn.Module):
             initially counted, used to set time until first real emit.
         """
         nn.Module.__init__(self)
-        self.__prototype = prototype.copy()
+        self.__prototype = prototype
         self.__delay = create_param(delay)
         self.__init_stored_mass = create_param(stored_mass)
         self.__stored_mass = 1 * self.__init_stored_mass
@@ -242,6 +242,8 @@ class MarbleEmitter(Emitter):
         # The mass should not be a torch.nn.Parameter.
         # It should not be a leaf node in the computational graph,
         # but propagate back to the stored_mass and prototype.mass
+        # -- Also ensure the mass of the prototype is not also del'ed!
+        output._PhysicalParticle__mass = nn.Parameter(torch.zeros(1))
         del output._PhysicalParticle__mass
         output._PhysicalParticle__mass = \
             (self.stored_mass/self.stored_mass.item())*self.prototype.mass
@@ -281,6 +283,13 @@ class MarbleEmitterVariablePosition(MarbleEmitter):
         super().__init__(prototype, delay, stored_mass, initial_time_passed)
         self.__rel_prototype_pos = rel_prototype_pos
         
+    @property
+    def rel_prototype_pos(self) -> torch.Tensor:
+        """
+        Return the relative position to [new_pos] at which the Marble is
+        emitted in .emit(new_pos),
+        """
+        return self.__rel_prototype_pos.clone()
 
     def emit(self, new_pos: Optional[torch.Tensor]) -> Node:
         output = super().emit()
