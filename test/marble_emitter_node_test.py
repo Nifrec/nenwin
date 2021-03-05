@@ -51,7 +51,7 @@ class MockPrototype(Marble):
 
     def copy(self):
         self.copy_called = True
-        return self
+        return super().copy()
 
 
 class MarbleEmitterNodeTestCase(unittest.TestCase):

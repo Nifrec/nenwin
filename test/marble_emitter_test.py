@@ -34,12 +34,12 @@ from test_aux import check_named_parameters
 from experiment_1.attraction_functions.attraction_functions \
     import NewtonianGravity
 from experiment_1.auxliary import generate_stiffness_dict
-from experiment_1.node import Marble
+from experiment_1.node import EmittedMarble, Marble
 from experiment_1.marble_emitter_node import MarbleEmitter, \
     Emitter, MarbleEmitterNode, MarbleEmitterVariablePosition
 from experiment_1.constants import MAX_EMITTER_SPAWN_DIST
 from test_aux import check_close
-
+from marble_emitter_node_test import MockPrototype
 
 
 
@@ -50,11 +50,6 @@ class MarbleEmitterTestCase(unittest.TestCase):
         self.__mock_prototype = MockPrototype()
         self.__mass = 1
         self.__massfull_prototype = MockPrototype(self.__mass)
-
-    def test_emit(self):
-        emitter = MarbleEmitter(self.__mock_prototype, 0)
-        emitter.emit()
-        self.assertTrue(self.__mock_prototype.copy_called)
 
     def test_delay_1(self):
         """
@@ -143,6 +138,16 @@ class MarbleEmitterTestCase(unittest.TestCase):
                                 stored_mass=1)
         self.assertFalse(emitter.can_emit())
 
+    def test_emit_output_type(self):
+        """
+        Output should be a EmittedMarble, not just a normal Marble.
+        """
+        prototype = Marble(ZERO, ZERO, ZERO, 0, None, None)
+        delay = 0
+        emitter = MarbleEmitter(prototype, delay)
+        output = emitter.emit()
+        self.assertIsInstance(output, EmittedMarble)
+
     def test_emit_1(self):
         """
         Corner case: throw error when trying to emit 
@@ -154,16 +159,6 @@ class MarbleEmitterTestCase(unittest.TestCase):
         emitter.emit()
         emitter.register_time_passed(delay/2)
         self.assertRaises(RuntimeError, emitter.emit)
-
-    def test_emit_2(self):
-        """
-        Base case: check if emitted Marble is similar to prototype.
-        """
-        emitter = MarbleEmitter(self.__mock_prototype, 0)
-        result = emitter.emit()
-
-        expected = self.__mock_prototype
-        self.assertIs(expected, result)
 
     def test_emit_mass_stored_1(self):
         """
@@ -209,22 +204,22 @@ class MarbleEmitterTestCase(unittest.TestCase):
         emitter = MarbleEmitter(self.__massfull_prototype,
                                 0,
                                 stored_mass=self.__mass)
-        result = emitter.emit()
-
-        expected = self.__massfull_prototype
-        self.assertIs(expected, result)
+        try:
+            emitter.emit()
+        except:
+            self.fail("Operation should not raise errors")
 
     def test_emit_massfull_3(self):
         """
-        Base case: can emit negaitve massfull Marble when negative mass stored.
+        Base case: can emit negative massfull Marble when negative mass stored.
         (Should not raise any errors)
         """
         neg_mass_prototype = MockPrototype(-1)
         emitter = MarbleEmitter(neg_mass_prototype, 0, stored_mass=-1)
-        result = emitter.emit()
-
-        expected = neg_mass_prototype
-        self.assertIs(expected, result)
+        try:
+            emitter.emit()
+        except:
+            self.fail("Operation should not raise errors")
 
     def test_repr_1(self):
         """
@@ -277,7 +272,7 @@ class MarbleEmitterTestCase(unittest.TestCase):
         self.assertTrue(check_named_parameters(expected_names,
                                                tuple(named_params)))
 
-    def test_grads(self):
+    def test_grads_mass(self):
         """
         A Marble [eaten_marble] is eaten by the MarbleEmitter.
         A second Marble m2 is emitted by the MarbleEmitter.
@@ -294,20 +289,15 @@ class MarbleEmitterTestCase(unittest.TestCase):
         emitter.register_time_passed(20)
         output_marble = emitter.emit()
         output_marble.update_movement(30)
-        emitter._Emitter__stored_mass
-        output_marble._PhysicalParticle__mass
 
-        meh = torch.tensor([1, 1], dtype=torch.float, requires_grad=True) \
-            * output_marble.mass
-        torch.sum(meh).backward(create_graph=True)
+        meh = torch.tensor([1.0], dtype=torch.float, requires_grad=True) \
+            + output_marble.mass
+        loss = torch.sum(meh)
+        loss.backward(create_graph=True)
         print(output_marble.mass)
 
         print(output_marble.mass.grad)
-        self.assertIsNotNone(output_marble.mass.grad)
-        # self.assertIsNotNone(emitter._Emitter__init_stored_mass.grad)
-        # # self.assertIsNotNone(emitter._Emitter__delay.grad)
-        # # self.assertIsNotNone(emitter._Emitter__init_stored_mass.grad)
-        # # self.assertIsNotNone(emitter._Emitter__inital_time_passed.grad)
+        self.assertIsNotNone(emitter._Emitter__init_stored_mass.grad)
         self.assertIsNotNone(eaten_marble.mass.grad)
 
     def setup_full_emitter(self) -> Tuple[Emitter, Marble, float, float, float]:
@@ -357,7 +347,7 @@ class MarbleEmitterTestCase(unittest.TestCase):
         self.assertAlmostEqual(copy.init_stored_mass, stored_mass)
         self.assertAlmostEqual(copy.init_time_passed, initial_time_passed)
         self.assertAlmostEqual(copy.delay, delay)
-        self.assertIs(copy.prototype.pos, prototype.pos)
+        self.assertIs(copy.prototype.init_pos, prototype.init_pos)
 
     def test_copy_values_2(self):
         """
@@ -459,14 +449,14 @@ class MarbleEmitterVariablePositionTestCase(unittest.TestCase):
         Base case: original still has init values.
         """
         (prototype, delay, stored_mass, initial_time_passed,
-                  relative_prototype_pos, emitter) = self.set_up_full_emitter()
+                  rel_prototype_pos, emitter) = self.set_up_full_emitter()
         copy = emitter.copy()
         self.assertIsInstance(copy, MarbleEmitterVariablePosition)
         self.assertAlmostEqual(copy.init_stored_mass, stored_mass)
         self.assertAlmostEqual(copy.init_time_passed, initial_time_passed)
         self.assertAlmostEqual(copy.delay, delay)
-        self.assertTrue(check_close(copy.))
-        self.assertIs(copy.prototype.pos, prototype.pos)
+        self.assertTrue(check_close(copy.rel_prototype_pos, rel_prototype_pos))
+        self.assertIs(copy.prototype.init_pos, prototype.init_pos)
 
     def set_up_full_emitter(self) -> Tuple:
         prototype = Marble(ZERO, ZERO, ZERO, 0, None, None, 0, 0, 0, 0)
