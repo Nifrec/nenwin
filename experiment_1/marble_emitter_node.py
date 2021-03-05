@@ -16,7 +16,7 @@ import re
 import torch.nn as nn
 
 from experiment_1.marble_eater_node import MarbleEaterNode
-from experiment_1.node import Marble, Node
+from experiment_1.node import Marble, Node, EmittedMarble
 from experiment_1.auxliary import distance
 from experiment_1.constants import MAX_EMITTER_SPAWN_DIST
 from experiment_1.particle import create_param
@@ -156,7 +156,7 @@ class Emitter(abc.ABC, nn.Module):
                 "Cannot emit, delay not passed or too little mass stored")
 
     @abc.abstractmethod
-    def _create_particle(self) -> Node:
+    def _create_particle(self) -> EmittedMarble:
         pass
 
     def eat_mass(self, mass: float):
@@ -237,16 +237,23 @@ class MarbleEmitter(Emitter):
     def __repr__(self) -> str:
         return "Marble" + super().__repr__()
 
-    def _create_particle(self) -> Marble:
-        output = self.prototype.copy()
-        # The mass should not be a torch.nn.Parameter.
-        # It should not be a leaf node in the computational graph,
-        # but propagate back to the stored_mass and prototype.mass
-        # -- Also ensure the mass of the prototype is not also del'ed!
-        output._PhysicalParticle__mass = nn.Parameter(torch.zeros(1))
-        del output._PhysicalParticle__mass
-        output._PhysicalParticle__mass = \
-            (self.stored_mass/self.stored_mass.item())*self.prototype.mass
+    def _create_particle(self) -> EmittedMarble:
+        # output = self.prototype.copy()
+        # # The mass should not be a torch.nn.Parameter.
+        # # It should not be a leaf node in the computational graph,
+        # # but propagate back to the stored_mass and prototype.mass
+        # # -- Also ensure the mass of the prototype is not also del'ed!
+        # output._PhysicalParticle__mass = nn.Parameter(torch.zeros(1))
+        # del output._PhysicalParticle__mass
+        # output._PhysicalParticle__mass = \
+
+
+        p = self.prototype
+        mass = (self.stored_mass/self.stored_mass.item())*self.prototype.mass
+        output = EmittedMarble(p.pos, p.vel, p.acc, mass,
+                               p._attraction_function, p.datum, 
+                               p.marble_stiffness, p.node_stiffness, 
+                               p.marble_attraction, p.node_attraction)
         return output
 
 
@@ -282,7 +289,7 @@ class MarbleEmitterVariablePosition(MarbleEmitter):
 
         super().__init__(prototype, delay, stored_mass, initial_time_passed)
         self.__rel_prototype_pos = rel_prototype_pos
-        
+
     @property
     def rel_prototype_pos(self) -> torch.Tensor:
         """
@@ -294,13 +301,24 @@ class MarbleEmitterVariablePosition(MarbleEmitter):
     def emit(self, new_pos: Optional[torch.Tensor]) -> Node:
         output = super().emit()
         output.set_init_pos(nn.Parameter(new_pos + self.__rel_prototype_pos))
-        output.pos = 1 * output.init_pos 
+        output.pos = 1 * output.init_pos
         return output
 
     def __repr__(self) -> str:
-        output= super().__repr__()
-        output = re.sub("MarbleEmitter", "MarbleEmitterVariablePosition", output)
+        output = super().__repr__()
+        output = re.sub("MarbleEmitter",
+                        "MarbleEmitterVariablePosition", output)
         output = re.sub("\)$", f",{repr(self.__rel_prototype_pos)})", output)
 
         return output
-        
+
+    def copy(self) -> Emitter:
+        output = self.__class__(self.prototype,
+                                self.delay,
+                                self.stored_mass,
+                                self.init_time_passed,
+                                self.__rel_prototype_pos)
+        output.set_delay(self.delay)
+        output.set_init_time_passed(self.init_time_passed)
+        output.set_init_stored_mass(self.init_stored_mass)
+        return output
