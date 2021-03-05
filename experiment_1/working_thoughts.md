@@ -216,3 +216,16 @@ Apparently that module does something different. All the updating effort for not
 
 The good news is that registered Parameters
 can be removed from a module simply with `del`.
+
+## Update 05-03-2021
+The mass of a Marble created by an emitter **WILL NEVER COLLECT GRADS**.
+Non-leaf tensors do not store grad, and it is not a leaf because this
+mass is derived from the `stored_mass` of the emitter 
+and the mass of the prototype.
+
+I also noticed that I am making quite a mess by making a distinction between
+the `mass` attribute of emitted marbles and 'normal' marbles.
+It is clear I need to make the difference more explicit. 
+Introducing a new class: `EmittedMarble`!
+Hopefully this will finally solve things...
+

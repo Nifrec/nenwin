@@ -96,7 +96,7 @@ class Node(PhysicalParticle):
         output += f",{self.marble_attraction}"
         output += f",{self.node_attraction})"
         return output
-    
+
     @property
     def marble_stiffness(self) -> float:
         return self.__marble_stiffness
@@ -142,14 +142,14 @@ class Node(PhysicalParticle):
 
     def copy(self) -> Node:
         output = Node(self.init_pos,
-                    self.init_vel,
-                    self.init_acc,
-                    self.mass,
-                    self._attraction_function,
-                    self.marble_stiffness,
-                    self.node_stiffness,
-                    self.marble_attraction,
-                    self.node_attraction)
+                      self.init_vel,
+                      self.init_acc,
+                      self.mass,
+                      self._attraction_function,
+                      self.marble_stiffness,
+                      self.node_stiffness,
+                      self.marble_attraction,
+                      self.node_attraction)
         output.adopt_parameters(self)
         return output
 
@@ -225,24 +225,71 @@ class Marble(Node):
         output = re.sub(r'(([0-9]\.[0-9]*,?){4})', f'{self.datum},\\1', output)
         return output
 
-
     @property
     def datum(self):
         return self.__datum
 
     def copy(self) -> Marble:
-        output =  Marble(self.init_pos,
-                      self.init_vel,
-                      self.init_acc,
-                      self.mass,
-                      self._attraction_function,
-                      self.datum,
-                      self.marble_stiffness,
-                      self.node_stiffness,
-                      self.marble_attraction,
-                      self.node_attraction)
+        output = Marble(self.init_pos,
+                        self.init_vel,
+                        self.init_acc,
+                        self.mass,
+                        self._attraction_function,
+                        self.datum,
+                        self.marble_stiffness,
+                        self.node_stiffness,
+                        self.marble_attraction,
+                        self.node_attraction)
         output.adopt_parameters(self)
         return output
+
+
+class EmittedMarble(Marble):
+    """
+    Identical to Marble, except that the .mass attribute is not a nn.Parameter
+    and hence a leaf (in any computational graph used by autograd),
+    but a non-leaf normal tensor.
+    """
+
+    def __init__(self,
+                 pos: torch.Tensor,
+                 vel: torch.Tensor,
+                 acc: torch.Tensor,
+                 mass: torch.Tensor,
+                 attraction_function: callable,
+                 datum: object,
+                 marble_stiffness: float,
+                 node_stiffness: float,
+                 marble_attraction: float,
+                 node_attraction: float):
+        super().__init__(pos, vel, acc, mass,
+                         attraction_function,
+                         datum,
+                         marble_stiffness=marble_stiffness,
+                         node_stiffness=node_stiffness,
+                         marble_attraction=marble_attraction,
+                         node_attraction=node_attraction)
+        if not isinstance(mass, torch.Tensor):
+            raise ValueError("Initializing an EmittedMarble "
+                             + "whose mass is not a tensor.")
+        if mass.is_leaf:
+            raise ValueError("Initializing an EmittedMarble with a leaf mass")
+
+        del self._PhysicalParticle__mass
+        self.__mass = mass.clone()
+
+    def copy(self):
+        raise RuntimeError("EmittedMarble's should never be copied.")
+
+    def set_mass(self, new_mass) -> torch.Tensor:
+        self.__mass = new_mass
+
+    @property
+    def mass(self) -> torch.Tensor:
+        return self.__mass
+
+    def __repr__(self):
+        raise RuntimeError("EmittedMarble's should never be __repr__'ed.")
 
 
 def raise_error_if_any_not_in_range(values: Iterable[float],
