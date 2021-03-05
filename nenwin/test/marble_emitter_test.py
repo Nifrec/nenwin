@@ -3,7 +3,7 @@ Nenwin-project (NEural Networks WIthout Neurons) for
 the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 
 Author: Lulof Pirée
-February 2021
+March 2021
 
 Copyright (C) 2020 Lulof Pirée, Teun Schilperoort
 
