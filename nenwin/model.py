@@ -25,14 +25,7 @@ Class representing the state of a simulation:
 """
 import torch
 from typing import Set, Iterable, Optional, List
-import multiprocessing
-import multiprocessing.connection
-import enum
-from numbers import Number
-import warnings
-import abc
 
-from nenwin.particle import PhysicalParticle
 from nenwin.node import Node
 from nenwin.marble_eater_node import MarbleEaterNode
 from nenwin.node import Marble
