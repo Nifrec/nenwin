@@ -262,17 +262,15 @@ speed towards `x_1`, but still be a little further away than some Marble
 `m_2` that is moving *away* from `x_1`. Blaming `m_1` would seem more
 fitting than blaming `m_2`.
 
-But we can take the velocity into account.
+But we can take the velocity into account, and make a *very coarse* estimate of the position in the near future.
 We can blame the Marble with the least value of
 
-`x_1 - m.pos + m.vel`
+`x_1 - m.pos + α*m.vel`
 
-By why weight them evenly?
-
-`x_1 - α*m.pos + β*m.vel`
-
-Here, α and β are not trainable, as any loss function can easily get unbounded scores by increasing/decreasing them to limits. 
+Here, α is not trainable, as any loss function can easily get unbounded scores by increasing/decreasing them to limits. 
 
 We can state that the loss is the minimum
 
-`|x_1 - (m.pos + α*m.vel)|²` over all Marbles `m`. But let's just begin with `α = 0`, i.e. just blaming the closest Marble.
+`|x_1 - (m.pos + α*m.vel)|²` over all Marbles `m`. 
+
+But let's just begin with `α = 0`, i.e. just blaming the closest Marble.
