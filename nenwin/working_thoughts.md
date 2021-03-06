@@ -229,3 +229,48 @@ It is clear I need to make the difference more explicit.
 Introducing a new class: `EmittedMarble`!
 Hopefully this will finally solve things...
 
+## Update 06-03-2021
+
+To train a NenwinModel, we need to compute a loss function based on the
+output of the network (the amount of Marbles eaten by the MarbleEaterNodes), 
+and use the derivative of this loss w.r.t. the 
+particle's parameters for the optimization algorithm.
+Hence the output must be differentiable w.r.t. the Marbles eaten.
+So far I forgot to implement this. 
+
+### Idea 1:
+Set `num_marbles_eaten <- m.pos / m.pos.item()`.
+The the gradient of `num_marbles_eaten` w.r.t. `m.pos`is 1.
+This only works if the Marble has actually been eaten. 
+Hence it can be used to punish Marbles eaten by the wrong MarbleEaterNode,
+but not to make Marbles turn to the location where they should end up.
+
+## Idea 2:
+Blame the Marble who is not at the right position. 
+If we demand a Marble to be at `x_1`, and it is at `x_2`, then
+we can set `|x_1 - x_2|²` as the error (as the loss).
+
+This becomes more difficult when there are multiple Marbles present.
+Do we punish all of them? But we may need only one at `x_1`, so
+it does not make sense to optimize the architecture to get *all*
+Marbles there; this may even be counterproductive to later desired outputs
+on the other side of the network.
+
+Only the clostest Marble? This seems to be a better option, 
+but not in all cases. For example, a Marble `m_1` may be moving with a high
+speed towards `x_1`, but still be a little further away than some Marble
+`m_2` that is moving *away* from `x_1`. Blaming `m_1` would seem more
+fitting than blaming `m_2`.
+
+But we can take the velocity into account, and make a *very coarse* estimate of the position in the near future.
+We can blame the Marble with the least value of
+
+`x_1 - m.pos + α*m.vel`
+
+Here, α is not trainable, as any loss function can easily get unbounded scores by increasing/decreasing them to limits. 
+
+We can state that the loss is the minimum
+
+`|x_1 - (m.pos + α*m.vel)|²` over all Marbles `m`. 
+
+But let's just begin with `α = 0`, i.e. just blaming the closest Marble.
