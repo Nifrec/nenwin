@@ -78,13 +78,11 @@ class PhiInputPlacer(InputPlacer):
                     1.0429177323017866, 1.0404149477818474, 1.03818801943645, 
                     1.0361937171306834, 1.034397396133807]
         
-        #print(input_data)
         input_list = list(input_data)
         dimension = len(input_list[0])
         dimension_vector = np.array([])
         for i in range(1, dimension + 1):
             dimension_vector = np.append(dimension_vector, np.divide(1, list_phi[dimension]**i))
-        #print("dimension_vector", dimension_vector)
         
         number_of_data = len(input_list)
         
@@ -95,7 +93,6 @@ class PhiInputPlacer(InputPlacer):
                 exists = True
             else:    
                 possible_points = np.append(possible_points, [divmod((i+1)*dimension_vector, 1)[1]], axis = 0)
-        print("possible points", list(possible_points))
         
         """
         Works, step 1 and 2 for the algorithm in latex, possible_point is array of points op to i
@@ -109,40 +106,28 @@ class PhiInputPlacer(InputPlacer):
             for d in entry:
                 length = length + d**2  
             length_possible_points.append(math.sqrt(length))
-        print("lengths", length_possible_points)
         
         minimal_point_index = np.where(length_possible_points == np.amin(length_possible_points))[0]
-        distance_sequence = np.array([possible_points[minimal_point_index]])
-        #print("distance_sequence", distance_sequence)
+        distance_sequence = np.array(possible_points[minimal_point_index])
         
         #distance sequence is filled with bottom-left most point
         #below is incorrect, fix next time
         #testcase: a = PhiInputPlacer.marblize_data, PhiInputPlacer.marblize_data(a, input_data =[[1,2,67,9,6],[1,3,4,5,6],[3,3,3,3,3]])
-        
-        possible_points_edit = possible_points
-        current_point = possible_points[minimal_point_index]
-        possible_points_edit = np.delete(possible_points_edit, minimal_point_index, 0)
-        #print(list(possible_points_edit))
-        list_distances = []
-        for entry in possible_points_edit:
-            print("e", entry)
-            distance = 0
-            distance = (current_point[0] - entry[0])**2
-            list_distances.append(distance)
-            print(list_distances)
-        
-        """possible_points_edit = possible_points
-        for i in range(0, number_of_data):    
+        possible_points_edit = possible_points        
+        counter = 1
+        while counter < number_of_data:
+            counter = counter + 1
             current_point = possible_points[minimal_point_index]
-            possible_points_edit = np.delete(possible_points_edit, possible_points_edit.argmin())
-            print(list(possible_points_edit))
+            possible_points_edit = np.delete(possible_points_edit, minimal_point_index, 0)
             list_distances = []
             for entry in possible_points_edit:
                 distance = 0
-                for i in range(0, int(dimension)):
-                    print("k",current_point)
-                    distance = (current_point[i] - entry[i])**2
+                for d in range(0, dimension):
+                    distance = distance + (current_point[0][d] - entry[d])**2
                 list_distances.append(distance)
-                #print(list_distances)"""
+            minimal_point_index = np.where(list_distances == np.amin(list_distances))[0]
+            distance_sequence = np.append(distance_sequence, possible_points_edit[minimal_point_index], axis = 0)
+            
+        print(distance_sequence)
         
         pass
