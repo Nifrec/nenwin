@@ -117,8 +117,14 @@ class PhiInputPlacer(InputPlacer):
         
         #distance sequence is filled with bottom-left most point
         #below is incorrect, fix next time
-        #testcase: PhiInputPlacer.marblize_data(a, input_data =[[1,2,67,9,6],[1,3,4,5,6],[3,3,3,3,3]])
+        #testcase: a = PhiInputPlacer.marblize_data, PhiInputPlacer.marblize_data(a, input_data =[[1,2,67,9,6],[1,3,4,5,6],[3,3,3,3,3]])
+        
         possible_points_edit = possible_points
+        current_point = possible_points[minimal_point_index]
+        possible_points_edit = np.delete(possible_points_edit, minimal_point_index, 0)
+        print(list(possible_points_edit))
+
+        """possible_points_edit = possible_points
         for i in range(0, number_of_data):    
             current_point = possible_points[minimal_point_index]
             possible_points_edit = np.delete(possible_points_edit, possible_points_edit.argmin())
@@ -130,6 +136,6 @@ class PhiInputPlacer(InputPlacer):
                     print("k",current_point)
                     distance = (current_point[i] - entry[i])**2
                 list_distances.append(distance)
-                #print(list_distances)
+                #print(list_distances)"""
         
         pass
