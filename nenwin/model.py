@@ -24,6 +24,7 @@ Class representing the state of a simulation:
     keeps track of the nodes, marbles, and advances timesteps.
 """
 import torch
+import torch.nn as nn
 from typing import Set, Iterable, Optional, List
 
 from nenwin.node import Node
@@ -31,7 +32,7 @@ from nenwin.marble_eater_node import MarbleEaterNode
 from nenwin.node import Marble
 import nenwin.auxliary as auxliary
 
-class NenwinModel():
+class NenwinModel(nn.Module):
     """
     Class representing the state of a simulation:
     keeps track of the nodes, marbles, and advances timesteps.
@@ -46,6 +47,7 @@ class NenwinModel():
         Optionally some input Marble's can already be added,
         which will move as soon as NenwinModel.run() is called.
         """
+        super().__init__()
         self.__nodes = set(nodes)
         self.__eater_nodes: List[MarbleEaterNode] =\
             [node for node in nodes if isinstance(node, MarbleEaterNode)]
@@ -54,6 +56,18 @@ class NenwinModel():
         else:
             self.__marbles = set([])
         self.__all_particles = self.__nodes.union(self.__marbles)
+
+        self.__register_particles_as_modules(self.__all_particles)
+
+    def __register_particles_as_modules(self, particles: Iterable[Node]):
+        """
+        Particles are stored in sets, but this way they are not registered
+        as submodules within the PyTorch framework.
+        By registering them as modules it becomes possible to get
+        all trainable parameters at once via the NenwinModel.
+        """
+        for particle in particles:
+            self.add_module(str(id(particle)), particle)
 
     def __repr__(self) -> str:
         return f"NenwinModel({repr(self.__nodes)},{repr(self.__marbles)})"
@@ -86,6 +100,7 @@ class NenwinModel():
         """
         Add more Marbles to the set of actively simulated Marbles.
         """
+        self.__register_particles_as_modules(new_marbles)
         self.__marbles.update(new_marbles)
         self.__all_particles.update(new_marbles)
 

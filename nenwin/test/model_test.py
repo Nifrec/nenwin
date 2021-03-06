@@ -274,7 +274,7 @@ class ModelToStringTestCase(unittest.TestCase):
         marble_acc = torch.tensor([3.])
         marble = Marble(marble_pos, marble_vel, marble_acc, 8,
                         None, None, 0.4, 0.5, 0.6, 0.7)
-        marble_2 = marble.copy
+        marble_2 = marble.copy()
         node = Node(ZERO, ZERO, ZERO, 0, None, 0, 0, 0, 0)
         node_2 = Node(torch.tensor([11.]), torch.tensor([12.]),
                       torch.tensor([13.]), 14, None, 0, 0, 0, 0)
@@ -282,6 +282,39 @@ class ModelToStringTestCase(unittest.TestCase):
             + f"{repr(set([marble, marble_2]))})"
         result = repr(NenwinModel([node, node_2], [marble, marble_2]))
         self.assertEqual(expected, result)
+
+    def test_get_params(self):
+        """
+        Nodes and Marbles should be registered as submodules
+        of the model within the PyTorch framework,
+        and hence all learnable parameters should be
+        obtainable via model.
+        """
+        marbles = (generate_dummy_marble(), )
+        nodes = (generate_dummy_node(), )
+        model = NenwinModel(nodes, marbles)
+        # 8 parameters per particle: init_pos, init_vel, init_acc, mass,
+        # and the 4 stiffness / attraction params
+        result = tuple(model.parameters())
+        print(result)
+        self.assertEqual(len(result), 16)
+
+    def test_get_params_add_marbles(self):
+        """
+        Also later added marbles should be registered.
+        """
+        marbles = (generate_dummy_marble(), )
+        nodes = (generate_dummy_node(), )
+        model = NenwinModel(nodes)
+
+        model.add_marbles(marbles)
+
+        # 8 parameters per particle: init_pos, init_vel, init_acc, mass,
+        # and the 4 stiffness / attraction params
+        result = tuple(model.parameters())
+        print(result)
+        self.assertEqual(len(result), 16)
+
 
 
 def generate_dummy_marble() -> Marble:
