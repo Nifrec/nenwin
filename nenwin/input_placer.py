@@ -147,11 +147,11 @@ class PhiInputPlacer(InputPlacer):
 
     def marblize_data(self, input_data: Iterable[object], vel: Optional[torch.Tensor] = ZERO, acc: Optional[torch.Tensor] = ZERO, mass: Optional[float] = 1) -> Iterable[Marble]:
         all_coordinates = self.find_coordinates(input_data)
-        marble_array = np.array([])
+        marble_array = []
         for point in input_data:
             particular_coordinate = torch.tensor(all_coordinates[input_data.index(point)], dtype=torch.float)
             new_marble = Marble(particular_coordinate, vel, acc, mass, NewtonianGravity(), point)
-            marble_array = np.append(marble_array, new_marble)
+            marble_array.append(new_marble)
         
-        return marble_array
+        return tuple(marble_array)
     
