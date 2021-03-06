@@ -69,7 +69,7 @@ class PhiInputPlacer(InputPlacer):
     to topright according to a pseudorandom sequence
     """
 
-    def marblize_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
+    def coordinates(self, input_data: Iterable[object]) -> Iterable[Marble]:
         list_phi = [0, 1.618033988749895, 1.324717957244746, 1.2207440846057596, 
                     1.1673039782614187, 1.1347241384015194, 1.1127756842787055, 
                     1.0969815577985598, 1.085070245491451, 1.0757660660868371, 
@@ -127,11 +127,14 @@ class PhiInputPlacer(InputPlacer):
                 list_distances.append(distance)
             minimal_point_index = np.where(list_distances == np.amin(list_distances))[0]
             distance_sequence = np.append(distance_sequence, possible_points_edit[minimal_point_index], axis = 0)
-        #print(distance_sequence)            
-        #print('dimension', dimension)
+
         for entry in distance_sequence:
             for d in range(0, dimension):
                 entry[d] = entry[d]*self.input_region_sizes[d]
                 entry[d] = entry[d] + self.input_pos[d]
-        print(distance_sequence)
+        return distance_sequence.tolist()
+
+    def marblize_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
+        import coordinates
+        print(coordinates(input_data))
         pass
