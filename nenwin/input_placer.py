@@ -127,7 +127,11 @@ class PhiInputPlacer(InputPlacer):
                 list_distances.append(distance)
             minimal_point_index = np.where(list_distances == np.amin(list_distances))[0]
             distance_sequence = np.append(distance_sequence, possible_points_edit[minimal_point_index], axis = 0)
-            
+        #print(distance_sequence)            
+        #print('dimension', dimension)
+        for entry in distance_sequence:
+            for d in range(0, dimension):
+                entry[d] = entry[d]*self.input_region_sizes[d]
+                entry[d] = entry[d] + self.input_pos[d]
         print(distance_sequence)
-        
         pass
