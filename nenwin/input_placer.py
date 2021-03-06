@@ -24,7 +24,7 @@ Class to place a set of input values into a given space.
 """
 import abc
 import numpy as np
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Sequence, List
 import math
 import torch
 
@@ -83,8 +83,7 @@ class PhiInputPlacer(InputPlacer):
     to topright according to a pseudorandom sequence
     """
 
-    def find_coordinates(self, input_data: Iterable[object]) -> Iterable[Marble]:
-
+    def find_coordinates(self, input_data: Iterable[Sequence[float]]) -> List[List[float]]:
         input_list = list(input_data)
         dimension = len(input_list[0])
         dimension_vector = np.array([])
@@ -116,8 +115,7 @@ class PhiInputPlacer(InputPlacer):
                 length = length + d**2
             length_possible_points.append(math.sqrt(length))
 
-        minimal_point_index = np.where(
-            length_possible_points == np.amin(length_possible_points))[0]
+        minimal_point_index = np.where(length_possible_points == np.amin(length_possible_points))[0]
         distance_sequence = np.array(possible_points[minimal_point_index])
 
         # distance sequence is filled with bottom-left most point
@@ -147,15 +145,13 @@ class PhiInputPlacer(InputPlacer):
                 entry[d] = entry[d] + self.input_pos[d]
         return distance_sequence.tolist()
 
-    def marblize_data(self,
-                      input_data: Iterable[object],
-                      vel: Optional[torch.Tensor] = ZERO,
-                      acc: Optional[torch.Tensor] = ZERO,
-                      mass: Optional[float] = 1) -> Iterable[Marble]:
+    def marblize_data(self, input_data: Iterable[object], vel: Optional[torch.Tensor] = ZERO, acc: Optional[torch.Tensor] = ZERO, mass: Optional[float] = 1) -> Iterable[Marble]:
         all_coordinates = self.find_coordinates(input_data)
-        marble_list = []
-        for point in self.input_data:
-            point_as_tensor = torch.tensor(point, dtpe=torch.float)
-            new_marble = Marble(point_as_tensor, vel, acc, mass,
-                                NewtonianGravity(), datum=point)
-        pass
+        marble_array = np.array([])
+        for point in input_data:
+            particular_coordinate = torch.tensor(all_coordinates[input_data.index(point)], dtype=torch.float)
+            new_marble = Marble(particular_coordinate, vel, acc, mass, NewtonianGravity(), point)
+            marble_array = np.append(marble_array, new_marble)
+        
+        return marble_array
+    
