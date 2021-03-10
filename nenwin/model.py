@@ -137,3 +137,11 @@ class NenwinModel(nn.Module):
                 eater.eat(marble)
                 self.__marbles.remove(marble)
                 break
+
+    def reset(self):
+        """
+        Reset all Nodes and Marbles to their init_pos, init_acc and init_vel.
+        Also all emitters to their init
+        """
+        for particle in self.__all_particles:
+            particle.reset()

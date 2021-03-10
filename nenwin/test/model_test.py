@@ -33,7 +33,7 @@ from nenwin.attraction_functions.attraction_functions \
     import AttractionFunction
 from nenwin.particle import PhysicalParticle
 from nenwin.marble_eater_node import MarbleEaterNode
-from nenwin.test.test_aux import TEST_SIMULATION_STEP_SIZE
+from nenwin.test.test_aux import TEST_SIMULATION_STEP_SIZE, check_close
 from nenwin.test.test_aux import runge_kutta_4_step
 from nenwin.test.test_aux import ATTRACT_FUNCT
 from nenwin.test.test_aux import ZERO
@@ -168,6 +168,32 @@ class ModelTestCase(unittest.TestCase):
         except:
             self.fail("Initialization of NenwinModel without initial_marbles"
                       + " should not fail.")
+
+    def test_reset(self):
+        # Node and Marble have some arbitrary nonzero initial motion vars.
+        node = Node(torch.tensor([1.]), torch.tensor([2.]), torch.tensor([3.]),
+                    4, NewtonianGravity(), 1, 1, 1, 1)
+        marble = Marble(torch.tensor([1.1]), torch.tensor([2.2]),
+                        torch.tensor([3.3]), 4.4, NewtonianGravity(), None)
+        model = NenwinModel([node], [marble])
+        model.make_timestep(10)
+        model.make_timestep(10)
+        model.make_timestep(10)
+
+        # Verify that the motion variables have changed
+        self.assertFalse(check_close(node.pos, node.init_pos))
+        self.assertFalse(check_close(marble.vel, marble.init_vel))
+        self.assertFalse(check_close(marble.acc, marble.init_acc))
+
+        model.reset()
+
+        # Now they should be the original values again.
+        self.assertTrue(check_close(node.pos, node.init_pos))
+        self.assertTrue(check_close(node.vel, node.init_vel))
+        self.assertTrue(check_close(node.acc, node.init_acc))
+        self.assertTrue(check_close(marble.pos, marble.init_pos))
+        self.assertTrue(check_close(marble.vel, marble.init_vel))
+        self.assertTrue(check_close(marble.acc, marble.init_acc))
 
 
 class ModelBackpropTestCase(unittest.TestCase):
@@ -314,7 +340,6 @@ class ModelToStringTestCase(unittest.TestCase):
         result = tuple(model.parameters())
         print(result)
         self.assertEqual(len(result), 16)
-
 
 
 def generate_dummy_marble() -> Marble:
