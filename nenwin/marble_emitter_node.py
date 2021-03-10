@@ -238,16 +238,6 @@ class MarbleEmitter(Emitter):
         return "Marble" + super().__repr__()
 
     def _create_particle(self) -> EmittedMarble:
-        # output = self.prototype.copy()
-        # # The mass should not be a torch.nn.Parameter.
-        # # It should not be a leaf node in the computational graph,
-        # # but propagate back to the stored_mass and prototype.mass
-        # # -- Also ensure the mass of the prototype is not also del'ed!
-        # output._PhysicalParticle__mass = nn.Parameter(torch.zeros(1))
-        # del output._PhysicalParticle__mass
-        # output._PhysicalParticle__mass = \
-
-
         p = self.prototype
         mass = (self.stored_mass/self.stored_mass.item())*self.prototype.mass
         output = EmittedMarble(p.pos, p.vel, p.acc, mass,
