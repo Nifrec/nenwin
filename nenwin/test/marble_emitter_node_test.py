@@ -32,15 +32,27 @@ from nenwin.test.test_aux import check_named_parameters
 from nenwin.attraction_functions.attraction_functions \
     import NewtonianGravity
 from nenwin.auxliary import generate_stiffness_dict
-from nenwin.node import Marble
+from nenwin.node import Marble, Node
 from nenwin.marble_emitter_node import MarbleEmitter, \
     Emitter, MarbleEmitterNode, MarbleEmitterVariablePosition
 from nenwin.constants import MAX_EMITTER_SPAWN_DIST
 from nenwin.test.test_aux import check_close
 
+
 class MockEmitter(Emitter):
+
+    def __init__(self, prototype: Node, delay: float,
+                 stored_mass: Optional[float]=0,
+                 initial_time_passed: Optional[float] = 0):
+        super().__init__(prototype, delay, stored_mass=stored_mass,
+                         initial_time_passed=initial_time_passed)
+        self.was_reset = False
+
     def _create_particle(self):
         pass
+
+    def reset(self):
+        self.was_reset = True
 
 
 class MockPrototype(Marble):
@@ -230,6 +242,11 @@ class MarbleEmitterNodeTestCase(unittest.TestCase):
         result = repr(eater)
         self.assertEqual(expected, result)
 
+    def test_reset(self):
+        emitter_node = create_particle()
+        emitter_node.reset()
+        self.assertTrue(emitter_node._MarbleEmitterNode__emitter.was_reset)
+
 
 def create_particle() -> MarbleEmitterNode:
     pos = torch.tensor([1], dtype=torch.float)
@@ -249,6 +266,7 @@ def create_particle() -> MarbleEmitterNode:
                                emitter=emitter,
                                **stiffnesses)
     return output
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -99,7 +99,7 @@ class MarbleEmitterNode(MarbleEaterNode):
         return output
 
     def reset(self):
-        warnings.warn("TODO: TEST")
+        super().reset()
         self.__emitter.reset()
 
 
