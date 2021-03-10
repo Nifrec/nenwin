@@ -98,6 +98,10 @@ class MarbleEmitterNode(MarbleEaterNode):
         output.adopt_parameters(self)
         return output
 
+    def reset(self):
+        warnings.warn("TODO: TEST")
+        self.__emitter.reset()
+
 
 class Emitter(abc.ABC, nn.Module):
 
@@ -221,6 +225,14 @@ class Emitter(abc.ABC, nn.Module):
         output.set_init_time_passed(self.init_time_passed)
         output.set_init_stored_mass(self.init_stored_mass)
         return output
+
+    def reset(self):
+        """
+        Reset the current time passed and the stored_mass
+        back to their original values.
+        """
+        self.__time_since_last_emit = self.__inital_time_passed.clone()
+        self.__stored_mass = self.__init_stored_mass.clone()
 
 
 class MarbleEmitter(Emitter):

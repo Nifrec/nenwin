@@ -42,8 +42,6 @@ from nenwin.test.test_aux import check_close
 from marble_emitter_node_test import MockPrototype
 
 
-
-
 class MarbleEmitterTestCase(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
@@ -390,6 +388,21 @@ class MarbleEmitterTestCase(unittest.TestCase):
 
         self.assertIsInstance(copy, MarbleEmitter)
 
+    def test_reset(self):
+        emitter, prototype, delay, stored_mass, initial_time_passed\
+             = self.setup_full_emitter()
+
+        # Ensure currenly saved mass is very different from initial stores mass.
+        emitter.eat_mass(100)
+        emitter.register_time_passed(123)
+        emitter.emit()
+        emitter.reset()
+
+        self.assertTrue(torch.allclose(emitter.stored_mass,
+                                       emitter.init_stored_mass))
+        self.assertTrue(torch.allclose(emitter.init_time_passed,
+                                       emitter._Emitter__time_since_last_emit))
+
 
 class MarbleEmitterVariablePositionTestCase(unittest.TestCase):
 
@@ -431,7 +444,7 @@ class MarbleEmitterVariablePositionTestCase(unittest.TestCase):
 
     def test_repr(self):
         (prototype, delay, stored_mass, initial_time_passed,
-                  relative_prototype_pos, emitter) = self.set_up_full_emitter()
+         relative_prototype_pos, emitter) = self.set_up_full_emitter()
 
         expected = f"MarbleEmitterVariablePosition({repr(prototype)}," \
             + f"{convert_scalar_param_to_repr(delay)},"\
@@ -449,7 +462,7 @@ class MarbleEmitterVariablePositionTestCase(unittest.TestCase):
         Base case: original still has init values.
         """
         (prototype, delay, stored_mass, initial_time_passed,
-                  rel_prototype_pos, emitter) = self.set_up_full_emitter()
+         rel_prototype_pos, emitter) = self.set_up_full_emitter()
         copy = emitter.copy()
         self.assertIsInstance(copy, MarbleEmitterVariablePosition)
         self.assertAlmostEqual(copy.init_stored_mass, stored_mass)
@@ -471,6 +484,7 @@ class MarbleEmitterVariablePositionTestCase(unittest.TestCase):
         output = (prototype, delay, stored_mass, initial_time_passed,
                   relative_prototype_pos, emitter)
         return output
+
 
 if __name__ == "__main__":
     unittest.main()
