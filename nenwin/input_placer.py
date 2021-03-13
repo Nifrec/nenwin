@@ -82,16 +82,15 @@ class PhiInputPlacer(InputPlacer):
     Given a set of data, create the marbles and place them from the bottomleft
     to topright according to a pseudorandom sequence
     """
-
-    def find_coordinates(self, input_data: Iterable[Sequence[float]]) -> List[List[float]]:
+    def make_possible_points(self, input_data: Iterable[Sequence[float]]):
         input_list = list(input_data)
         dimension = len(input_list[0])
         dimension_vector = np.array([])
+        number_of_data = len(input_list)
+        
         for i in range(1, dimension + 1):
             dimension_vector = np.append(
                 dimension_vector, np.divide(1, PHI[dimension]**i))
-
-        number_of_data = len(input_list)
 
         exists = False
         for i in range(0, number_of_data):
@@ -101,7 +100,10 @@ class PhiInputPlacer(InputPlacer):
             else:
                 possible_points = np.append(
                     possible_points, [divmod((i+1)*dimension_vector, 1)[1]], axis=0)
+        return [possible_points, input_list, dimension, dimension_vector, number_of_data]
 
+    def find_coordinates(self, input_data: Iterable[Sequence[float]]) -> List[List[float]]:
+        data_input_data = self.make_possible_points(input_data)
         """
         Works, step 1 and 2 for the algorithm in latex, possible_point is array of points op to i
         """
@@ -109,29 +111,29 @@ class PhiInputPlacer(InputPlacer):
         # find point closest to bottom_left point = input_pos, is equal to entry of possible
         # points with shortest length
         length_possible_points = []
-        for entry in possible_points:
+        for entry in data_input_data[0]:
             length = 0
             for d in entry:
                 length = length + d**2
             length_possible_points.append(math.sqrt(length))
 
         minimal_point_index = np.where(length_possible_points == np.amin(length_possible_points))[0]
-        distance_sequence = np.array(possible_points[minimal_point_index])
+        distance_sequence = np.array(data_input_data[0][minimal_point_index])
 
         # distance sequence is filled with bottom-left most point
         # below is incorrect, fix next time
         # testcase: a = PhiInputPlacer.marblize_data, PhiInputPlacer.marblize_data(a, input_data =[[1,2,67,9,6],[1,3,4,5,6],[3,3,3,3,3]])
-        possible_points_edit = possible_points
+        possible_points_edit = data_input_data[0]
         counter = 1
-        while counter < number_of_data:
+        while counter < data_input_data[4]:
             counter = counter + 1
-            current_point = possible_points[minimal_point_index]
+            current_point = data_input_data[0][minimal_point_index]
             possible_points_edit = np.delete(
                 possible_points_edit, minimal_point_index, 0)
             list_distances = []
             for entry in possible_points_edit:
                 distance = 0
-                for d in range(0, dimension):
+                for d in range(0, data_input_data[2]):
                     distance = distance + (current_point[0][d] - entry[d])**2
                 list_distances.append(distance)
             minimal_point_index = np.where(
@@ -140,7 +142,7 @@ class PhiInputPlacer(InputPlacer):
                 distance_sequence, possible_points_edit[minimal_point_index], axis=0)
 
         for entry in distance_sequence:
-            for d in range(0, dimension):
+            for d in range(0, data_input_data[2]):
                 entry[d] = entry[d]*self.input_region_sizes[d]
                 entry[d] = entry[d] + self.input_pos[d]
         return distance_sequence.tolist()
