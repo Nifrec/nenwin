@@ -291,13 +291,13 @@ class PhysicalParticle(InitialValueParticle):
         themselves.
         """
         if forces.shape[0] == 0:
-            self.acc *= 0
+            self.acc = 0 * self.acc
             return
         if (len(forces.shape) != 2) or (forces[0].shape != self.acc.shape):
             raise ValueError(
                 "Unexpected shape of forces-array, expected 2 dims")
         self._set_prev_accs()
-        self.acc = torch.sum(forces, dim=0) / abs(self.mass)
+        self.acc = torch.sum(forces, dim=0) / torch.abs(self.mass)
 
     def compute_attraction_force_to(
             self, other: PhysicalParticle) -> torch.Tensor:
