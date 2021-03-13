@@ -67,13 +67,13 @@ class Particle(abc.ABC, nn.Module):
                           ) -> torch.Tensor:
         """
         Create correct datastructure for a non-trainable vector variable such as
-        self.__prev_pos, self._prev_acc, self._prev_prev_acc
+        self._prev_acc, self._prev_prev_acc
         """
         if isinstance(vector, torch.Tensor):
-            return vector.clone().detach().requires_grad_(False)
+            return vector.clone().detach()
         else:
             return torch.tensor(vector, dtype=torch.float,
-                                device=self.device, requires_grad=False)
+                                device=self.device)
 
     def __repr__(self) -> str:
         pos_str = repr(self.pos.detach())
@@ -220,14 +220,17 @@ class InitialValueParticle(Particle):
             raise ValueError("Initial accition should be a torch.nn.Paratemer")
         self.__init_acc = new_init_acc
 
-
     def reset(self):
         self.pos = self.__init_pos.clone()
         self.vel = self.__init_vel.clone()
         self.acc = self.__init_acc.clone()
 
+        self._prev_acc = self.init_acc.clone()
+        self._prev_prev_acc = self._prev_acc.clone()
+
     def copy(self) -> InitialValueParticle:
-        output = InitialValueParticle(self.init_pos, self.init_vel, self.init_acc)
+        output = InitialValueParticle(self.init_pos, self.init_vel,
+                                      self.init_acc)
         output.adopt_parameters(self)
 
         return output
@@ -241,6 +244,7 @@ class InitialValueParticle(Particle):
         self.set_init_pos(source.init_pos)
         self.set_init_vel(source.init_vel)
         self.set_init_acc(source.init_acc)
+
 
 class PhysicalParticle(InitialValueParticle):
     """
@@ -313,10 +317,10 @@ class PhysicalParticle(InitialValueParticle):
 
     def copy(self) -> PhysicalParticle:
         output = PhysicalParticle(self.init_pos,
-                                self.init_vel,
-                                self.init_acc,
-                                self.mass,
-                                self._attraction_function)
+                                  self.init_vel,
+                                  self.init_acc,
+                                  self.mass,
+                                  self._attraction_function)
         output.adopt_parameters(self)
         return output
 

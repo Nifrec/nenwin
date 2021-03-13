@@ -223,7 +223,6 @@ class InitialValueParticleTestCase(unittest.TestCase):
         self.assertTrue(check_close(some_particle.init_acc.grad,
                                     another_particle.init_acc.grad))
 
-
     def test_init_pos_setter(self):
         """
         Should set reference, not only value.
@@ -231,7 +230,7 @@ class InitialValueParticleTestCase(unittest.TestCase):
         """
         particle = setup_simple_particle()
         new_init_pos = torch.nn.Parameter(
-            torch.tensor([1.0],requires_grad=True))
+            torch.tensor([1.0], requires_grad=True))
         particle.set_init_pos(new_init_pos)
 
         self.assertIs(particle.init_pos, new_init_pos)
@@ -243,7 +242,7 @@ class InitialValueParticleTestCase(unittest.TestCase):
         """
         particle = setup_simple_particle()
         new_init_vel = torch.nn.Parameter(
-            torch.tensor([1.0],requires_grad=True))
+            torch.tensor([1.0], requires_grad=True))
         particle.set_init_vel(new_init_vel)
 
         self.assertIs(particle.init_vel, new_init_vel)
@@ -255,10 +254,50 @@ class InitialValueParticleTestCase(unittest.TestCase):
         """
         particle = setup_simple_particle()
         new_init_acc = torch.nn.Parameter(
-            torch.tensor([1.0],requires_grad=True))
+            torch.tensor([1.0], requires_grad=True))
         particle.set_init_acc(new_init_acc)
 
         self.assertIs(particle.init_acc, new_init_acc)
+
+    def test_reset_prev_acc(self):
+        """
+        When calling reset(), the prev_acc should not depend
+        on any value except init_acc!
+        """
+
+        particle = setup_simple_particle()
+        optim = torch.optim.Adam(particle.parameters())
+        for x in range(2):
+            particle.update_movement(5)
+            particle.pos.backward()
+            optim.step()
+
+
+            particle.zero_grad()
+            particle.reset()
+
+        self.assertEqual(particle.init_acc._version,
+                         particle._prev_acc._version)
+
+    def test_reset_prev_prev_acc(self):
+        """
+        When calling reset(), the prev_prev_acc should not depend
+        on any value except init_acc!
+        """
+
+        particle = setup_simple_particle()
+        optim = torch.optim.Adam(particle.parameters())
+
+        for x in range(2):
+            particle.update_movement(5)
+            particle.pos.backward()
+            optim.step()
+
+            particle.zero_grad(set_to_none=True)
+            particle.reset()
+
+        self.assertEqual(particle.init_acc._version,
+                         particle._prev_prev_acc._version)
 
 
 def setup_simple_particle() -> InitialValueParticle:

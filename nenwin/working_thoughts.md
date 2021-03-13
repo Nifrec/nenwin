@@ -274,3 +274,148 @@ We can state that the loss is the minimum
 `|x_1 - (m.pos + α*m.vel)|²` over all Marbles `m`. 
 
 But let's just begin with `α = 0`, i.e. just blaming the closest Marble.
+
+## Update 13-03-2021
+PyTorch is reporting errors in the backpropagation experiment.
+Currently it does execute one epoch, including backprop and optimization,
+successfully. But it crashed during backprop of the second epoch:
+it reports some variable has been modified in-place.
+It is difficult to imagine what can be different between the first and
+the second epoch.
+
+When not optimizing, so when only computing the gradient,
+and keeping `retain_graph = True`, it does not crash.
+
+I found something related on the [PyTorch forum](https://discuss.pytorch.org/t/in-place-operation-error-pytorch1-6-0/97032/7?u=nifrec)
+
+The `_version` attribute of Tensors (the pos, vel, acc, mass and node_stiffness
+of the Marble) does turn to 1 in the second epoch:
+```python
+print(marble.init_pos._version)
+print(marble.init_vel._version)
+print(marble.init_acc._version)
+print(marble.mass._version)
+print(marble.node_stiffness._version)
+```
+gives:
+```python
+being epoch 0
+0
+0
+0
+0
+0
+end epoch 0
+0
+0
+0
+0
+0
+being epoch 1
+1
+1
+1
+1
+1
+end epoch 1
+1
+1
+1
+1
+1
+```
+
+I tried the same experiment, but now only with a single `Marble`that
+has not been encapsulated in a `NenwinModel`:
+```python
+marble = Marble(marble_pos, zero, zero, mass, NewtonianGravity(), None)
+optimizer = torch.optim.Adam(marble.parameters())
+step_time=0.5
+
+
+for epoch in range(25):
+    optimizer.zero_grad(set_to_none=True)
+
+    marble.zero_grad(set_to_none=True)
+    marble.reset()
+    
+    t = 0
+    while t <= 5:
+        marble.update_movement(time_passed=step_time)
+        t += step_size
+
+    loss = torch.mean(torch.pow(marble.pos - torch.tensor([0, 0], dtype=torch.float), 2))
+
+    loss.backward()
+    del loss
+    optimizer.step()
+```
+Now we get a different error:
+```python
+RuntimeError: Trying to backward through the graph a second time, but the saved intermediate results have already been freed. Specify retain_graph=True when calling backward the first time.
+```
+Also, the second epoch, the init_pos is at `_version` 1, while the mass
+stays at version 0. Of course the mass has not been used as there were no
+forces applied to the Marble.
+
+### Is it the `_prev_acc` and `_prev_prev_acc`?
+They are not supposed to do gradient tracking 
+(not sure why I decided that, I now think they should),
+but they do: and they may depend on values of `init_acc` from *before*
+the last optimizer step!
+
+The following indeed fails:
+
+```python
+def test_reset_prev_acc(self):
+        """
+        When calling reset(), the prev_acc should not depend
+        on any value except init_acc!
+        """
+
+        particle = setup_simple_particle()
+        optim = torch.optim.Adam(particle.parameters())
+        for x in range(2):
+            particle.update_movement(5)
+            particle.pos.backward()
+            optim.step()
+
+
+            particle.zero_grad()
+            particle.reset()
+
+        self.assertEqual(particle.init_acc._version,
+                         particle._prev_acc._version)
+```
+
+Although, PyTorch *wants* the things in the computational graph to have
+`_version` 0, which in this case only the `_prev_acc` and `_prev_prev_acc`
+have. Now `.clone()` returns a Tensor with `_version` 0, and
+both `_prev_acc` and `_prev_prev_acc` are created through a clone.
+So it makes sense these values are ok.
+
+Now here some code that works:
+
+```python
+mm = MyModule()
+optim = torch.optim.Adam(mm.parameters())
+
+for epoch in range(2):
+    optim.zero_grad()
+    loss = mm(torch.tensor([2.0]))
+    loss.backward()
+    optim.step()
+print(mm.my_param._version)
+print(mm(torch.tensor([2.0]))._version)
+print(loss._version)
+```
+with output:
+```python
+2
+0
+0
+```
+
+Clearly, `my_param` is part of the computational graph.
+Yet it has version 2. 
+Why does this not raise an error, but does it raise errors for Marbles?
