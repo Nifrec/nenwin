@@ -100,3 +100,8 @@ class MarbleEaterNode(Node):
                                self.radius)
         output.adopt_parameters(self)
         return output
+
+    def reset(self):
+        super().reset()
+        self.num_marbles_eaten = 0
+        self.__marble_data_eaten = []
