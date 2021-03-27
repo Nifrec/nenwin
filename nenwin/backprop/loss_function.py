@@ -5,7 +5,7 @@ the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 Author: Lulof Pirée
 March 2021
 
-Copyright (C) 2020 Lulof Pirée, Teun Schilperoort
+Copyright (C) 2021 Lulof Pirée, Teun Schilperoort
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -22,7 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Differentiable loss function for using a Nenwin model for classification.
 """
-from typing import Callable, List, Sequence, Set
+from typing import Callable, List, Optional, Sequence, Set
 import torch
 
 from nenwin.marble_eater_node import MarbleEaterNode
@@ -103,7 +103,7 @@ class NenwinLossFunction:
                  output_nodes: Sequence[MarbleEaterNode],
                  model: NenwinModel,
                  vel_weight: float,
-                 pos_weight: float = 1):
+                 pos_weight: Optional[float] = 1):
         """
         Arguments:
             * output_nodes: ordered sequence of Nodes,
@@ -111,11 +111,18 @@ class NenwinLossFunction:
                 classification-class they represent.
             * model: NenwinModel containing the output_nodes,
                 used to compute the loss.
+            * vel_weight: weight of velocity in computing which
+                Marble is to 'blame' for any loss.
+                Velocity multiplied with [vel_weight] is added to
+                compute the closest marble to the target output Node.
+            * pos_weight: idem as vel_weight, but for position. 1 by default.
         """
         if not all(node in model.nodes for node in output_nodes):
             raise RuntimeError("Not all output_nodes are in model")
         self.__output_nodes = output_nodes
         self.__model = model
+        self.__vel_weight = vel_weight
+        self.__pos_weight = pos_weight
 
     def __call__(self, expected: int) -> torch.Tensor:
         activated_nodes = self.__get_activated_nodes()
@@ -125,7 +132,9 @@ class NenwinLossFunction:
         if output_index == expected:  # Correct prediction
             return torch.tensor([0.0], requires_grad=True)
         else:  # "Blame" it on closest Marble.
-            ...
+            blamed_marble = find_most_promising_marble_to(activated_nodes[0],
+            self.__model, self.__pos_weight, self.__pos_weight)
+            TODO
     def __get_activated_nodes(self) -> List[MarbleEaterNode]:
         """
         Return all Nodes designated as outputs that have eaten one or
