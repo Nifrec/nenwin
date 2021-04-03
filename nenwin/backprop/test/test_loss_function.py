@@ -385,7 +385,7 @@ class LossFunctionCallNoPredTestCase(unittest.TestCase):
 
     def test_grads_no_error_no_output(self):
         """
-        Case in which no preidction output is given.
+        Case in which no prediction output is given.
         All learnable parameters should have a gradient value
         that does not cause errors with an optimizer.
 
