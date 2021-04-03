@@ -30,8 +30,9 @@ from nenwin.marble_eater_node import MarbleEaterNode
 from nenwin.node import Marble, Node
 from nenwin.model import NenwinModel
 from nenwin.auxliary import distance
-from nenwin.backprop.loss_function import find_closest_marble_to, find_most_promising_marble_to, \
+from nenwin.backprop.loss_function import LossCases, NenwinLossFunction, find_closest_marble_to, find_most_promising_marble_to, \
     velocity_weighted_distance
+from nenwin.attraction_functions.attraction_functions import NewtonianGravity
 
 ZERO = torch.tensor([0.0, 0.0])
 
@@ -231,6 +232,73 @@ class VelocityWeightedDistanceTestCase(unittest.TestCase):
         result = velocity_weighted_distance(m1, m2, pos_weight, vel_weight)
 
         torch.testing.assert_allclose(result, expected)
+
+
+class FindLossCaseTestCase(unittest.TestCase):
+
+    def test_no_output(self):
+        nodes = [gen_node_at(torch.tensor([10., 10]))]
+        marbles = [gen_marble_at(ZERO)]
+        model = NenwinModel(nodes, marbles)
+        loss_fun = NenwinLossFunction(nodes, model, 0, 1)
+
+        result = loss_fun._find_loss_case(0)
+        expected = LossCases.no_prediction
+
+        self.assertEqual(result, expected)
+
+    def test_wrong_output(self):
+        nodes = [gen_node_at(torch.tensor([10., 10])),
+                 gen_node_at(torch.tensor([11., 11]))]
+        marbles = [gen_marble_at(ZERO), gen_marble_at(torch.tensor([11, 11]))]
+        model = NenwinModel(nodes, marbles)
+        nodes[1].eat(marbles[1])
+        loss_fun = NenwinLossFunction(nodes, model, 0, 1)
+
+        target_index = 0 # Node at index 1 ate the Marble
+        result = loss_fun._find_loss_case(target_index)
+        expected = LossCases.wrong_prediction
+
+        self.assertEqual(result, expected)
+
+    def test_wrong_output(self):
+        node = gen_node_at(ZERO)
+        marble = gen_marble_at(ZERO)
+        model = NenwinModel([node], [marble])
+        node.eat(marble)
+        loss_fun = NenwinLossFunction([node], model, 0, 1)
+
+        target_index = 0 # Node at index 1 ate the Marble
+        result = loss_fun._find_loss_case(target_index)
+        expected = LossCases.correct_prediction
+
+        self.assertEqual(result, expected)
+
+
+def gen_node_at(pos: torch.Tensor, mass: float = 10) -> MarbleEaterNode:
+    output = MarbleEaterNode(pos, vel=ZERO, acc=ZERO,
+                             mass=mass,
+                             attraction_function=NewtonianGravity(),
+                             marble_attraction=1,
+                             marble_stiffness=1,
+                             node_attraction=0,
+                             node_stiffness=0,
+                             radius=1)
+
+    return output
+
+
+def gen_marble_at(pos: torch.Tensor, mass: float = 10) -> Marble:
+    output = Marble(pos, vel=ZERO, acc=ZERO,
+                    mass=mass,
+                    attraction_function=NewtonianGravity(),
+                    marble_attraction=1,
+                    marble_stiffness=1,
+                    node_attraction=0,
+                    node_stiffness=0,
+                    datum=None)
+
+    return output
 
 
 if __name__ == '__main__':

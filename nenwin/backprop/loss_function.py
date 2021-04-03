@@ -22,8 +22,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Differentiable loss function for using a Nenwin model for classification.
 """
-from typing import Callable, List, Optional, Sequence, Set
+from typing import Callable, List, Optional, Sequence, Set, Tuple
 import torch
+from enum import Enum
 
 from nenwin.marble_eater_node import MarbleEaterNode
 from nenwin.node import Marble, Node
@@ -31,7 +32,10 @@ from nenwin.model import NenwinModel
 from nenwin.auxliary import distance
 
 
-
+class LossCases(Enum):
+    correct_prediction = 0
+    no_prediction = 1
+    wrong_prediction = 2
 
 
 def find_closest_marble_to(particle: Node, model: NenwinModel):
@@ -67,7 +71,7 @@ def find_most_promising_marble_to(particle: Node,
     """
     other_marbles = __get_other_marbles(model, particle)
 
-    def key(m): 
+    def key(m):
         return velocity_weighted_distance(particle, m, pos_weight, vel_weight)
 
     return min(other_marbles, key=key)
@@ -92,6 +96,7 @@ def __get_other_marbles(model: NenwinModel, target: Node) -> Set[Marble]:
         raise RuntimeError("Model does not contain any Marble that"
                            " is not target particle")
     return other_marbles
+
 
 class NenwinLossFunction:
     """
@@ -125,19 +130,41 @@ class NenwinLossFunction:
         self.__pos_weight = pos_weight
 
     def __call__(self, expected: int) -> torch.Tensor:
-        activated_nodes = self.__get_activated_nodes()
-        assert len(activated_nodes) <= 1, "Multiple Nodes are giving output"
+        ...
+        return torch.tensor([0.0], requires_grad=True)
+        # "Blame" it on closest Marble, and punish wrong Marble.
+        blamed_marble = find_most_promising_marble_to(activated_nodes[0],
+                                                      self.__model, self.__pos_weight, self.__pos_weight)
+        TODO
 
-        output_index = self.__output_nodes.index(activated_nodes[0])
-        if output_index == expected:  # Correct prediction
-            return torch.tensor([0.0], requires_grad=True)
-        else:  # "Blame" it on closest Marble.
-            blamed_marble = find_most_promising_marble_to(activated_nodes[0],
-            self.__model, self.__pos_weight, self.__pos_weight)
-            TODO
-    def __get_activated_nodes(self) -> List[MarbleEaterNode]:
+    def __get_activated_nodes(self) -> Tuple[MarbleEaterNode]:
         """
         Return all Nodes designated as outputs that have eaten one or
         more Marbles.
         """
-        return filter(lambda n: n.num_marbles_eaten >= 1, self.__output_nodes)
+        output = filter(lambda n: n.num_marbles_eaten >= 1, self.__output_nodes)
+        return tuple(output)
+
+    def _find_loss_case(self, expected: int) -> LossCases:
+        """
+        The loss is a piecewise function.
+        This method finds which of the three pieces (cases) currently applies.
+        The cases are:
+            * No prediction is made, as no Marble has been eaten 
+                by any of the output Nodes.
+            * The correct prediction has been made 
+                (i.e. the correct Node has eaten a Marble)
+            * A wrong prediction has been made
+                (i.e. a Marble has been eaten but by the wrong Node)
+        """
+        activated_nodes = self.__get_activated_nodes()
+        assert len(activated_nodes) <= 1, "Multiple Nodes are giving output"
+
+        if len(activated_nodes) == 0:
+            return LossCases.no_prediction
+        else:
+            output_index = self.__output_nodes.index(activated_nodes[0])
+            if output_index == expected:  # Correct prediction
+                return LossCases.correct_prediction
+            else:
+                return LossCases.wrong_prediction
