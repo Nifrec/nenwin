@@ -197,7 +197,7 @@ class ModelTestCase(unittest.TestCase):
 
     def test_eaten_marbles_disappear(self):
 
-        # Both are generated
+        # Both are generated at the smame pos, so immediately eaten.
         node = MarbleEaterNode(ZERO, ZERO, ZERO, 10, NewtonianGravity(),
                                1, 1, 1, 0, 10)
         marble = Marble(ZERO, ZERO, ZERO, 10, NewtonianGravity(), datum=None)
@@ -206,6 +206,27 @@ class ModelTestCase(unittest.TestCase):
 
         self.assertSetEqual(model.marbles, set([]))
         self.assertNotIn(marble, model._NenwinModel__all_particles)
+
+    def test_reset_removed_added_marbles(self):
+        """
+        NenwinModel.reset() should remove all Marbles
+        added with NenwinModel.add_marbles()
+        """
+        original_marble = Marble(ZERO, ZERO, ZERO, 10, NewtonianGravity(), datum=None)
+        added_marble = original_marble.copy()
+
+        assert added_marble is not original_marble
+
+        model = NenwinModel([], [original_marble])
+        model.add_marbles([added_marble])
+
+        model.reset()
+
+        self.assertIn(original_marble, model.marbles)
+        self.assertIn(original_marble, model._NenwinModel__all_particles)
+        self.assertNotIn(added_marble, model.marbles)
+        self.assertNotIn(added_marble, model._NenwinModel__all_particles)
+        
 
 
 class ModelBackpropTestCase(unittest.TestCase):
@@ -339,7 +360,7 @@ class ModelToStringTestCase(unittest.TestCase):
 
     def test_get_params_add_marbles(self):
         """
-        Also later added marbles should be registered.
+       Later added marbles should not be registered as submodules.
         """
         marbles = (generate_dummy_marble(), )
         nodes = (generate_dummy_node(), )
@@ -351,7 +372,7 @@ class ModelToStringTestCase(unittest.TestCase):
         # and the 4 stiffness / attraction params
         result = tuple(model.parameters())
         print(result)
-        self.assertEqual(len(result), 16)
+        self.assertEqual(len(result), 8)
 
 
 def generate_dummy_marble() -> Marble:

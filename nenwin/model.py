@@ -54,10 +54,12 @@ class NenwinModel(nn.Module):
         if initial_marbles is not None:
             self.__marbles = set(initial_marbles)
         else:
-            self.__marbles = set([])
+            self.__marbles: Set[Marble] = set([])
         self.__all_particles = self.__nodes.union(self.__marbles)
 
         self.__register_particles_as_modules(self.__all_particles)
+
+        self.__added_marbles: Set[Marble] = set([])
 
     def __register_particles_as_modules(self, particles: Iterable[Node]):
         """
@@ -100,9 +102,9 @@ class NenwinModel(nn.Module):
         """
         Add more Marbles to the set of actively simulated Marbles.
         """
-        self.__register_particles_as_modules(new_marbles)
         self.__marbles.update(new_marbles)
         self.__all_particles.update(new_marbles)
+        self.__added_marbles.update(new_marbles)
 
     def make_timestep(self, time_passed: float):
         """
@@ -149,5 +151,12 @@ class NenwinModel(nn.Module):
         Reset all Nodes and Marbles to their init_pos, init_acc and init_vel.
         Also all emitters to their init
         """
+        self.__remove_added_marbles()
+
         for particle in self.__all_particles:
             particle.reset()
+
+    def __remove_added_marbles(self):
+        self.__marbles.difference_update(self.__added_marbles)
+        self.__all_particles.difference_update(self.__added_marbles)
+        self.__added_marbles = set([])
