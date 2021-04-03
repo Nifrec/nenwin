@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 A variant of the Node that can 'consume' Marbles if they come close.
 """
 from __future__ import annotations
-from typing import List
+from typing import Any, List, Tuple
 import torch
 import torch.nn as nn
 import re
@@ -59,7 +59,7 @@ class MarbleEaterNode(Node):
 
         self.__radius = radius
         self.__num_marbles_eaten: int = 0
-        self.__marble_data_eaten = []
+        self.__marbles_eaten = []
 
     def __repr__(self):
         output = super().__repr__()
@@ -76,12 +76,20 @@ class MarbleEaterNode(Node):
         return self.__num_marbles_eaten
 
     @property
-    def marble_data_eaten(self) -> List[object]:
-        return self.__marble_data_eaten.copy()
+    def marble_data_eaten(self) -> Tuple[Any]:
+        return tuple(map(lambda m: m.datum), self.__marbles_eaten)
+
+    @property
+    def marbles_eaten(self) -> Tuple[Marble]:
+        """
+        Return the eaten Marbles in chronological order,
+        with the first eaten Marble first.
+        """
+        return tuple(self.__marbles_eaten)
 
     def eat(self, marble: Marble):
         self.__num_marbles_eaten += 1
-        self.__marble_data_eaten.append(marble.datum)
+        self.__marbles_eaten.append(marble)
 
     def copy(self) -> MarbleEaterNode:
         """
@@ -104,4 +112,4 @@ class MarbleEaterNode(Node):
     def reset(self):
         super().reset()
         self.__num_marbles_eaten = 0
-        self.__marble_data_eaten = []
+        self.__marbles_eaten = []
