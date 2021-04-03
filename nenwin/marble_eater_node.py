@@ -103,5 +103,5 @@ class MarbleEaterNode(Node):
 
     def reset(self):
         super().reset()
-        self.num_marbles_eaten = 0
+        self.__num_marbles_eaten = 0
         self.__marble_data_eaten = []
