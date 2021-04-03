@@ -30,8 +30,9 @@ from nenwin.marble_eater_node import MarbleEaterNode
 from nenwin.node import Marble, Node
 from nenwin.model import NenwinModel
 from nenwin.auxliary import distance
-from nenwin.backprop.loss_function import LossCases, NenwinLossFunction, find_closest_marble_to, find_most_promising_marble_to, \
-    velocity_weighted_distance
+from nenwin.backprop.loss_function import LossCases, NenwinLossFunction, \
+    find_closest_marble_to, find_most_promising_marble_to, \
+    velocity_weighted_distance, find_min_weighted_distance_to
 from nenwin.attraction_functions.attraction_functions import NewtonianGravity
 
 ZERO = torch.tensor([0.0, 0.0])
@@ -159,6 +160,38 @@ class FindMostPromisingMarbleTo(unittest.TestCase):
         result = find_most_promising_marble_to(target, model,
                                                pos_weight, vel_weight)
         self.assertIs(result, expected)
+
+
+class findMinWeightedDistanceToTestCase(unittest.TestCase):
+
+    def test_find_min_weighted_distance_to(self):
+        """
+        Base case: target particle not in Model. Weights differ.
+        """
+        marble_positions = (
+            torch.tensor([0.0, 0]),
+            torch.tensor([10.0, 10.0])
+        )
+
+        marble_velocities = (
+            torch.tensor([7.5, 7.5]),
+            torch.tensor([5.0, 5.0])
+        )
+
+        marbles = [gen_marble_at(pos=pos, vel=vel)
+                   for pos, vel in zip(marble_positions, marble_velocities)]
+        model = NenwinModel([], marbles)
+
+        target = Marble(torch.tensor([15.0, 15.0]), ZERO, ZERO, 0, None, None)
+
+        pos_weight = 1
+        vel_weight = 2
+
+        expected = velocity_weighted_distance(target, marbles[0],
+                                              pos_weight, vel_weight)
+        result = find_min_weighted_distance_to(target, model,
+                                               pos_weight, vel_weight)
+        torch.testing.assert_allclose(result, expected)
 
 
 class VelocityWeightedDistanceTestCase(unittest.TestCase):
@@ -446,7 +479,7 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
          |
          +-------------------------------
            -10         0         10   x>
-        
+
 
         Marble M starts with moving towards N_1, but should arrive at N_0.
 
@@ -461,8 +494,8 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
                                     datum="original")
         self.model = NenwinModel(self.nodes, [self.marble])
 
-        for _ in range(50): # Should be enough for the Marble to be eaten
-            self.model.make_timestep(0.1)  
+        for _ in range(50):  # Should be enough for the Marble to be eaten
+            self.model.make_timestep(0.1)
 
         assert len(self.model.marbles) == 0, "Testcase badly designed."
 
@@ -490,8 +523,8 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
                                               pos_weight=self.pos_weight,
                                               vel_weight=self.vel_weight)
         expected -= 1/velocity_weighted_distance(wrong_node, self.marble,
-                                              pos_weight=self.pos_weight,
-                                              vel_weight=self.vel_weight)
+                                                 pos_weight=self.pos_weight,
+                                                 vel_weight=self.vel_weight)
         torch.testing.assert_allclose(self.loss, expected)
 
     def test_value_loss_wrong_pred_some_marble_left(self):
@@ -514,8 +547,8 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
                                               pos_weight=self.pos_weight,
                                               vel_weight=self.vel_weight)
         expected -= 1/velocity_weighted_distance(wrong_node, self.marble,
-                                              pos_weight=self.pos_weight,
-                                              vel_weight=self.vel_weight)
+                                                 pos_weight=self.pos_weight,
+                                                 vel_weight=self.vel_weight)
         torch.testing.assert_allclose(self.loss, expected)
 
     def test_grads_no_error_wrong_pred(self):

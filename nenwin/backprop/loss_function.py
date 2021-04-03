@@ -77,11 +77,26 @@ def find_most_promising_marble_to(particle: Node,
 
     return min(other_marbles, key=key)
 
+def find_min_weighted_distance_to(particle: Node,
+                                  model: NenwinModel,
+                                  pos_weight: float,
+                                  vel_weight: float) -> Marble:
+    """
+    Same as find_most_promising_marble_to(), but returns
+    the weighted distance instead of the Marble.
+    """
+    other_marbles = __get_other_marbles(model, particle)
+
+    def key(m):
+        return velocity_weighted_distance(particle, m, pos_weight, vel_weight)
+
+    return min(map(key, other_marbles))
+
 
 def velocity_weighted_distance(stationary: Node,
                                moving: Node,
                                pos_weight: float,
-                               vel_weight: float):
+                               vel_weight: float) -> torch.Tensor:
     """
     Return:
     ||stationary.pos - (pos_weight * moving.pos + vel_weight * moving.vel)||²
