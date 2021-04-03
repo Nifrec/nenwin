@@ -141,7 +141,7 @@ class NenwinLossFunction:
             return self.__compute_loss_case_no_prediction(expected)
 
         elif current_case == LossCases.wrong_prediction:
-            raise NotImplementedError()
+            return self.__compute_loss_case_wrong_prediction(expected)
 
         else:
             raise RuntimeError("Unrecognized case of loss function. "
@@ -158,6 +158,27 @@ class NenwinLossFunction:
                       "twice for blamed Marble")
         return velocity_weighted_distance(target_node, blamed_marble,
                                           self.__pos_weight, self.__vel_weight)
+
+    def __compute_loss_case_wrong_prediction(self, expected: int):
+        
+
+        activated_node = self.__get_activated_nodes()[0]
+        wrong_marble = activated_node.marbles_eaten[0]
+        # Negative term for Marble at wrong EaterNode
+        loss = -1/velocity_weighted_distance(activated_node, wrong_marble,
+                pos_weight=self.__pos_weight, vel_weight=self.__vel_weight)
+
+        # Positive loss term for missing Marble at expected EaterNode.
+        try:
+            loss += self.__compute_loss_case_no_prediction(expected)
+        except RuntimeError:
+            # There are no other Marble than the eaten Marble.
+            # So *also* blame the eaten Marble for not being at the right place.
+            target_node = self.__output_nodes[expected]
+            loss += velocity_weighted_distance(target_node, wrong_marble,
+                pos_weight=self.__pos_weight, vel_weight=self.__vel_weight)
+        
+        return loss
 
     def __get_activated_nodes(self) -> Tuple[MarbleEaterNode]:
         """

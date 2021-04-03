@@ -22,7 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Testcases for the source file loss_function.py
 """
-from typing import List, Sequence
+from typing import Any, List, Sequence
 import torch
 import unittest
 
@@ -456,20 +456,22 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
 
         self.nodes = (gen_node_at(torch.tensor([10.0, 0])),
                       gen_node_at(torch.tensor([-10.0, 0])))
-        self.marble = gen_marble_at(torch.tensor([0.0]),
-                                    vel=torch.tensor([-3.0, 0]))
-        self.model = NenwinModel([self.node], [self.marble])
+        self.marble = gen_marble_at(ZERO,
+                                    vel=torch.tensor([-3.0, 0]),
+                                    datum="original")
+        self.model = NenwinModel(self.nodes, [self.marble])
 
         for _ in range(50): # Should be enough for the Marble to be eaten
             self.model.make_timestep(0.1)  
 
-        assert len(self.model.marbles), "Testcase badly desgined."
+        assert len(self.model.marbles) == 0, "Testcase badly designed."
 
-        self.loss_fun = NenwinLossFunction([self.node], self.model,
+        self.loss_fun = NenwinLossFunction(self.nodes, self.model,
                                            vel_weight=self.vel_weight,
                                            pos_weight=self.pos_weight)
 
         self.target_index = 0
+        self.wrong_node_index = 1
         self.loss = self.loss_fun(self.target_index)
 
     def test_value_loss_wrong_pred_no_marble_left(self):
@@ -481,8 +483,13 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
 
         Case where no non-eaten Marble is available.
         """
-        self.fail()
-        expected = velocity_weighted_distance(self.node, self.marble,
+
+        target_node = self.nodes[self.target_index]
+        wrong_node = self.nodes[self.wrong_node_index]
+        expected = velocity_weighted_distance(target_node, self.marble,
+                                              pos_weight=self.pos_weight,
+                                              vel_weight=self.vel_weight)
+        expected -= 1/velocity_weighted_distance(wrong_node, self.marble,
                                               pos_weight=self.pos_weight,
                                               vel_weight=self.vel_weight)
         torch.testing.assert_allclose(self.loss, expected)
@@ -497,21 +504,32 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
         Case where another non-eaten Marble is still available
         at time of loss computation.
         """
-        self.fail()
-        expected = velocity_weighted_distance(self.node, self.marble,
+        second_marble = gen_marble_at(ZERO, datum="second")
+        self.model.add_marbles([second_marble])
+        self.loss = self.loss_fun(self.target_index)
+
+        target_node = self.nodes[self.target_index]
+        wrong_node = self.nodes[self.wrong_node_index]
+        expected = velocity_weighted_distance(target_node, second_marble,
+                                              pos_weight=self.pos_weight,
+                                              vel_weight=self.vel_weight)
+        expected -= 1/velocity_weighted_distance(wrong_node, self.marble,
                                               pos_weight=self.pos_weight,
                                               vel_weight=self.vel_weight)
         torch.testing.assert_allclose(self.loss, expected)
 
     def test_grads_no_error_wrong_pred(self):
-        self.fail()
         """
         Case in which no prediction output is given.
         All learnable parameters should have a gradient value
         that does not cause errors with an optimizer.
 
-        Passes if no errors occurs.
+        Case where another non-eaten Marble is still available
+        at time of loss computation.
         """
+        second_marble = gen_marble_at(ZERO)
+        self.model.add_marbles([second_marble])
+
         optim = torch.optim.Adam(self.model.parameters())
         optim.zero_grad()
 
@@ -522,13 +540,15 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
             self.fail(f"Error occurred during backprop/optim step: {e}")
 
     def test_grads_value_wrong_pred(self):
-        self.fail()
         """
         Case in which no prediction output is given.
         The learnable parameters of the Marble should have a gradient value
         that does affect the values of the weights.
         The loss should be lower for the second run.
         """
+        second_marble = gen_marble_at(ZERO)
+        self.model.add_marbles([second_marble])
+
         optim = torch.optim.Adam(self.model.parameters())
         optim.zero_grad()
 
@@ -543,6 +563,7 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
         # Now verify the loss improved.
         self.model.reset()
         self.model.make_timestep(0.1)
+        self.model.add_marbles([second_marble])
         new_loss = self.loss_fun(self.target_index)
 
         self.assertLess(new_loss.item(), self.loss.item())
@@ -563,7 +584,8 @@ def gen_node_at(pos: torch.Tensor, mass: float = 10) -> MarbleEaterNode:
 
 def gen_marble_at(pos: torch.Tensor,
                   vel: torch.Tensor = ZERO,
-                  mass: float = 10) -> Marble:
+                  mass: float = 10,
+                  datum: Any = None) -> Marble:
     output = Marble(pos=pos, vel=vel, acc=ZERO,
                     mass=mass,
                     attraction_function=NewtonianGravity(),
@@ -571,7 +593,7 @@ def gen_marble_at(pos: torch.Tensor,
                     marble_stiffness=1,
                     node_attraction=0,
                     node_stiffness=0,
-                    datum=None)
+                    datum=datum)
 
     return output
 
