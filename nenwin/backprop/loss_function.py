@@ -130,19 +130,36 @@ class NenwinLossFunction:
         self.__pos_weight = pos_weight
 
     def __call__(self, expected: int) -> torch.Tensor:
-        ...
-        return torch.tensor([0.0], requires_grad=True)
-        # "Blame" it on closest Marble, and punish wrong Marble.
-        blamed_marble = find_most_promising_marble_to(activated_nodes[0],
-                                                      self.__model, self.__pos_weight, self.__pos_weight)
-        TODO
+
+        current_case = self._find_loss_case(expected)
+
+        if current_case == LossCases.correct_prediction:
+            return torch.tensor([0.0], requires_grad=True)
+
+        elif current_case == LossCases.no_prediction:
+            target_node = self.__output_nodes[expected]
+            blamed_marble = find_most_promising_marble_to(
+                self.__output_nodes[expected],
+                self.__model,
+                self.__pos_weight,
+                self.__vel_weight)
+            return velocity_weighted_distance(target_node, blamed_marble,
+                                              self.__pos_weight, self.__vel_weight)
+
+        elif current_case == LossCases.wrong_prediction:
+            raise NotImplementedError()
+
+        else:
+            raise RuntimeError("Unrecognized case of loss function. "
+                               "This can never happen.")
 
     def __get_activated_nodes(self) -> Tuple[MarbleEaterNode]:
         """
         Return all Nodes designated as outputs that have eaten one or
         more Marbles.
         """
-        output = filter(lambda n: n.num_marbles_eaten >= 1, self.__output_nodes)
+        output = filter(lambda n: n.num_marbles_eaten >=
+                        1, self.__output_nodes)
         return tuple(output)
 
     def _find_loss_case(self, expected: int) -> LossCases:
