@@ -346,6 +346,7 @@ class LossFunctionCallCorrectPredTestCase(unittest.TestCase):
         self.assertIsNone(marble.init_vel.grad)
         self.assertIsNone(marble.mass.grad)
 
+
 class LossFunctionCallNoPredTestCase(unittest.TestCase):
     """
     Testcases for NenwinLossFunction.__call__() in case none of the
@@ -362,16 +363,14 @@ class LossFunctionCallNoPredTestCase(unittest.TestCase):
         self.model = NenwinModel([self.node], [self.marble])
         self.model.make_timestep(0.1)  # too short to cross the distance
 
-
         self.loss_fun = NenwinLossFunction([self.node], self.model,
-                                      vel_weight=self.vel_weight,
-                                      pos_weight=self.pos_weight)
+                                           vel_weight=self.vel_weight,
+                                           pos_weight=self.pos_weight)
 
         assert self.node.num_marbles_eaten == 0, "Testcase badly desgined."
 
         self.target_index = 0
         self.loss = self.loss_fun(self.target_index)
-
 
     def test_value_loss_no_output(self):
         """
@@ -412,7 +411,128 @@ class LossFunctionCallNoPredTestCase(unittest.TestCase):
         optim.zero_grad()
 
         self.loss.backward()
+
+        self.assertIsNotNone(self.marble.init_pos.grad)
+        self.assertIsNotNone(self.marble.init_vel.grad)
+        self.assertIsNotNone(self.marble.mass.grad)
+
+        optim.step()
+
+        # Now verify the loss improved.
+        self.model.reset()
+        self.model.make_timestep(0.1)
+        new_loss = self.loss_fun(self.target_index)
+
+        self.assertLess(new_loss.item(), self.loss.item())
+
+
+class LossFunctionCallWrongPredTestCase(unittest.TestCase):
+    """
+    Testcases for NenwinLossFunction.__call__() in another than the target
+    output-MarbleEaterNodes has eaten a Marble.
+    """
+
+    def setUp(self):
+        """
+
+        Sketch:
+
+         |
+        ^|
+        y|
+         |
+        0| N_1        <M        N_0
+         |
+         |
+         +-------------------------------
+           -10         0         10   x>
         
+
+        Marble M starts with moving towards N_1, but should arrive at N_0.
+
+        """
+        self.pos_weight = 0.5
+        self.vel_weight = 0.5
+
+        self.nodes = (gen_node_at(torch.tensor([10.0, 0])),
+                      gen_node_at(torch.tensor([-10.0, 0])))
+        self.marble = gen_marble_at(torch.tensor([0.0]),
+                                    vel=torch.tensor([-3.0, 0]))
+        self.model = NenwinModel([self.node], [self.marble])
+
+        for _ in range(50): # Should be enough for the Marble to be eaten
+            self.model.make_timestep(0.1)  
+
+        assert len(self.model.marbles), "Testcase badly desgined."
+
+        self.loss_fun = NenwinLossFunction([self.node], self.model,
+                                           vel_weight=self.vel_weight,
+                                           pos_weight=self.pos_weight)
+
+        self.target_index = 0
+        self.loss = self.loss_fun(self.target_index)
+
+    def test_value_loss_wrong_pred_no_marble_left(self):
+        """
+        The loss should equal the velocity-weighted distance
+        of the target Node to the nearest Marble,
+        plus the *negative reciprocal* of the distance of the wrong node
+        (self.nodes[1]) to the Marble.
+
+        Case where no non-eaten Marble is available.
+        """
+        self.fail()
+        expected = velocity_weighted_distance(self.node, self.marble,
+                                              pos_weight=self.pos_weight,
+                                              vel_weight=self.vel_weight)
+        torch.testing.assert_allclose(self.loss, expected)
+
+    def test_value_loss_wrong_pred_some_marble_left(self):
+        """
+        The loss should equal the velocity-weighted distance
+        of the target Node to the nearest Marble,
+        plus the *negative reciprocal* of the distance of the wrong node
+        (self.nodes[1]) to the Marble.
+
+        Case where another non-eaten Marble is still available
+        at time of loss computation.
+        """
+        self.fail()
+        expected = velocity_weighted_distance(self.node, self.marble,
+                                              pos_weight=self.pos_weight,
+                                              vel_weight=self.vel_weight)
+        torch.testing.assert_allclose(self.loss, expected)
+
+    def test_grads_no_error_wrong_pred(self):
+        self.fail()
+        """
+        Case in which no prediction output is given.
+        All learnable parameters should have a gradient value
+        that does not cause errors with an optimizer.
+
+        Passes if no errors occurs.
+        """
+        optim = torch.optim.Adam(self.model.parameters())
+        optim.zero_grad()
+
+        try:
+            self.loss.backward()
+            optim.step()
+        except RuntimeError as e:
+            self.fail(f"Error occurred during backprop/optim step: {e}")
+
+    def test_grads_value_wrong_pred(self):
+        self.fail()
+        """
+        Case in which no prediction output is given.
+        The learnable parameters of the Marble should have a gradient value
+        that does affect the values of the weights.
+        The loss should be lower for the second run.
+        """
+        optim = torch.optim.Adam(self.model.parameters())
+        optim.zero_grad()
+
+        self.loss.backward()
 
         self.assertIsNotNone(self.marble.init_pos.grad)
         self.assertIsNotNone(self.marble.init_vel.grad)
@@ -441,8 +561,10 @@ def gen_node_at(pos: torch.Tensor, mass: float = 10) -> MarbleEaterNode:
     return output
 
 
-def gen_marble_at(pos: torch.Tensor, mass: float = 10) -> Marble:
-    output = Marble(pos, vel=ZERO, acc=ZERO,
+def gen_marble_at(pos: torch.Tensor,
+                  vel: torch.Tensor = ZERO,
+                  mass: float = 10) -> Marble:
+    output = Marble(pos=pos, vel=vel, acc=ZERO,
                     mass=mass,
                     attraction_function=NewtonianGravity(),
                     marble_attraction=1,
