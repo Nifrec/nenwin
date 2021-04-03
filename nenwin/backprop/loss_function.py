@@ -25,6 +25,7 @@ Differentiable loss function for using a Nenwin model for classification.
 from typing import Callable, List, Optional, Sequence, Set, Tuple
 import torch
 from enum import Enum
+import warnings
 
 from nenwin.marble_eater_node import MarbleEaterNode
 from nenwin.node import Marble, Node
@@ -56,7 +57,7 @@ def find_closest_marble_to(particle: Node, model: NenwinModel):
 def find_most_promising_marble_to(particle: Node,
                                   model: NenwinModel,
                                   pos_weight: float,
-                                  vel_weight: float):
+                                  vel_weight: float) -> Marble:
     """
     Find the Marble m where 
         ||particle.pos - (pos_weight * m.pos + vel_weight * m.vel)||²
@@ -137,14 +138,7 @@ class NenwinLossFunction:
             return torch.tensor([0.0], requires_grad=True)
 
         elif current_case == LossCases.no_prediction:
-            target_node = self.__output_nodes[expected]
-            blamed_marble = find_most_promising_marble_to(
-                self.__output_nodes[expected],
-                self.__model,
-                self.__pos_weight,
-                self.__vel_weight)
-            return velocity_weighted_distance(target_node, blamed_marble,
-                                              self.__pos_weight, self.__vel_weight)
+            return self.__compute_loss_case_no_prediction(expected)
 
         elif current_case == LossCases.wrong_prediction:
             raise NotImplementedError()
@@ -152,6 +146,18 @@ class NenwinLossFunction:
         else:
             raise RuntimeError("Unrecognized case of loss function. "
                                "This can never happen.")
+
+    def __compute_loss_case_no_prediction(self, expected: int):
+        target_node = self.__output_nodes[expected]
+        blamed_marble = find_most_promising_marble_to(
+            self.__output_nodes[expected],
+            self.__model,
+            self.__pos_weight,
+            self.__vel_weight)
+        warnings.warn("Inefficiency: vel-weighted-distance is computed "
+                      "twice for blamed Marble")
+        return velocity_weighted_distance(target_node, blamed_marble,
+                                          self.__pos_weight, self.__vel_weight)
 
     def __get_activated_nodes(self) -> Tuple[MarbleEaterNode]:
         """
