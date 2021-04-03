@@ -110,7 +110,12 @@ class NenwinModel(nn.Module):
         (i.e. update position, velocity, acceleration of particles,
         and consumption by Eater-Nodes).
         """
-        for particle in self.__all_particles:
+        for particle in tuple(self.__all_particles):
+            if particle not in self.__all_particles:
+                # It was a Marble that has been eaten during the iteration.
+                assert isinstance(particle, Marble)
+                continue 
+            
             net_force = self.__compute_net_force_for(particle)
             particle.update_acceleration(net_force)
 
@@ -136,6 +141,7 @@ class NenwinModel(nn.Module):
             if auxliary.distance(marble, eater) <= eater.radius:
                 eater.eat(marble)
                 self.__marbles.remove(marble)
+                self.__all_particles.remove(marble)
                 break
 
     def reset(self):

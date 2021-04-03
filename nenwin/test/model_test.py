@@ -195,6 +195,18 @@ class ModelTestCase(unittest.TestCase):
         self.assertTrue(check_close(marble.vel, marble.init_vel))
         self.assertTrue(check_close(marble.acc, marble.init_acc))
 
+    def test_eaten_marbles_disappear(self):
+
+        # Both are generated
+        node = MarbleEaterNode(ZERO, ZERO, ZERO, 10, NewtonianGravity(),
+                               1, 1, 1, 0, 10)
+        marble = Marble(ZERO, ZERO, ZERO, 10, NewtonianGravity(), datum=None)
+        model = NenwinModel([node], [marble])
+        model.make_timestep(1.0)
+
+        self.assertSetEqual(model.marbles, set([]))
+        self.assertNotIn(marble, model._NenwinModel__all_particles)
+
 
 class ModelBackpropTestCase(unittest.TestCase):
     """
