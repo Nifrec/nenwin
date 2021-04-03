@@ -250,7 +250,7 @@ class FindLossCaseTestCase(unittest.TestCase):
     def test_wrong_output(self):
         nodes = [gen_node_at(torch.tensor([10., 10])),
                  gen_node_at(torch.tensor([11., 11]))]
-        marbles = [gen_marble_at(ZERO), gen_marble_at(torch.tensor([11, 11]))]
+        marbles = [gen_marble_at(ZERO), gen_marble_at(torch.tensor([11., 11]))]
         model = NenwinModel(nodes, marbles)
         nodes[1].eat(marbles[1])
         loss_fun = NenwinLossFunction(nodes, model, 0, 1)
@@ -261,18 +261,92 @@ class FindLossCaseTestCase(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_wrong_output(self):
+    def test_correct_output(self):
         node = gen_node_at(ZERO)
         marble = gen_marble_at(ZERO)
         model = NenwinModel([node], [marble])
         node.eat(marble)
         loss_fun = NenwinLossFunction([node], model, 0, 1)
 
-        target_index = 0 # Node at index 1 ate the Marble
+        target_index = 0
         result = loss_fun._find_loss_case(target_index)
         expected = LossCases.correct_prediction
 
         self.assertEqual(result, expected)
+
+
+class LossFunctionCallTestCase(unittest.TestCase):
+    """
+    Testcases for NenwinLossFunction.__call__().
+    """
+
+    def test_value_loss_correct_output(self):
+        """
+        If the prediction is correct, the loss should be 0.0.
+        """
+        node = gen_node_at(ZERO)
+        marble = gen_marble_at(ZERO)
+        model = NenwinModel([node], [marble])
+        node.eat(marble)
+        loss_fun = NenwinLossFunction([node], model, 0, 1)
+
+        target_index = 0
+        result = loss_fun(target_index)
+        expected = 0.0
+
+        self.assertAlmostEqual(result, expected)
+
+    def test_grads_no_error_correct_pred(self):
+        """
+        Case in which the prediction is correct.
+        All learnable parameters should have a gradient value
+        that does not cause errors with an optimizer.
+
+        Passes if no errors occurs.
+        """
+        node = gen_node_at(ZERO)
+        marble = gen_marble_at(ZERO)
+        model = NenwinModel([node], [marble])
+        model.make_timestep(1.0)
+        optim = torch.optim.Adam(model.parameters())
+        optim.zero_grad()
+
+
+        loss_fun = NenwinLossFunction([node], model, 0, 1)
+
+        target_index = 0
+        result = loss_fun(target_index)
+        
+
+        try:
+            result.backward()
+            optim.step()
+        except RuntimeError as e:
+            self.fail(f"Error occurred during backprop/optim step: {e}")
+
+
+    def test_grads_value_correct_pred(self):
+        """
+        Case in which the prediction is correct.
+        All learnable parameters should have a gradient value
+        that does not affect the values of the weights.
+        """
+        node = gen_node_at(ZERO)
+        marble = gen_marble_at(torch.tensor([1.1, 1.1]))
+        model = NenwinModel([node], [marble])
+        for x in range(1000):
+            model.make_timestep(0.1)
+        
+        assert node.num_marbles_eaten == 1
+
+        loss_fun = NenwinLossFunction([node], model, 0, 1)
+
+        target_index = 0 # Node at index 1 ate the Marble
+        result = loss_fun(target_index)
+        result.backward()
+
+        self.assertIsNone(marble.init_pos.grad)
+        self.assertIsNone(marble.pos.grad)
 
 
 def gen_node_at(pos: torch.Tensor, mass: float = 10) -> MarbleEaterNode:
