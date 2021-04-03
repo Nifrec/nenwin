@@ -164,36 +164,38 @@ class NenwinLossFunction:
 
     def __compute_loss_case_no_prediction(self, expected: int):
         target_node = self.__output_nodes[expected]
-        blamed_marble = find_most_promising_marble_to(
+        loss = find_min_weighted_distance_to(
             self.__output_nodes[expected],
             self.__model,
             self.__pos_weight,
             self.__vel_weight)
-        warnings.warn("Inefficiency: vel-weighted-distance is computed "
-                      "twice for blamed Marble")
-        return velocity_weighted_distance(target_node, blamed_marble,
-                                          self.__pos_weight, self.__vel_weight)
+        return loss
 
     def __compute_loss_case_wrong_prediction(self, expected: int):
-        
-
         activated_node = self.__get_activated_nodes()[0]
         wrong_marble = activated_node.marbles_eaten[0]
+
         # Negative term for Marble at wrong EaterNode
         loss = -1/velocity_weighted_distance(activated_node, wrong_marble,
                 pos_weight=self.__pos_weight, vel_weight=self.__vel_weight)
 
         # Positive loss term for missing Marble at expected EaterNode.
+        target_node = self.__output_nodes[expected]
+        loss += self.__compute_loss_term_missing_marble_case_wrong_output(
+            target_node, wrong_marble, expected)
+        
+        return loss
+    
+    def __compute_loss_term_missing_marble_case_wrong_output(self,
+        target_node: MarbleEaterNode, wrong_marble: Marble,
+        expected_node_idx: int):
         try:
-            loss += self.__compute_loss_case_no_prediction(expected)
+            return  self.__compute_loss_case_no_prediction(expected_node_idx)
         except RuntimeError:
             # There are no other Marble than the eaten Marble.
             # So *also* blame the eaten Marble for not being at the right place.
-            target_node = self.__output_nodes[expected]
-            loss += velocity_weighted_distance(target_node, wrong_marble,
+            return velocity_weighted_distance(target_node, wrong_marble,
                 pos_weight=self.__pos_weight, vel_weight=self.__vel_weight)
-        
-        return loss
 
     def __get_activated_nodes(self) -> Tuple[MarbleEaterNode]:
         """
