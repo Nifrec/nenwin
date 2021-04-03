@@ -343,7 +343,8 @@ class LossFunctionCallCorrectPredTestCase(unittest.TestCase):
         result.backward(retain_graph=True)
 
         self.assertIsNone(marble.init_pos.grad)
-        self.assertIsNone(marble.pos.grad)
+        self.assertIsNone(marble.init_vel.grad)
+        self.assertIsNone(marble.mass.grad)
 
 class LossFunctionCallNoPredTestCase(unittest.TestCase):
     """
@@ -368,8 +369,8 @@ class LossFunctionCallNoPredTestCase(unittest.TestCase):
 
         assert self.node.num_marbles_eaten == 0, "Testcase badly desgined."
 
-        target_index = 0
-        self.loss = self.loss_fun(target_index)
+        self.target_index = 0
+        self.loss = self.loss_fun(self.target_index)
 
 
     def test_value_loss_no_output(self):
