@@ -36,10 +36,13 @@ from nenwin.backprop.training_stats import TrainingStats
 
 
 class FilenameGenerator:
-    ...
+    ... # See implementation below.
 
 
 class NenwinTrainer:
+    """
+    Class for managing the training of a NenwinModel using backpropagation.
+    """
 
     def __init__(self,
                  model: NenwinModel,
@@ -56,8 +59,21 @@ class NenwinTrainer:
                      ):
         ...
 
-    def evaluate_on_testset(self, testset_iter: Iterable
+    def evaluate_on_datasetset(self, dataset_iter: Iterable
                             ) -> Tuple[float, float]:
+        """
+        Evaluate the current performance of the model
+        on one epoch of the given dataset.
+        This dataset can for example the testset or the validation set.
+
+        Arguments:
+            * dataset_iter: Iterable that iterates over all samples
+                of the dataset once.
+
+        Returns:
+            * accuracy: fraction of correct predictions
+            * loss: sum of losses of each prediction.
+        """
         ...
 
     def visualize_model(self) -> axes.Axes:
@@ -73,31 +89,3 @@ class NenwinTrainer:
     @property
     def model(self) -> NenwinModel:
         ...
-
-
-class FilenameGenerator:
-    """
-    Class to generate filenames with a timestamp.
-    """
-
-    def __init__(self, directory: str, base: str, extension: str):
-        """
-        Arguments:
-            * directory: path to directory containing the target file.
-            * base: prefix of the name of the file itself.
-            * extension: suffix of the file, 
-                usually an extension such as ".pt".
-        """
-        self.__directory = directory
-        self.__base = base
-        self.__extension = extension
-
-    def gen_filename(self, is_checkpoint: bool = False) -> str:
-        if is_checkpoint:
-            checkpoint = "_checkpoint"
-        else:
-            checkpoint = ""
-
-        name = self.__base + time.asctime() + checkpoint + self.__extension
-        output = os.path.joint(self.__directory, name)
-        return output
