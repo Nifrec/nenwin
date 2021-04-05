@@ -23,6 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Class for managing the training of a NenwinModel using backpropagation.
 """
+
 import torch
 import matplotlib.axes as axes
 import matplotlib.pyplot as plt
@@ -33,12 +34,8 @@ import os
 from nenwin.backprop.loss_function import NenwinLossFunction
 from nenwin.model import NenwinModel
 from nenwin.backprop.training_stats import TrainingStats
-
-
-class FilenameGenerator:
-    ... # See implementation below.
-
-
+from nenwin.input_placer import InputPlacer
+from nenwin.backprop.filename_gen import FilenameGenerator
 class NenwinTrainer:
     """
     Class for managing the training of a NenwinModel using backpropagation.
@@ -48,7 +45,8 @@ class NenwinTrainer:
                  model: NenwinModel,
                  loss_funct: NenwinLossFunction,
                  optimizer: torch.optim.Optimizer,
-                 name_gen: FilenameGenerator):
+                 name_gen: FilenameGenerator,
+                 input_places: InputPlacer):
         ...
 
     def run_training(self,
@@ -88,4 +86,7 @@ class NenwinTrainer:
 
     @property
     def model(self) -> NenwinModel:
+        ...
+
+    def get_current_model_output(self) -> int:
         ...
