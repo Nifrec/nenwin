@@ -26,13 +26,17 @@ Class for managing the training of a NenwinModel using backpropagation.
 import torch
 import matplotlib.axes as axes
 import matplotlib.pyplot as plt
-from typing import Iterable, Tuple
+from typing import Callable, Iterable, Optional, Tuple
 import time
 import os
 
 from nenwin.backprop.loss_function import NenwinLossFunction
 from nenwin.model import NenwinModel
 from nenwin.backprop.training_stats import TrainingStats
+
+
+class FilenameGenerator:
+    ...
 
 
 class NenwinTrainer:
@@ -46,11 +50,14 @@ class NenwinTrainer:
 
     def run_training(self,
                      num_iters: int,
-                     eval_on_validation_set: bool = True,
-                     checkpoint_interval: int = 1):
+                     trainset_iter_funct: Callable,
+                     validationset_iter_funct: Optional[Callable] = None,
+                     checkpoint_interval: int = 1,
+                     ):
         ...
 
-    def evaluate_on_testset(self) -> Tuple[float, float]:
+    def evaluate_on_testset(self, testset_iter: Iterable
+                            ) -> Tuple[float, float]:
         ...
 
     def visualize_model(self) -> axes.Axes:
@@ -61,6 +68,10 @@ class NenwinTrainer:
 
     @property
     def training_stats(self) -> TrainingStats:
+        ...
+
+    @property
+    def model(self) -> NenwinModel:
         ...
 
 
