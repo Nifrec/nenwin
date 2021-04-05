@@ -28,10 +28,12 @@ import matplotlib.axes as axes
 import matplotlib.pyplot as plt
 from typing import Iterable, Tuple
 import time
+import os
 
 from nenwin.backprop.loss_function import NenwinLossFunction
 from nenwin.model import NenwinModel
 from nenwin.backprop.training_stats import TrainingStats
+
 
 class NenwinTrainer:
 
@@ -39,15 +41,13 @@ class NenwinTrainer:
                  model: NenwinModel,
                  loss_funct: NenwinLossFunction,
                  optimizer: torch.optim.Optimizer,
-                 train_iter: Iterable,
-                 test_iter: Iterable,
-                 validation_iter: Iterable):
+                 name_gen: FilenameGenerator):
         ...
 
-    def run_training(self, 
-    num_iters: int, 
-    eval_on_validation_set: bool=True,
-    checkpoint_interval: int = 1):
+    def run_training(self,
+                     num_iters: int,
+                     eval_on_validation_set: bool = True,
+                     checkpoint_interval: int = 1):
         ...
 
     def evaluate_on_testset(self) -> Tuple[float, float]:
@@ -63,15 +63,30 @@ class NenwinTrainer:
     def training_stats(self) -> TrainingStats:
         ...
 
-class FilenameGenerator:
 
-    def __init__(self, base: str, extension: str):
+class FilenameGenerator:
+    """
+    Class to generate filenames with a timestamp.
+    """
+
+    def __init__(self, directory: str, base: str, extension: str):
+        """
+        Arguments:
+            * directory: path to directory containing the target file.
+            * base: prefix of the name of the file itself.
+            * extension: suffix of the file, 
+                usually an extension such as ".pt".
+        """
+        self.__directory = directory
         self.__base = base
         self.__extension = extension
 
-    def gen_filename(self, is_checkpoint: bool=False) -> str:
+    def gen_filename(self, is_checkpoint: bool = False) -> str:
         if is_checkpoint:
             checkpoint = "_checkpoint"
         else:
             checkpoint = ""
-        return self.__base + time.asctime() + checkpoint + self.__extension
+
+        name = self.__base + time.asctime() + checkpoint + self.__extension
+        output = os.path.joint(self.__directory, name)
+        return output
