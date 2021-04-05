@@ -1,0 +1,77 @@
+"""
+Nenwin-project (NEural Networks WIthout Neurons) for
+the AI Honors Academy track 2020-2021 at the TU Eindhoven.
+
+Author: Lulof Pirée
+March 2021
+
+Copyright (C) 2021 Lulof Pirée, Teun Schilperoort
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+Class for managing the training of a NenwinModel using backpropagation.
+"""
+import torch
+import matplotlib.axes as axes
+import matplotlib.pyplot as plt
+from typing import Iterable, Tuple
+import time
+
+from nenwin.backprop.loss_function import NenwinLossFunction
+from nenwin.model import NenwinModel
+from nenwin.backprop.training_stats import TrainingStats
+
+class NenwinTrainer:
+
+    def __init__(self,
+                 model: NenwinModel,
+                 loss_funct: NenwinLossFunction,
+                 optimizer: torch.optim.Optimizer,
+                 train_iter: Iterable,
+                 test_iter: Iterable,
+                 validation_iter: Iterable):
+        ...
+
+    def run_training(self, 
+    num_iters: int, 
+    eval_on_validation_set: bool=True,
+    checkpoint_interval: int = 1):
+        ...
+
+    def evaluate_on_testset(self) -> Tuple[float, float]:
+        ...
+
+    def visualize_model(self) -> axes.Axes:
+        ...
+
+    def reset_stats(self):
+        ...
+
+    @property
+    def training_stats(self) -> TrainingStats:
+        ...
+
+class FilenameGenerator:
+
+    def __init__(self, base: str, extension: str):
+        self.__base = base
+        self.__extension = extension
+
+    def gen_filename(self, is_checkpoint: bool=False) -> str:
+        if is_checkpoint:
+            checkpoint = "_checkpoint"
+        else:
+            checkpoint = ""
+        return self.__base + time.asctime() + checkpoint + self.__extension
