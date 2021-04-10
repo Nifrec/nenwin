@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Class for managing the training of a NenwinModel using backpropagation.
 """
-
+from __future__ import annotations
 import torch
 import matplotlib.axes as axes
 import matplotlib.pyplot as plt
@@ -59,7 +59,7 @@ class NenwinTrainer:
                      ):
         ...
 
-    def evaluate_model(self, use_validtion: bool = False
+    def evaluate_model(self, use_validation: bool = False
                             ) -> Tuple[float, float]:
         """
         Evaluate the current performance of the model
@@ -67,7 +67,7 @@ class NenwinTrainer:
         Alternatively the validation set can be used instead.
 
         Arguments:
-            * use_validtion: flag if the validation set should be used.
+            * use_validation: flag if the validation set should be used.
                 True -> validation set is used.
                 False -> test set is used.
 
