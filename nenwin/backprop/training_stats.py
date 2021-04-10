@@ -36,16 +36,12 @@ class TrainingStats:
         * training set loss
         * validation set loss
         * validation set accuracy
-        * test set loss
-        * test set accuracy
     """
 
     def __init__(self):
         self.__train_losses = []
         self.__vali_losses = []
         self.__vali_accuracies = []
-        self.__test_losses = []
-        self.__test_accuracies = []
 
     @property
     def train_losses(self) -> Tuple[float]:
@@ -60,10 +56,6 @@ class TrainingStats:
         return tuple(self.__vali_accuracies)
 
     @property
-    def test_losses(self) -> Tuple[float]:
-        return tuple(self.__test_losses)
-
-    @property
     def test_accuracies(self) -> Tuple[float]:
         return tuple(self.__test_accuracies)
 
@@ -75,9 +67,3 @@ class TrainingStats:
 
     def add_validation_accuracy(self, accuracy: float):
         self.__vali_accuracies.append(accuracy)
-
-    def add_test_loss(self, loss: float):
-        self.__test_losses.append(loss)
-
-    def add_test_accuracy(self, accuracy: float):
-        self.__test_accuracies.append(accuracy)
