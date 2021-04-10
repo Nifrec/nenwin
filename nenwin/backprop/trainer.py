@@ -36,6 +36,8 @@ from nenwin.model import NenwinModel
 from nenwin.backprop.training_stats import TrainingStats
 from nenwin.input_placer import InputPlacer
 from nenwin.backprop.filename_gen import FilenameGenerator
+from nenwin.backprop.dataset import Dataset
+
 class NenwinTrainer:
     """
     Class for managing the training of a NenwinModel using backpropagation.
@@ -46,27 +48,28 @@ class NenwinTrainer:
                  loss_funct: NenwinLossFunction,
                  optimizer: torch.optim.Optimizer,
                  name_gen: FilenameGenerator,
-                 input_places: InputPlacer):
+                 input_places: InputPlacer,
+                 dataset: Dataset):
         ...
 
     def run_training(self,
                      num_iters: int,
-                     trainset_iter_funct: Callable,
-                     validationset_iter_funct: Optional[Callable] = None,
+                     do_validate: bool = False,
                      checkpoint_interval: int = 1,
                      ):
         ...
 
-    def evaluate_on_datasetset(self, dataset_iter: Iterable
+    def evaluate_model(self, use_validtion: bool = False
                             ) -> Tuple[float, float]:
         """
         Evaluate the current performance of the model
-        on one epoch of the given dataset.
-        This dataset can for example the testset or the validation set.
+        on one epoch of the test set.
+        Alternatively the validation set can be used instead.
 
         Arguments:
-            * dataset_iter: Iterable that iterates over all samples
-                of the dataset once.
+            * use_validtion: flag if the validation set should be used.
+                True -> validation set is used.
+                False -> test set is used.
 
         Returns:
             * accuracy: fraction of correct predictions
@@ -88,5 +91,9 @@ class NenwinTrainer:
     def model(self) -> NenwinModel:
         ...
 
-    def get_current_model_output(self) -> int:
-        ...
+    def get_current_model_output(self) -> int | None:
+        """
+        Map the state of the NenwinModel to a classification prediction .
+        Return None in case no Marbles 
+        have been eaten by any of the output-eaters.
+        """

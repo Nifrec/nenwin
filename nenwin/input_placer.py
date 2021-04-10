@@ -69,7 +69,7 @@ class InputPlacer(abc.ABC):
         return self.__input_region_sizes
 
     @abc.abstractmethod
-    def marblize_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
+    def marblelize_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
         """
         Given a set of data, create a Marble for each input datum,
         and assign them a position in the input region.
@@ -122,7 +122,7 @@ class PhiInputPlacer(InputPlacer):
 
         # distance sequence is filled with bottom-left most point
         # below is incorrect, fix next time
-        # testcase: a = PhiInputPlacer.marblize_data, PhiInputPlacer.marblize_data(a, input_data =[[1,2,67,9,6],[1,3,4,5,6],[3,3,3,3,3]])
+        # testcase: a = PhiInputPlacer.marblelize_data, PhiInputPlacer.marblelize_data(a, input_data =[[1,2,67,9,6],[1,3,4,5,6],[3,3,3,3,3]])
         possible_points_edit = data_input_data[0]
         counter = 1
         while counter < data_input_data[4]:
@@ -147,7 +147,7 @@ class PhiInputPlacer(InputPlacer):
                 entry[d] = entry[d] + self.input_pos[d]
         return distance_sequence.tolist()
 
-    def marblize_data(self, input_data: Iterable[object], vel: Optional[torch.Tensor] = ZERO, acc: Optional[torch.Tensor] = ZERO, mass: Optional[float] = 1) -> Iterable[Marble]:
+    def marblelize_data(self, input_data: Iterable[object], vel: Optional[torch.Tensor] = ZERO, acc: Optional[torch.Tensor] = ZERO, mass: Optional[float] = 1) -> Iterable[Marble]:
         all_coordinates = self.find_coordinates(input_data)
         marble_array = []
         for point in input_data:

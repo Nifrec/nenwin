@@ -121,5 +121,5 @@ class Simulation():
         self.__pipe.send(output)
 
     def __handle_inputs(self, data: Iterable):
-        new_marbles = self.__input_placer.marblize_data(data)
+        new_marbles = self.__input_placer.marblelize_data(data)
         self.__model.add_marbles(new_marbles)

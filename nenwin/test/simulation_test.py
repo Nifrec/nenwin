@@ -133,7 +133,7 @@ class MockInputPlacer(CheckInvokedMocker, InputPlacer):
         CheckInvokedMocker.__init__(self)
         InputPlacer.__init__(self, ZERO, ZERO)
 
-    def marblize_data(self, input_data):
+    def marblelize_data(self, input_data):
         self.count_invocation()
         return [MOCK_MARBLE]
 

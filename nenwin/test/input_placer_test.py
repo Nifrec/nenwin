@@ -41,20 +41,20 @@ class InputPlacerTestCase(unittest.TestCase):
         self.assertAlmostEqual(placer.input_pos, input_pos)
         self.assertAlmostEqual(placer.input_region_sizes, input_dimensions)
         
-    def test_marblize_data_output(self):
+    def test_marblelize_data_output(self):
         input_pos = [0,0]
         input_dimensions = [2,2]
         wanted_output = "(Marble(tensor([1.0195, 0.2794]),tensor([0., 0.]),tensor([0., 0.]),1.0,NewtonianGravity(),[1, 2],1.0,0.0,0.0,1.0), Marble(tensor([1.5098, 1.1397]),tensor([0., 0.]),tensor([0., 0.]),1.0,NewtonianGravity(),[2, 3],1.0,0.0,0.0,1.0), Marble(tensor([0.5293, 1.4190]),tensor([0., 0.]),tensor([0., 0.]),1.0,NewtonianGravity(),[4, 5],1.0,0.0,0.0,1.0))"
         placer = PhiInputPlacer(input_pos, input_dimensions)
-        tensors = placer.marblize_data([[1,2], [2,3], [4,5]])
+        tensors = placer.marblelize_data([[1,2], [2,3], [4,5]])
         self.assertMultiLineEqual(str(tensors), wanted_output) 
 
-    def test_marblize_data_output_2(self):
+    def test_marblelize_data_output_2(self):
         input_pos = [1, 3, 6, 9, 1]
         input_dimensions = [1,4,7,3,2]
         wanted_output = "(Marble(tensor([1.7625, 5.2131, 8.5820, 9.6190, 1.1262]),tensor([0., 0., 0., 0., 0.]),tensor([0., 0., 0., 0., 0.]),1.0,NewtonianGravity(),[0, 2, 0, 0, 0],1.0,0.0,0.0,1.0), Marble(tensor([ 1.8813,  6.1066, 10.7910, 10.8095,  2.0631]),tensor([0., 0., 0., 0., 0.]),tensor([0., 0., 0., 0., 0.]),1.0,NewtonianGravity(),[1, 2, 3, 2, 3],1.0,0.0,0.0,1.0), Marble(tensor([ 1.6438,  4.3197,  6.3730, 11.4285,  2.1893]),tensor([0., 0., 0., 0., 0.]),tensor([0., 0., 0., 0., 0.]),1.0,NewtonianGravity(),[4, 5, 8, 9, 1],1.0,0.0,0.0,1.0))"
         placer = PhiInputPlacer(input_pos, input_dimensions)
-        tensors = placer.marblize_data(input_data = [[0,2,0,0,0], [1,2,3,2,3], [4,5,8,9,1]], vel = torch.tensor([0,0,0,0,0], dtype=torch.float), acc = torch.tensor([0,0,0,0,0], dtype=torch.float))
+        tensors = placer.marblelize_data(input_data = [[0,2,0,0,0], [1,2,3,2,3], [4,5,8,9,1]], vel = torch.tensor([0,0,0,0,0], dtype=torch.float), acc = torch.tensor([0,0,0,0,0], dtype=torch.float))
         self.assertMultiLineEqual(str(tensors), wanted_output)
                                
 if __name__ == '__main__':
