@@ -26,6 +26,7 @@ algorithm.
 """
 
 from typing import Tuple
+from numbers import Number
 
 class TrainingStats:
     """
@@ -63,10 +64,17 @@ class TrainingStats:
         return tuple(self.__test_accuracies)
 
     def add_train_loss(self, loss: float):
+        self.__check_new_value_is_number(loss)
         self.__train_losses.append(loss)
 
     def add_validation_loss(self, loss: float):
+        self.__check_new_value_is_number(loss)
         self.__vali_losses.append(loss)
 
     def add_validation_accuracy(self, accuracy: float):
+        self.__check_new_value_is_number(accuracy)
         self.__vali_accuracies.append(accuracy)
+
+    def __check_new_value_is_number(self, new_value: Number):
+        if not isinstance(new_value, Number):
+            raise ValueError("Added values to TrainingStats must be numbers.")
