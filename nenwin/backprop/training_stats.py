@@ -39,6 +39,9 @@ class TrainingStats:
     """
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.__train_losses = []
         self.__vali_losses = []
         self.__vali_accuracies = []
