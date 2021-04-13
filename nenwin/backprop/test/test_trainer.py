@@ -70,6 +70,9 @@ class MockLossFunction(NenwinLossFunction):
     def set_outputs(self, outputs: Sequence[float]):
         self.outputs = list(reversed(outputs))
 
+    def set_output_nodes(self, output_nodes: Sequence[MarbleEaterNode]):
+        self._NenwinLossFunction__output_nodes = tuple(output_nodes)
+
 
 class MockOptimizer():
 
@@ -142,15 +145,15 @@ class MockDataset(Dataset):
 class NenwinTrainerTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.eaters: Tuple[MarbleEaterNode] = (
-            MarbleEaterNode(ZERO, ZERO, ZERO, 0, None, 0, 0, 0, 0, 0),
-        ) * 6
+        self.eaters: Tuple[MarbleEaterNode] = tuple(
+            MarbleEaterNode(ZERO, ZERO, ZERO, 0, None, 0, 0, 0, 0, 0)
+            for _ in range(6))
 
         self.model = MockModel(self.eaters)
 
         self.file_gen = FilenameGenerator(".", "TEST__", "")
 
-        dataset = self.set_up_dataset()
+        self.set_up_dataset()
 
         self.train_losses = (1, 2, 3)
         self.vali_losses = (3, 4, 5)
@@ -159,8 +162,8 @@ class NenwinTrainerTestCase(unittest.TestCase):
         self.loss_funct = MockLossFunction(
             self.train_losses + self.vali_losses,
             self.train_targets + self.vali_targets)
+        self.loss_funct.set_output_nodes(self.eaters)
 
-        
         self.trainer = NenwinTrainer(self.model, self.loss_funct,
                                      MockOptimizer(), self.file_gen,
                                      MockInputPlacer(), self.dataset)
@@ -174,13 +177,11 @@ class NenwinTrainerTestCase(unittest.TestCase):
         valiset = [Sample(value, label) for (value, label)
                    in zip([None]*3, self.vali_targets)]
 
-        
         self.test_targets = (0, 1, 1)
         testset = [Sample(value, label) for (value, label)
                    in zip([None]*3, self.test_targets)]
 
         self.dataset = MockDataset(trainset, valiset, testset)
-
 
     def test_reset_stats(self):
         self.trainer.run_training(1, self.dataset, True)
@@ -193,8 +194,6 @@ class NenwinTrainerTestCase(unittest.TestCase):
         self.assertTupleEqual(result.validation_accuracies, empty)
         self.assertTupleEqual(result.validation_losses, empty)
 
-
-
     def test_evaluate_model_on_dataset_case_vali(self):
         """
         Evaluating on the *validation* set should 
@@ -206,14 +205,14 @@ class NenwinTrainerTestCase(unittest.TestCase):
         # Make model output [0, 0, 0, 1, 0, 0]
         output = 3
         self.eaters[output].eat(DUMMY_MARBLE)
-        expected_loss = np.mean(self.vali_losses)
-        expected_acc = np.sum(np.array(self.vali_targets) == output)
-        result_acc, result_loss = self.trainer.evaluate_model(True)
+        expected_loss = np.sum(self.vali_losses)
+        expected_acc = np.sum(np.array(self.vali_targets) == output)\
+            / len(self.vali_targets)
+        result_acc, result_loss = self.trainer.evaluate_model(1, 1, True)
 
         self.assertAlmostEqual(expected_loss, result_loss)
         self.assertAlmostEqual(expected_acc, result_acc)
 
-        
     def test_evaluate_model_on_dataset_case_test(self):
         """
         Evaluating on the *test* set should 
@@ -225,13 +224,13 @@ class NenwinTrainerTestCase(unittest.TestCase):
         # Make model output [0, 1, 0, 0, 0, 0]
         output = 1
         self.eaters[output].eat(DUMMY_MARBLE)
-        expected_loss = np.mean(self.test_losses)
-        expected_acc = np.sum(np.array(self.test_targets) == output)
-        result_acc, result_loss = self.trainer.evaluate_model(False)
+        expected_loss = np.sum(self.test_losses)
+        expected_acc = np.sum(np.array(self.test_targets) == output)\
+            / len(self.test_targets)
+        result_acc, result_loss = self.trainer.evaluate_model(1, 1, False)
 
         self.assertAlmostEqual(expected_loss, result_loss)
         self.assertAlmostEqual(expected_acc, result_acc)
-
 
     def test_evaluate_model_not_affect_stats(self):
         """
@@ -241,7 +240,7 @@ class NenwinTrainerTestCase(unittest.TestCase):
         self.loss_funct.set_outputs(self.test_losses)
         self.loss_funct.set_targets(self.test_targets)
         self.eaters[0].eat(DUMMY_MARBLE)
-        self.trainer.evaluate_model(False)
+        self.trainer.evaluate_model(1, 1, False)
 
         result = self.trainer.training_stats
 
@@ -252,7 +251,7 @@ class NenwinTrainerTestCase(unittest.TestCase):
     def test_run_training_with_validation(self):
         """
         When running the training with validation enabled,
-        the mean epoch loss should be stored for the validation 
+        the total epoch loss should be stored for the validation 
         and the train set.
         In addition, also the mean epoch accuracy of the validation
         set should be stored.
@@ -263,14 +262,15 @@ class NenwinTrainerTestCase(unittest.TestCase):
         num_iters = 1
 
         self.trainer.run_training(num_iters, 1, 1, True)
-        self.trainer.reset_stats()
 
         result = self.trainer.training_stats
 
-        expected_train_losses = (np.mean(self.train_losses),)*num_iters
-        expected_vali_losses = (np.mean(self.vali_losses),)*num_iters
+        expected_train_losses = (np.sum(self.train_losses),)*num_iters
+        expected_vali_losses = (np.sum(self.vali_losses),)*num_iters
         expected_vali_accs = (
-            np.sum(np.array(self.vali_targets) == output),) * num_iters
+            np.sum(np.array(self.vali_targets) == output)
+            / len(self.vali_targets),
+        ) * num_iters
 
         np.testing.assert_allclose(result.train_losses, expected_train_losses)
         self.assertTupleEqual(result.validation_accuracies, expected_vali_accs)
@@ -281,14 +281,16 @@ class NenwinTrainerTestCase(unittest.TestCase):
         When running the training with validation *disabled*,
         only the mean epoch loss of the train set should be recorded.
         """
-        num_iters = 3
+        num_epochs = 3
+        self.loss_funct.set_outputs(self.train_losses*num_epochs)
+        self.loss_funct.set_targets(self.train_targets*num_epochs)
 
-        self.trainer.run_training(num_iters, 1, 1, False)
-        self.trainer.reset_stats()
+
+        self.trainer.run_training(num_epochs, 1, 1, False)
 
         result = self.trainer.training_stats
 
-        expected_train_losses = (np.mean(self.train_losses),)*num_iters
+        expected_train_losses = (np.sum(self.train_losses),)*num_epochs
 
         np.testing.assert_allclose(result.train_losses, expected_train_losses)
         self.assertTupleEqual(result.validation_accuracies, tuple())
@@ -311,10 +313,10 @@ class NenwinTrainerTestCase(unittest.TestCase):
         """
         # Make model output [0, 0, 0, 1, 0, 0]
         self.eaters[3].eat(DUMMY_MARBLE)
+        self.loss_funct.set_output_nodes(self.eaters)
         expected = 3
         result = self.trainer.get_current_model_output()
         self.assertEqual(expected, result)
-
 
     def test_get_current_model_output_muli_output_case(self):
         """
@@ -326,6 +328,7 @@ class NenwinTrainerTestCase(unittest.TestCase):
         # Make model output [0, 1, 0, 0, 0, 1]
         self.eaters[1].eat(DUMMY_MARBLE)
         self.eaters[5].eat(DUMMY_MARBLE)
+        self.loss_funct.set_output_nodes(self.eaters)
 
         expected = (1, 5)
 
