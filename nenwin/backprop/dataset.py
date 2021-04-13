@@ -36,13 +36,13 @@ class Sample:
     For training or evaualuating a classification model.
     """
 
-    def __init__(self, marbles: Iterable[Marble], label: int):
-        self.marbles = marbles
+    def __init__(self, inputs: Iterable[float], label: int):
+        self.inputs = inputs
         self.label = label
 
-    def __getitem__(self, key: int) -> Iterable[Marble] | int:
+    def __getitem__(self, key: int) -> Iterable[float] | int:
         if key == 0:
-            return self.marbles
+            return self.inputs
         if key == 1:
             return self.label
         else:
