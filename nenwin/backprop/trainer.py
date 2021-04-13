@@ -86,34 +86,55 @@ class NenwinTrainer:
                      ):
 
         for epoch in range(num_epochs):
-            for sample in self.__dataset.iter_train():
-                self.__model.reset()
-                marbles = self.__input_placer.marblelize_data(sample.inputs)
-                self.__model.add_marbles(marbles)
 
-                for _ in range(num_steps_till_read_output):
-                    self.__model.make_timestep(step_size)
-                loss = self.__loss_funct(sample.label)
-                self.__optim.zero_grad()
-                loss.backward()
-                self.__optim.step()
-
-                self.__stats.add_train_loss(loss.item())
+            epoch_loss = self.__run_one_trainset_epoch(
+                step_size, num_steps_till_read_output)
+            self.__stats.add_train_loss(epoch_loss)
 
             if do_validate:
-                acc, val_loss = self.evaluate_model(step_size,
-                     num_steps_till_read_output, True)
-                self.__stats.add_validation_accuracy(acc)
-                self.__stats.add_validation_loss(val_loss)
+                self.__run_and_record_one_validation_epoch(
+                    step_size, num_steps_till_read_output)
 
-            if epoch % checkpoint_interval == 0:
-                print(f"Epoch {epoch}: saving model...")
-                filename = self.__save_model(True)
-                print(f"Model saved as {filename}")
+            self.__make_checkpoint_if_needed(epoch, checkpoint_interval)
 
         print(f"Last epoch {epoch} finished: saving model...")
         filename = self.__save_model(False)
         print(f"Model saved as {filename}")
+
+    def __run_one_trainset_epoch(self, step_size: float,
+                                 num_steps_till_read_output: int) -> float:
+        """
+        Returns the total loss.
+        """
+        epoch_loss = 0
+        for sample in self.__dataset.iter_train():
+            self.__model.reset()
+            marbles = self.__input_placer.marblelize_data(sample.inputs)
+            self.__model.add_marbles(marbles)
+
+            for _ in range(num_steps_till_read_output):
+                self.__model.make_timestep(step_size)
+
+            loss = self.__loss_funct(sample.label)
+            self.__optim.zero_grad()
+            loss.backward()
+            self.__optim.step()
+
+            epoch_loss += loss.item()
+        return epoch_loss
+
+    def __run_and_record_one_validation_epoch(self, step_size: float,
+                                              num_steps_till_read_output: int):
+        acc, val_loss = self.evaluate_model(
+            step_size, num_steps_till_read_output, True)
+        self.__stats.add_validation_accuracy(acc)
+        self.__stats.add_validation_loss(val_loss)
+
+    def __make_checkpoint_if_needed(self, epoch: int, checkpoint_interval: int):
+        if epoch % checkpoint_interval == 0:
+            print(f"Epoch {epoch}: saving model...")
+            filename = self.__save_model(True)
+            print(f"Model saved as {filename}")
 
     def __save_model(self, is_checkpoint: bool):
         filename = self.__filename_gen.gen_filename(is_checkpoint)
@@ -171,6 +192,19 @@ class NenwinTrainer:
 
     @property
     def training_stats(self) -> TrainingStats:
+        """
+        Return a TrainingStats instance where:
+            * train_losses are the sums of the losses per epoch.
+            * validation_losses are the sums of the validation losses
+                of one epoch of the validation-set,
+                evaluated after each epoch of training.
+            * validation_acc is the accuracy on the validation set,
+                evaluated after each epoch of training.
+
+        Some of these attributes may be empty, in case the training
+        has not been run, has been run without validating,
+        or the stats have been reset.
+        """
         return self.__stats
 
     @property
@@ -185,12 +219,10 @@ class NenwinTrainer:
         """
         output_nodes = self.__loss_funct.output_nodes
 
-        num_outputs = 0
         output_indices = []
         for node_idx in range(len(output_nodes)):
             node = output_nodes[node_idx]
             if node.num_marbles_eaten >= 1:
-                num_outputs += 1
                 output_indices.append(node_idx)
 
         if len(output_indices) == 1:
