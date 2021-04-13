@@ -140,7 +140,7 @@ class NenwinLossFunction:
         """
         if not all(node in model.nodes for node in output_nodes):
             raise RuntimeError("Not all output_nodes are in model")
-        self.__output_nodes = output_nodes
+        self.__output_nodes = tuple(output_nodes)
         self.__model = model
         self.__vel_weight = vel_weight
         self.__pos_weight = pos_weight
@@ -229,3 +229,7 @@ class NenwinLossFunction:
                 return LossCases.correct_prediction
             else:
                 return LossCases.wrong_prediction
+
+    @property
+    def output_nodes(self) -> Tuple[MarbleEaterNode]:
+        return self.__output_nodes
