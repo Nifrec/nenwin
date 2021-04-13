@@ -57,10 +57,12 @@ class MockLossFunction(NenwinLossFunction):
         if expected_targets is not None:
             self.set_targets(expected_targets)
 
+        self._NenwinLossFunction__output_nodes = []
+
     def __call__(self, expected: int) -> torch.Tensor:
         if self.expected_targets is not None:
             assert expected == self.expected_targets.pop()
-        return self.outputs.pop()
+        return torch.tensor([1.0], requires_grad=True) * self.outputs.pop()
 
     def set_targets(self, expected_targets: Sequence[int]):
         self.expected_targets = list(reversed(expected_targets))
@@ -71,10 +73,10 @@ class MockLossFunction(NenwinLossFunction):
 
 class MockOptimizer():
 
-    def step():
+    def step(self):
         ...
 
-    def zero_grad():
+    def zero_grad(self):
         ...
 
 
@@ -95,6 +97,9 @@ class MockModel(NenwinModel):
     @property
     def marble_eater_nodes(self) -> List[MarbleEaterNode]:
         return self.eaters
+
+    def __repr__(self) -> str:
+        return f"MockModel({repr(self.eaters)})"
 
 
 class MockInputPlacer(InputPlacer):
@@ -257,7 +262,7 @@ class NenwinTrainerTestCase(unittest.TestCase):
         self.eaters[output].eat(DUMMY_MARBLE)
         num_iters = 1
 
-        self.trainer.run_training(num_iters, True)
+        self.trainer.run_training(num_iters, 1, 1, True)
         self.trainer.reset_stats()
 
         result = self.trainer.training_stats
@@ -278,7 +283,7 @@ class NenwinTrainerTestCase(unittest.TestCase):
         """
         num_iters = 3
 
-        self.trainer.run_training(num_iters, False)
+        self.trainer.run_training(num_iters, 1, 1, False)
         self.trainer.reset_stats()
 
         result = self.trainer.training_stats
