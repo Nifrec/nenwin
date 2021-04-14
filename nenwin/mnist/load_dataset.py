@@ -32,9 +32,11 @@ import torchvision
 import torch.utils
 import math
 import random
+import os
+import pickle
 
 from nenwin.backprop.dataset import Dataset, Sample
-from nenwin.constants import MNIST_DATA_DIR
+from nenwin.constants import MNIST_DATA_DIR, MNIST_CACHE_FILE
 
 
 class MNISTDataset(Dataset):
@@ -75,6 +77,18 @@ class MNISTDataset(Dataset):
 
 
 def load_mnist_dataset() -> Dataset:
+    if os.path.exists(MNIST_CACHE_FILE):
+        with open(MNIST_CACHE_FILE, "rb") as file:
+            dataset = pickle.load(file)
+    else:
+        dataset = convert_mnist_dataset()
+        with open(MNIST_CACHE_FILE, "wb") as file:
+            pickle.dump(dataset, file)
+    return dataset
+
+
+
+def convert_mnist_dataset() -> Dataset:
     """
     Load the MNIST dataset as a training-, vaidation- and test-set.
     The validation set are 10000 samples of the 'training set' (according to the

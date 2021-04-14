@@ -133,3 +133,4 @@ dmypy.json
 # Experiments not worth publishing
 ungitted_experiments/
 TEST*
+nenwin/mnist/dataset/cached_dataset.pickle

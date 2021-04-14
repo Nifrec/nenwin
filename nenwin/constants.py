@@ -39,3 +39,6 @@ DEVICE = torch.device('cpu')
 PROJECT_ROOT_DIR = os.path.dirname(os.path.dirname(nenwin.__file__))
 
 MNIST_DATA_DIR = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist", "dataset")
+
+MNIST_CACHE_FILE = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist", "dataset",
+                                "cached_dataset.pickle")
