@@ -23,9 +23,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Collection of constant values.
 """
 import torch
+import os
+
+import nenwin
+
 # Maximum distance at which an EmitterNode can spawn a Marble
 # (measured from the border of the radius, towards the pos of the EmitterNode)
 MAX_EMITTER_SPAWN_DIST = 1e-3
 
 # Device on which Tensors are stored. Either GPU or CPU
 DEVICE = torch.device('cpu')
+
+
+# Directory where the nenwin repository is located in the OS´ filesystem.
+PROJECT_ROOT_DIR = os.path.dirname(os.path.dirname(nenwin.__file__))
+
+MNIST_DATA_DIR = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist", "dataset")
