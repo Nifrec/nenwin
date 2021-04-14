@@ -3,9 +3,9 @@ Nenwin-project (NEural Networks WIthout Neurons) for
 the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 
 Author: Teun Schilperoort
-Feb 2021
+Februari 2021
 
-Copyright (C) 2020 Lulof Pirée, Teun Schilperoort
+Copyright (C) 2021 Lulof Pirée, Teun Schilperoort
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
