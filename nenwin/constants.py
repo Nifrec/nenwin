@@ -42,3 +42,7 @@ MNIST_DATA_DIR = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist", "dataset")
 
 MNIST_CACHE_FILE = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist", "dataset",
                                 "cached_dataset.pickle")
+
+MNIST_CHECKPOINT_DIR = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist",
+                                    "checkpoints")
+MNIST_CHECKPOINT_RATE = 5
