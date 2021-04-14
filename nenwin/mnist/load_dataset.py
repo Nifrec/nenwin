@@ -76,7 +76,7 @@ class MNISTDataset(Dataset):
         return output
 
 
-def load_mnist_dataset() -> Dataset:
+def load_mnist_dataset() -> MNISTDataset:
     if os.path.exists(MNIST_CACHE_FILE):
         with open(MNIST_CACHE_FILE, "rb") as file:
             dataset = pickle.load(file)
@@ -88,7 +88,7 @@ def load_mnist_dataset() -> Dataset:
 
 
 
-def convert_mnist_dataset() -> Dataset:
+def convert_mnist_dataset() -> MNISTDataset:
     """
     Load the MNIST dataset as a training-, vaidation- and test-set.
     The validation set are 10000 samples of the 'training set' (according to the
