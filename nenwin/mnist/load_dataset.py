@@ -107,29 +107,14 @@ def convert_mnist_dataset() -> MNISTDataset:
                                               train=False,
                                               transform=transforms.ToTensor(),
                                               download=True)
-    print(test_dataset[0])
-    # train_plus_vali, test_dataset, scaler = __scale_datasets(train_plus_vali,
-    #                                                          test_dataset)
+
     test_samples = convert_to_samples(test_dataset)
     train_plus_vali_samples = convert_to_samples(train_plus_vali)
 
-    num_train_samples = len(train_plus_vali)
     train_samples = train_plus_vali_samples[:50000]
     vali_samples = train_plus_vali_samples[50000:]
 
     return MNISTDataset(train_samples, vali_samples, test_samples)
-
-
-def __scale_datasets(train_plus_vali: torch.utils.data.Dataset,
-                     test_dataset: torch.utils.data.Dataset) -> tuple:
-    max_value = torch.max(train_plus_vali.data)
-    min_value = torch.min(train_plus_vali.data)
-    print(max_value, max_value.shape)
-    scaler = MinMaxScaler(max_value, min_value)
-    train_plus_vali.data = scaler.apply_on(train_plus_vali.data)
-    test_dataset.data = scaler.apply_on(test_dataset.data)
-
-    return train_plus_vali, test_dataset, scaler
 
 
 def convert_to_samples(dataset: torch.utils.data.Dataset) -> Tuple[Sample]:
@@ -162,8 +147,3 @@ class MinMaxScaler:
         with the stored min and max values.
         """
         return self.apply_on(dataset)
-
-
-if __name__ == "__main__":
-    # print(MNIST_DATA_DIR)
-    print(load_mnist_dataset())
