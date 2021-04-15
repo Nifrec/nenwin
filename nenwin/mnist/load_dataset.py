@@ -118,7 +118,7 @@ def convert_mnist_dataset() -> MNISTDataset:
 
 
 def convert_to_samples(dataset: torch.utils.data.Dataset) -> Tuple[Sample]:
-    return tuple(map(lambda x: Sample(x[0], x[1]), dataset))
+    return tuple(map(lambda x: Sample(x[0].reshape([28, 28]), x[1]), dataset))
 
 
 class MinMaxScaler:
