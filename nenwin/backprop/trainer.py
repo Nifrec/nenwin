@@ -81,9 +81,7 @@ class NenwinTrainer:
                      step_size: float,
                      num_steps_till_read_output: int,
                      do_validate: bool = False,
-                     checkpoint_interval: int = 1,
-
-                     ):
+                     checkpoint_interval: int = 1):
 
         for epoch in range(num_epochs):
 
