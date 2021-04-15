@@ -31,6 +31,7 @@ import torch
 
 from nenwin.node import Marble
 from nenwin.attraction_functions.attraction_functions import NewtonianGravity
+from nenwin.input_placer import PhiInputPlacer
 
 class InputPlacerTestCase(unittest.TestCase):
     
