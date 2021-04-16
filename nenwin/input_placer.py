@@ -60,7 +60,7 @@ class InputPlacer(abc.ABC):
         """
         self.__input_pos = input_pos
         self.__input_region_sizes = input_region_sizes
-        self.__num_dims = len(input_region_sizes.shape)
+        self.__num_dims = len(input_region_sizes)
 
     @property
     def input_pos(self) -> np.ndarray:
