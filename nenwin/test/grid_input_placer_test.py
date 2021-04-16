@@ -26,6 +26,7 @@ from typing import Iterable, Sequence, Set
 import numpy as np
 import unittest
 import itertools
+import torch
 
 from nenwin.grid_input_placer import GridInputPlacer
 from nenwin.all_particles import Marble
@@ -38,15 +39,20 @@ class GridInputPlacerTestCase2D(unittest.TestCase):
         self.grid_size = np.array([100, 50])
         self.input_placer = GridInputPlacer(self.grid_pos, self.grid_size)
 
+    def test_num_dims(self):
+        expected = 2
+        result = self.input_placer.num_dims
+        self.assertEqual(expected, result)
+
     def test_marbilize_data_4x4(self):
         """
         4x4 input matrix should produce 16 Marbles
         at deterministic positions in the grid.
         """
         input_size = (4, 4)
-        input_data = np.random.uniform(low=-10, high=-10, size=input_size)
+        input_data = np.random.uniform(low=-10, high=10, size=input_size)
 
-        expected_y_positions = [6.125 + 12.5 * row
+        expected_y_positions = [6.25 + 12.5 * row
                                 for row in range(input_size[0])]
         expected_x_positions = [12.5 + 25 * col
                                 for col in range(input_size[1])]
@@ -64,7 +70,7 @@ class GridInputPlacerTestCase2D(unittest.TestCase):
         Corner case: smallest allowed input.
         """
         input_size = (1, 1)
-        input_data = np.random.uniform(low=-10, high=-10, size=input_size)
+        input_data = np.random.uniform(low=-10, high=10, size=input_size)
         expected_pos = (50, 25)
         result = self.input_placer.marblelize_data(input_data)
         check_marbles_at_positions([expected_pos], result)
@@ -77,13 +83,18 @@ class GridInputPlacerTestCase3D(unittest.TestCase):
         self.grid_size = np.array([10, 10, 20])
         self.input_placer = GridInputPlacer(self.grid_pos, self.grid_size)
 
+    def test_num_dims(self):
+        expected = 3
+        result = self.input_placer.num_dims
+        self.assertEqual(expected, result)
+
     def test_marbilize_data_2x2x4(self):
         """
         4x4 input matrix should produce 16 Marbles
         at deterministic positions in the grid.
         """
         input_size = (2, 2, 4)
-        input_data = np.random.uniform(low=-10, high=-10, size=input_size)
+        input_data = np.random.uniform(low=-10, high=10, size=input_size)
 
         
         expected_x_positions = [10 + 2.5 + 5 * col
@@ -116,15 +127,15 @@ def check_marbles_at_positions(positions: Iterable[Sequence[float]],
         two multisets, they should also have the same number of occurrences
         in the other multisetset.
     """
-
+    marbles = set(marbles)
     for pos in positions:
         has_match = False
         for marble in marbles:
-            if np.isclose(marble.pos, pos):
+            if torch.allclose(marble.pos, torch.tensor(pos, dtype=torch.float)):
                 has_match = True
                 marbles.remove(marble)
                 break
-        assert has_match
+        assert has_match, f"{pos} not in {list(map(lambda m:m.pos, marbles))}"
 
     assert len(marbles) == 0
 
