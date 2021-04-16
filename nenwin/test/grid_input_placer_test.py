@@ -28,7 +28,7 @@ import unittest
 import itertools
 import torch
 
-from nenwin.grid_input_placer import GridInputPlacer
+from nenwin.grid_input_placer import GridInputPlacer, MassGridInputPlacer
 from nenwin.all_particles import Marble
 
 
@@ -111,6 +111,37 @@ class GridInputPlacerTestCase3D(unittest.TestCase):
         result = self.input_placer.marblelize_data(input_data)
         check_marbles_at_positions(expected_positions, result,
                                    input_data.reshape(-1))
+
+
+class MassGridInputPlacerTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.grid_pos = np.array([0, 0])
+        self.grid_size = np.array([100, 50])
+        self.input_placer = MassGridInputPlacer(self.grid_pos, self.grid_size)
+
+        self.input_size = (4, 4)
+        expected_y_positions = [6.25 + 12.5 * row
+                                for row in range(self.input_size[0])]
+        expected_x_positions = [12.5 + 25 * col
+                                for col in range(self.input_size[1])]
+        self.expected_positions = tuple(itertools.product(expected_x_positions,
+                                                          expected_y_positions))
+
+    def test_marbilize_data_4x4(self):
+        """
+        Check if the masses equal the input values.
+        """
+
+        input_data = np.random.uniform(low=-10, high=10, size=self.input_size)
+
+        result = self.input_placer.marblelize_data(input_data)
+
+        for pos, datum in zip(self.expected_positions, input_data.reshape(-1)):
+            for marble in result:
+                if torch.allclose(marble.pos,
+                                  torch.tensor(pos, dtype=torch.float)):
+                    self.assertEqual(datum, marble.mass)
 
 
 def check_marbles_at_positions(positions: Iterable[Sequence[float]],
