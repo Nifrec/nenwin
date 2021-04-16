@@ -88,7 +88,6 @@ class GridInputPlacer(InputPlacer):
                          values: Iterable[float]) -> Set[Marble]:
         marbles = set()
         for pos, value in zip(positions, values):
-            assert isinstance(value, float)
             pos = torch.tensor(pos, dtype=torch.float)
             vel = self._map_value_to_vel(value)
             acc = self._map_value_to_acc(value)
@@ -137,7 +136,7 @@ class GridInputPlacer(InputPlacer):
         So that the radius corresponds correctly to a certain entry (value)
         in the given input_data.
         """
-        return torch.zeros(self.num_dims, dtype=torch.float)
+        return 100.0
 
 
 class MassGridInputPlacer(GridInputPlacer):

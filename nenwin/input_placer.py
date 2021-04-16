@@ -58,8 +58,8 @@ class InputPlacer(abc.ABC):
         * input_region_sizes: array of lengths of input region per dimension
             (in 2D, this are the width and the height respectively).
         """
-        self.__input_pos = input_pos
-        self.__input_region_sizes = input_region_sizes
+        self.__input_pos = np.array(input_pos)
+        self.__input_region_sizes = np.array(input_region_sizes)
         self.__num_dims = len(input_region_sizes)
 
     @property
