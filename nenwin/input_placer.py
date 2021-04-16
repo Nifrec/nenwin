@@ -53,9 +53,10 @@ class InputPlacer(abc.ABC):
         Arguments:
 
         * input_pos: vertex of input region with lowest distance to the origin
-            (lower left corner in 2D, generalizes to higher dimensions)
+            (lower left corner in 2D, generalizes to higher dimensions,
+            assuming the whole input region is in the positive subspace).
         * input_region_sizes: array of lengths of input region per dimension
-            (in 2D, this are the width and the height respectively)
+            (in 2D, this are the width and the height respectively).
         """
         self.__input_pos = input_pos
         self.__input_region_sizes = input_region_sizes
