@@ -59,14 +59,19 @@ class InputPlacer(abc.ABC):
         """
         self.__input_pos = input_pos
         self.__input_region_sizes = input_region_sizes
+        self.__num_dims = len(input_region_sizes.shape)
 
     @property
-    def input_pos(self):
-        return self.__input_pos
+    def input_pos(self) -> np.ndarray:
+        return self.__input_pos.copy()
 
     @property
-    def input_region_sizes(self):
-        return self.__input_region_sizes
+    def input_region_sizes(self) -> np.ndarray:
+        return self.__input_region_sizes.copy()
+
+    @property
+    def num_dims(self) -> int:
+        return self.__num_dims
 
     @abc.abstractmethod
     def marblelize_data(self, input_data: Iterable[object]) -> Iterable[Marble]:
