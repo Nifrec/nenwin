@@ -22,7 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Unit-tests for GridInputPlacer from grid_input_placer.py.
 """
-from typing import Iterable, Sequence, Set
+from typing import Iterable, Optional, Sequence, Set
 import numpy as np
 import unittest
 import itertools
@@ -61,7 +61,8 @@ class GridInputPlacerTestCase2D(unittest.TestCase):
                                                      expected_y_positions))
 
         result = self.input_placer.marblelize_data(input_data)
-        check_marbles_at_positions(expected_positions, result)
+        check_marbles_at_positions(expected_positions, result,
+                                   input_data.reshape(-1))
 
         self.assertTrue(all(isinstance(m, Marble) for m in result))
 
@@ -96,7 +97,6 @@ class GridInputPlacerTestCase3D(unittest.TestCase):
         input_size = (2, 2, 4)
         input_data = np.random.uniform(low=-10, high=10, size=input_size)
 
-        
         expected_x_positions = [10 + 2.5 + 5 * col
                                 for col in range(input_size[1])]
         expected_y_positions = [10 + 2.5 + 5 * row
@@ -109,10 +109,13 @@ class GridInputPlacerTestCase3D(unittest.TestCase):
                                                      expected_z_positions))
 
         result = self.input_placer.marblelize_data(input_data)
-        check_marbles_at_positions(expected_positions, result)
+        check_marbles_at_positions(expected_positions, result,
+                                   input_data.reshape(-1))
+
 
 def check_marbles_at_positions(positions: Iterable[Sequence[float]],
-                               marbles: Set[Marble]):
+                               marbles: Set[Marble],
+                               data: Optional[Sequence[float]] = None):
     """
     Assert that:
         (1) For each pos in positions,
@@ -126,8 +129,22 @@ def check_marbles_at_positions(positions: Iterable[Sequence[float]],
         So if the same position occurs twice or more in one of the
         two multisets, they should also have the same number of occurrences
         in the other multisetset.
+
+    Optionally, also the data stored in the Marbles (the .datum attribute)
+    can be checked.
     """
     marbles = set(marbles)
+    if data is None:
+        marbles = __remove_marbles_at_positions(positions, marbles)
+    else:
+        marbles = __remove_marbles_at_position_data_combos(
+            positions, marbles, data)
+    assert len(marbles) == 0
+
+
+def __remove_marbles_at_positions(
+        positions: Iterable[Sequence[float]],
+        marbles: Set[Marble]) -> Set[Marble]:
     for pos in positions:
         has_match = False
         for marble in marbles:
@@ -137,7 +154,24 @@ def check_marbles_at_positions(positions: Iterable[Sequence[float]],
                 break
         assert has_match, f"{pos} not in {list(map(lambda m:m.pos, marbles))}"
 
-    assert len(marbles) == 0
+    return marbles
+
+
+def __remove_marbles_at_position_data_combos(positions: Iterable[Sequence[float]],
+                                             marbles: Set[Marble],
+                                             data: Sequence[float]) -> Set[Marble]:
+    for pos, datum in zip(positions, data):
+        has_match = False
+        for marble in marbles:
+            if torch.allclose(marble.pos, torch.tensor(pos, dtype=torch.float)
+                              ) and marble.datum == datum:
+                has_match = True
+                marbles.remove(marble)
+                break
+        assert has_match, f"{pos} not in " \
+            + f"{list(map(lambda m:(m.pos, m.datum), marbles))}"
+
+    return marbles
 
 
 if __name__ == "__main__":
