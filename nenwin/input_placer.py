@@ -48,7 +48,7 @@ class InputPlacer(abc.ABC):
     that assign a set of input values a position in the network.
     """
 
-    def __init__(self, input_pos: np.array, input_region_sizes: np.array):
+    def __init__(self, input_pos: np.ndarray, input_region_sizes: np.ndarray):
         """
         Arguments:
 
