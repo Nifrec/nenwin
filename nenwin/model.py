@@ -121,11 +121,11 @@ class NenwinModel(nn.Module):
             net_force = self.__compute_net_force_for(particle)
             particle.update_acceleration(net_force)
 
-            for particle in self.__all_particles:
-                particle.update_movement(time_passed)
+        for particle in self.__all_particles:
+            particle.update_movement(time_passed)
 
-            for marble in list(self.__marbles):
-                self.__feed_marble_if_close_to_any_eater(marble)
+        for marble in list(self.__marbles):
+            self.__feed_marble_if_close_to_any_eater(marble)
 
     def __compute_net_force_for(self, particle: Node) -> torch.Tensor:
         """
