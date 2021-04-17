@@ -419,3 +419,64 @@ with output:
 Clearly, `my_param` is part of the computational graph.
 Yet it has version 2. 
 Why does this not raise an error, but does it raise errors for Marbles?
+
+# Running MNIST training
+## 17-04-2021
+Okay we *finally* got to the point where we can run the training algorithm, 
+with backprob, on MNIST. 
+As you would expect, it does not work. 
+In particular, my machine runs out of memory 
+**before completing the very first sample of the very first epoch**. 
+Even with only 8 non-output Nodes, 
+10 MarbleEaterNodes and *only 10 timesteps per sample.*
+
+One possible explanation is that tracking gradients for 28x28 Marbles 
+takes up too much memory. 
+This can easily be tested by disabling gradient checking for Marbles, 
+which should be possible I suppose. 
+In case it is not, gradient checking can be disabled for the whole training. 
+Clearly this does not train anything, 
+but it can still be used to confirm my hypothesis.
+
+### Disable input Marble gradient tracking
+```python
+m.requires_grad(False)
+```
+can simply be used to disable gradient tracking for a single marble `m`.
+
+Disable gradient tracking for the Marbles is not enough
+(I still run out of memory before finishing the first sample).
+They interact with the Nodes, so gradients for the variables
+of the Marbles will still be computed for the parameters of the Nodes.
+
+### Disable all gradients during training
+Wrapping the whole training in
+```python
+with torch.no_grad():
+    ...
+```
+does keep memory usage almost stable. 
+It does not increase much after loading the dataset.
+However, **the training remains extremely slow**.
+It takes over 20 minutes for a single sample 
+(after which I terminated the process).
+It appears that the O(n²) runtime complexity, 
+(where n is the number of particles),
+is still far too large to be feasible on MNIST.
+
+### Possible actions:
+1. Use a dataset with a much smaller amount of input Marbles.
+    + Quick confirmation whether it works.
+    - No long-term solution.
+1. Evaluate runtime/memory complexity of backprop.
+    + Adds scientific value.
+    + May provide insight into possible solution.
+    - Does not solve anything by itself.
+1. Use multiprocessing. 
+    Computing the next state for each particle can be done in parallel. Need to re-synchronize after each timestep, but that is O(n). Would have been much easier with multithreading.
+    - Some optimizations need to be added at some point.
+    - Probably an awful lot of implementation fuss.
+    - Quite some overhead. 
+    * According to the [PyTorch docs](https://pytorch.org/docs/stable/notes/multiprocessing.html#hogwild),
+    `model.share_memory()` can simply be called to share memory. If each sub-process has a set of Marbles of which it knows it should update those, then this may actually work.
+    
