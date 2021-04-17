@@ -38,9 +38,10 @@ from nenwin.attraction_functions.attraction_functions import ThresholdGravity
 from nenwin.auxliary import generate_stiffness_dict
 
 GRID_MARBLE_STIFFNESSES = generate_stiffness_dict(marble_stiffness=1,
-                            node_stiffness=0,
-                            marble_attraction=0,
-                            node_attraction=1)
+                                                  node_stiffness=0,
+                                                  marble_attraction=0,
+                                                  node_attraction=1)
+
 
 class GridInputPlacer(InputPlacer):
     """
@@ -154,3 +155,17 @@ class MassGridInputPlacer(GridInputPlacer):
         in the given input_data.
         """
         return value
+
+
+class NoGradMassGridInputPlacer(MassGridInputPlacer):
+    """
+    Same as MassGridInputPlaces, but sets .requires_grad() to False
+    for all generated Marbles.
+    """
+
+    def marblelize_data(self, input_data: np.ndarray | torch.Tensor
+                        ) -> Iterable[Marble]:
+        output = super().marblelize_data(input_data)
+        for marble in output:
+            marble.requires_grad_(False)
+        return output
