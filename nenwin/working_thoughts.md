@@ -480,3 +480,84 @@ is still far too large to be feasible on MNIST.
     * According to the [PyTorch docs](https://pytorch.org/docs/stable/notes/multiprocessing.html#hogwild),
     `model.share_memory()` can simply be called to share memory. If each sub-process has a set of Marbles of which it knows it should update those, then this may actually work.
     
+### Runtime complexity bug
+The runtime complexity of Nenwin is O(tn²), where t is the number of
+timesteps and n the number of particles. 
+However, I found a subtle bug (a loop was indented too much)
+in `NenwinModel.make_timestep()`, and all Marbles were checked
+for being close to MarbleEaterNodes *for every particle every step*.
+Since checking the Marbles that are eaten is already O(n²),
+this resulted in a O(tn³) runtime. That mattered.
+
+With the bug solved, individual timesteps now take in the
+order of one minute. Note that has 28x28 Marbles and 18 Nodes in total,
+so 802²= 643,204 forces need to be computed each timestep.
+This still has backprob disabled!
+But timesteps in the order of 10 can now be finished within an hour.
+
+### Memory complexity backprop
+For 10 timesteps, I estimated that 6.4 GB needs to be stored if each
+number is one bit. But we are using floats, so for 64 bit floats
+with whould require 411.7 GB of RAM. Which is still a lower bound.
+
+Motivation: backprop_mem_use = O(t * n² * (a_v * d + a_s)), where:
+* t is the number of timesteps.
+* n the number of Marbles.
+* a_v the number of vector variables that record gradients per Marble 
+    (i.e. the pos, vel and acc)
+* a_s the number of scalar variables that require gradients.
+    (Including those is probably too pessimistic, 
+    as they are the mass and the radius, and they never change: 
+    their gradients are computed via the gradients of the pos, vel and acc,
+    which does not require additional memory use).
+
+Excluding a_s, the memory needed would 'only' be 308.7 GB. 
+
+*Wait a moment, not all previous values of every variable needs to be stored!*
+
+## 18-04-2021
+* The idea of splitting the algorithm up in boxes is not new.
+    From Schofield, (1972), *COMPUTER SIMULATION STUDIES OF THE LIQUID STATE*:
+    > For potentials of finite range, a method hasbeen
+    > used in which the time step is proportional to N.
+    > This involves sorting the particles at each time step
+    > into cells, and only calculating distances between
+    > particles in cells which are within the interaction
+    > range. It turns out that the computation time is
+    > sensitive to the size of cell, the optimum being
+    > achieved with an average of about four particles per
+    > cell.
+
+* The memory complexity is just O(T*n). 
+    However, the constant factors seem bad enough to cause memory issues.
+    Also, note that if the number of particles increase by a factor 100,
+    also the memory need increases by a factor 100. 
+    If it were already in the order of 2GiB then this is not so funny.
+
+The remaining problems, with possible solutions are:
+1. **The simulation is too slow for feasible training on MNIST**, 
+    even if the memory issues were solved 
+    or an evolutionary algorithm were used.
+
+    *Possible solutions:*
+    1. Use a different dataset with smaller images. Not a long term solution.
+    1. Use boxing/multiprocessing (see above, also yesterday).
+    1. We could try running on a GPU 
+        (in combination with boxing/multiprocessing). 
+        This allows great parallelism, but has even less memory.
+1. **Backpropagation takes more memory than my computer has**.
+The possible actions that remain are:
+     *Possible solutions:*
+    1. Use a different dataset with smaller images. 
+        Not a long term solution.
+    1. Use a different optimization algorithm. 
+        But after all the fuss of implementing it in PyTorch, I do want to see if it works. 
+         Also scientifically interesting. 
+         Of course we may kickstart the training with a wilder algorithm, such as evolution.
+    1. Encapsulate functions like Beeman's Algorithm 
+        in a [torch.autograd.Function](https://pytorch.org/docs/stable/autograd.html#torch.autograd.Function). 
+        See [an example here](https://pytorch.org/tutorials/beginner/examples_autograd/two_layer_net_custom_function.html).
+        Not sure if it can be applied to Beeman's Algorithm, as it uses
+        multiple inputs. But it would simplify the computational graph (less memory needed!), at least I hope so...
+
+
