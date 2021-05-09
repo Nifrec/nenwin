@@ -169,3 +169,20 @@ class NoGradMassGridInputPlacer(MassGridInputPlacer):
         for marble in output:
             marble.requires_grad_(False)
         return output
+
+
+class VelInputPlacer(GridInputPlacer):
+    """
+    Variant of GridInputPlacer that uses the value of the
+    corresponding input-data element to set the velocity of the Marble.
+    Each element in the velocity tensor will have the same value.
+    """
+
+    def _map_value_to_vel(self, value: float) -> torch.Tensor:
+        """
+        Hook method used by marblelize_data()
+        to find the *mass* of the Marble
+        that is to be associated with with a certain entry (value)
+        in the given input_data.
+        """
+        return value * torch.ones(self.num_dims, dtype=torch.float)
