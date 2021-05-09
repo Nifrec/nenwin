@@ -38,6 +38,8 @@ DEVICE = torch.device('cpu')
 # Directory where the nenwin repository is located in the OS´ filesystem.
 PROJECT_ROOT_DIR = os.path.dirname(os.path.dirname(nenwin.__file__))
 
+################################################################################
+# Data and model checkpoint directory locations for the MNIST dataset
 MNIST_DATA_DIR = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist", "dataset")
 
 MNIST_CACHE_FILE = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist", "dataset",
@@ -46,3 +48,17 @@ MNIST_CACHE_FILE = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist", "dataset",
 MNIST_CHECKPOINT_DIR = os.path.join(PROJECT_ROOT_DIR, "nenwin", "mnist",
                                     "checkpoints")
 MNIST_CHECKPOINT_RATE = 5
+
+################################################################################
+# Data and model checkpoint directory locations for the banknote dataset
+BANKNOTE_DATA_FILE = os.path.join(PROJECT_ROOT_DIR, "nenwin",
+                                  "banknote_dataset", "dataset",
+                                  "banknote_dataset.csv")
+
+BANKNOTE_CACHE_FILE = os.path.join(PROJECT_ROOT_DIR, "nenwin",
+                                   "banknote_dataset", "dataset",
+                                   "cached_dataset.pickle")
+
+BANKNOTE_CHECKPOINT_DIR = os.path.join(PROJECT_ROOT_DIR, "banknote_dataset",
+                                       "banknote_dataset", "checkpoints")
+BANKNOTE_CHECKPOINT_RATE = 5
