@@ -3,9 +3,9 @@ Nenwin-project (NEural Networks WIthout Neurons) for
 the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 
 Author: Lulof Pirée
-October 2020
+May 2021
 
-Copyright (C) 2020 Lulof Pirée, Teun Schilperoort
+Copyright (C) 2021 Lulof Pirée
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -23,9 +23,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 A variant of the Node that can 'consume' Marbles if they come close.
 """
 from __future__ import annotations
-from typing import Any, List, Tuple
+from typing import Any, Tuple
 import torch
-import torch.nn as nn
 import re
 
 from nenwin.node import Marble, Node
