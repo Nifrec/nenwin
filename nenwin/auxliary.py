@@ -22,24 +22,12 @@ October 2020
 
 Multi-purpose auxiliary functions.
 """
-import numpy as np
-from typing import Dict, List, Iterable, Sequence
+from typing import Dict, List, Sequence
 import torch
 
 from nenwin.particle import Particle
-from nenwin.constants import BANKNOTE_CHECKPOINT_DIR
-from nenwin.all_particles import MarbleEaterNode, Marble, Node, MarbleEmitterNode
-from nenwin.model import NenwinModel
-from nenwin.input_placer import InputPlacer
-from nenwin.grid_input_placer import VelInputPlacer
-from nenwin.attraction_functions.attraction_functions import NewtonianGravity, AttractionFunction
-from nenwin.backprop.filename_gen import FilenameGenerator
-from nenwin.backprop.trainer import NenwinTrainer
-from nenwin.backprop.training_stats import TrainingStats
-from nenwin.backprop.loss_function import NenwinLossFunction
-from nenwin.banknote_dataset.load_dataset import load_banknote_dataset
-from nenwin.mnist.train_on_minst_as_script import gen_nodes, gen_eater_nodes
-
+from nenwin.all_particles import MarbleEaterNode, Node
+from nenwin.attraction_functions.attraction_functions import AttractionFunction
 def distance(p1: Particle, p2: Particle) -> float:
     difference = p1.pos - p2.pos
     return torch.norm(difference)
