@@ -26,7 +26,8 @@ from typing import Dict, List, Sequence
 import torch
 
 from nenwin.particle import Particle
-from nenwin.all_particles import MarbleEaterNode, Node
+from nenwin.node import Node
+from nenwin.marble_eater_node import MarbleEaterNode
 from nenwin.attraction_functions.attraction_functions import AttractionFunction
 def distance(p1: Particle, p2: Particle) -> float:
     difference = p1.pos - p2.pos
@@ -79,7 +80,7 @@ def gen_nodes(attract_funct: AttractionFunction,
     nodes = []
     num_dims = len(positions[0])
     zero = torch.zeros(num_dims, dtype=torch.float)
-    for node_pos in positions():
+    for node_pos in positions:
         node_pos = torch.tensor(node_pos, dtype=torch.float)
         node = Node(pos=node_pos, vel=zero, acc=zero, 
                     mass=mass,
