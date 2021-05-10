@@ -3,9 +3,9 @@ Nenwin-project (NEural Networks WIthout Neurons) for
 the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 
 Author: Lulof Pirée
-March 2021
+May 2021
 
-Copyright (C) 2020 Lulof Pirée, Teun Schilperoort
+Copyright (C) 2021 Lulof Pirée, Teun Schilperoort
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -23,8 +23,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Base class for Nodes and Marbles, subclass of PhysicalParticle.
 """
 from __future__ import annotations
-import abc
-import numpy as np
 import torch
 import torch.nn as nn
 import re
