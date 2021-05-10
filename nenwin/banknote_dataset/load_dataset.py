@@ -39,15 +39,13 @@ Features:
 2: curtosis
 3: entropy
 """
-from typing import Iterable, Iterator, Sequence, Tuple
-import torch
-import torch.utils
+from typing import Iterator, Sequence, Tuple
 import math
 import random
 import os
 import pickle
 import pandas as pd
-import numpy as np
+import math
 
 from nenwin.backprop.dataset import Dataset, Sample
 from nenwin.constants import BANKNOTE_DATA_FILE, BANKNOTE_CACHE_FILE
@@ -118,8 +116,8 @@ def convert_banknote_dataset(frac_train=0.8, frac_vali=0.1) -> BanknoteDataset:
     df = df.sample(frac=1).reset_index(drop=True)
 
     tot_num_samples = len(df)
-    first_vali_idx = np.floor(frac_train*tot_num_samples)
-    first_test_idx = np.floor((frac_train + frac_vali)*tot_num_samples)
+    first_vali_idx = math.floor(frac_train*tot_num_samples)
+    first_test_idx = math.floor((frac_train + frac_vali)*tot_num_samples)
 
     samples = convert_to_samples(df)
 
@@ -131,5 +129,12 @@ def convert_banknote_dataset(frac_train=0.8, frac_vali=0.1) -> BanknoteDataset:
 
 
 def convert_to_samples(df: pd.DataFrame) -> Tuple[Sample]:
-    return tuple(Sample(row[1][:-1].to_numpy(), int(row[1][-1]))
+    """
+    Convert each row of the df to a sample.
+    A sample is tuple of:
+    * a row vector containing all but one values of the df's row.
+    * the last value of the df's row, converted to int
+        (this is the label).
+    """
+    return tuple(Sample(row[1][:-1].to_numpy().reshape((1, -1)), int(row[1][-1]))
                  for row in df.iterrows())
