@@ -23,11 +23,22 @@ October 2020
 Multi-purpose auxiliary functions.
 """
 import numpy as np
-from typing import Dict
+from typing import Dict, List, Iterable, Sequence
 import torch
 
 from nenwin.particle import Particle
-
+from nenwin.constants import BANKNOTE_CHECKPOINT_DIR
+from nenwin.all_particles import MarbleEaterNode, Marble, Node, MarbleEmitterNode
+from nenwin.model import NenwinModel
+from nenwin.input_placer import InputPlacer
+from nenwin.grid_input_placer import VelInputPlacer
+from nenwin.attraction_functions.attraction_functions import NewtonianGravity, AttractionFunction
+from nenwin.backprop.filename_gen import FilenameGenerator
+from nenwin.backprop.trainer import NenwinTrainer
+from nenwin.backprop.training_stats import TrainingStats
+from nenwin.backprop.loss_function import NenwinLossFunction
+from nenwin.banknote_dataset.load_dataset import load_banknote_dataset
+from nenwin.mnist.train_on_minst_as_script import gen_nodes, gen_eater_nodes
 
 def distance(p1: Particle, p2: Particle) -> float:
     difference = p1.pos - p2.pos
@@ -67,3 +78,53 @@ def generate_node_dict(pos: torch.Tensor,
                                           marble_attraction,
                                           node_attraction))
     return output
+
+def gen_nodes(attract_funct: AttractionFunction,
+              mass: float,
+              positions: Sequence[Sequence[float]]) -> List[Node]:
+    """
+    Generate a list of Nodes, at the given positions.
+    Each Node will use the given attraction_function,
+    and will have the given mass.
+    Velocity and acceleration will be initialized with a zero vector.
+    """
+    nodes = []
+    num_dims = len(positions[0])
+    zero = torch.zeros(num_dims, dtype=torch.float)
+    for node_pos in positions():
+        node_pos = torch.tensor(node_pos, dtype=torch.float)
+        node = Node(pos=node_pos, vel=zero, acc=zero, 
+                    mass=mass,
+                    attraction_function=attract_funct, 
+                    marble_stiffness = 1,
+                    node_stiffness = 1,
+                    marble_attraction = 1,
+                    node_attraction = 0)
+        nodes.append(node)
+    return nodes
+
+def gen_eater_nodes(attract_funct: AttractionFunction,
+              mass: float,
+              radius:float,
+              positions: Sequence[Sequence[float]]) -> List[MarbleEaterNode]:
+    """
+    Generate a list of MarbleEaterNodes, at the given positions.
+    Each Node will use the given attraction_function,
+    and will have the given mass and radius.
+    Velocity and acceleration will be initialized with a zero vector.
+    """
+    eaters = []
+    num_dims = len(positions[0])
+    zero = torch.zeros(num_dims, dtype=torch.float)
+    for eater_pos in positions:
+        eater_pos = torch.tensor(eater_pos, dtype=torch.float)
+        eater = MarbleEaterNode(pos=eater_pos, vel=zero, acc=zero, 
+                    mass=mass,
+                    attraction_function=attract_funct, 
+                    marble_stiffness = 1,
+                    node_stiffness = 1,
+                    marble_attraction = 1,
+                    node_attraction = 0,
+                    radius = radius)
+        eaters.append(eater)
+    return eaters
