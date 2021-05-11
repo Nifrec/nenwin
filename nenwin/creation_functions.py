@@ -25,13 +25,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Functions that simplify the creation of objects.
 Not part of auxiliary.py to avoid circular imports.
 """
-
-
-from nenwin.backprop.dataset import Dataset
-from typing import Dict, List, Sequence
+from typing import List, Sequence
 import torch
 
-from nenwin.particle import Particle
 from nenwin.node import Node
 from nenwin.marble_eater_node import MarbleEaterNode
 from nenwin.attraction_functions.attraction_functions import AttractionFunction
