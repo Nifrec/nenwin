@@ -3,9 +3,9 @@ Nenwin-project (NEural Networks WIthout Neurons) for
 the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 
 Author: Lulof Pirée
-March 2021
+May 2021
 
-Copyright (C) 2021 Lulof Pirée, Teun Schilperoort
+Copyright (C) 2021 Lulof Pirée
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -63,5 +63,6 @@ class FilenameGenerator:
         name = self.__base + time.asctime(time.localtime(timestamp)) \
             + checkpoint + self.__extension
         name = name.replace(":", "-")
+        name = name.replace(" ", "_")
         output = os.path.join(self.__directory, name)
         return output
