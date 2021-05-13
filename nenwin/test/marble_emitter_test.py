@@ -5,7 +5,7 @@ the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 Author: Lulof Pirée
 March 2021
 
-Copyright (C) 2020 Lulof Pirée, Teun Schilperoort
+Copyright (C) 2020 Lulof Pirée, 
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
