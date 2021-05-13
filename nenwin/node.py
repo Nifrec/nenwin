@@ -186,6 +186,22 @@ class Node(PhysicalParticle):
             raise ValueError(
                 "__find_stiffness_to: particle is neither Node nor Marble")
 
+    def clamp_stiffness_attraction(self):
+        """
+        Clamp the following parameters into the range [0, 1]:
+        * self.marble_stiffness
+        * self.node_stiffness
+        * self.marble_attraction
+        * self.node_attraction
+        Calling this function may be needed 
+        after a backpropagation update.
+        """
+        with torch.no_grad():
+            self.__marble_stiffness.clamp_(0, 1)
+            self.__node_stiffness.clamp_(0, 1)
+            self.__marble_attraction.clamp_(0, 1)
+            self.__marble_attraction.clamp_(0, 1)
+
 
 class Marble(Node):
     """

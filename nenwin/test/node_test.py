@@ -330,6 +330,22 @@ class NodeTestCase(unittest.TestCase):
         result = repr(node)
         self.assertEqual(expected, result)
 
+    def test_clamping(self):
+        node = create_particle(1, 1, 0, 0)
+        optim = torch.optim.Adam(node.parameters())
+
+        loss = -10 * node.marble_stiffness + 10 * node.marble_attraction
+        optim.zero_grad()
+        loss.backward()
+        optim.step()
+
+        node.clamp_stiffness_attraction()
+        self.assertLessEqual(node.marble_stiffness, 1)
+        self.assertGreaterEqual(node.marble_attraction, 0)
+
+        loss = -10 * node.marble_stiffness + 10 * node.marble_attraction
+        loss.backward()
+
 
 def create_particle(marble_stiffness,
                     node_stiffness,

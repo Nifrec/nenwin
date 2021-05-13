@@ -160,3 +160,14 @@ class NenwinModel(nn.Module):
         self.__marbles.difference_update(self.__added_marbles)
         self.__all_particles.difference_update(self.__added_marbles)
         self.__added_marbles = set([])
+
+    def clamp_all_particles(self):
+        """
+        Call the method clamp_stiffness_attraction()
+        of all Marbles and Nodes.
+        Resets the stiffness and attraction parameters 
+        to a valid range.
+        Backpropagation updates may cause illegal values here.
+        """
+        for particle in self.__all_particles:
+            particle.clamp_stiffness_attraction()

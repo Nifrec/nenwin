@@ -135,6 +135,7 @@ class NenwinTrainer:
             self.__optim.zero_grad()
             loss.backward()
             self.__optim.step()
+            self.__model.clamp_all_particles()
 
             epoch_loss += loss.item()
         return epoch_loss
