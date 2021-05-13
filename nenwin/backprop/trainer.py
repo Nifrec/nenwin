@@ -138,6 +138,7 @@ class NenwinTrainer:
             self.__model.clamp_all_particles()
 
             epoch_loss += loss.item()
+        self.__model.reset()
         return epoch_loss
 
     def __run_and_record_one_validation_epoch(self, step_size: float,
@@ -206,6 +207,7 @@ class NenwinTrainer:
 
             acc = num_correct/dataset_size
 
+            self.__model.reset()
             return acc, tot_loss
 
     def reset_stats(self):
