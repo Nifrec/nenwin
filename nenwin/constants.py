@@ -59,6 +59,6 @@ BANKNOTE_CACHE_FILE = os.path.join(PROJECT_ROOT_DIR, "nenwin",
                                    "banknote_dataset", "dataset",
                                    "cached_dataset.pickle")
 
-BANKNOTE_CHECKPOINT_DIR = os.path.join(PROJECT_ROOT_DIR, "banknote_dataset",
-                                       "checkpoints")
+BANKNOTE_CHECKPOINT_DIR = os.path.join(PROJECT_ROOT_DIR, "nenwin",
+                                       "banknote_dataset", "checkpoints")
 BANKNOTE_CHECKPOINT_RATE = 5
