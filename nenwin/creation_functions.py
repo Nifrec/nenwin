@@ -28,8 +28,7 @@ Not part of auxiliary.py to avoid circular imports.
 from typing import List, Sequence
 import torch
 
-from nenwin.node import Node
-from nenwin.marble_eater_node import MarbleEaterNode
+from nenwin.all_particles import Node, Marble, MarbleEaterNode
 from nenwin.attraction_functions.attraction_functions import AttractionFunction
 
 def gen_nodes(attract_funct: AttractionFunction,
@@ -81,3 +80,25 @@ def gen_eater_nodes(attract_funct: AttractionFunction,
                     radius = radius)
         eaters.append(eater)
     return eaters
+
+def gen_marbles(attract_funct: AttractionFunction,
+              mass: float,
+              positions: Sequence[Sequence[float]]) -> List[Node]:
+    """
+    Generate a list of Marbles, at the given positions.
+    Each Marbles will use the given attraction_function,
+    and will have the given mass.
+    Velocity and acceleration will be initialized with a zero vector.
+    """
+    marbles = []
+    num_dims = len(positions[0])
+    zero = torch.zeros(num_dims, dtype=torch.float)
+    for marble_pos in positions:
+        marble_pos = torch.tensor(marble_pos, dtype=torch.float)
+        marble = Marble(pos=marble_pos, vel=zero, acc=zero, 
+                    mass=mass,
+                    attraction_function=attract_funct,
+                    datum=None
+                    )
+        marbles.append(marble)
+    return marbles

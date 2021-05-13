@@ -57,21 +57,27 @@ def plot_model(model: NenwinModel) -> matplotlib.axes.Axes:
     partiles = set(model.nodes)
     partiles.update(model.marbles)
 
-    ax = plt.subplot()
+    fig, ax = plt.subplots(1, 1)
 
     for node in model.nodes:
         assert torch.numel(node.pos) == 2
         point_coords = node.pos.detach().numpy().reshape((2))
-        ax.plot(point_coords[0], point_coords[1], ".", color="orange", markersize= 20)
+        nodes, = ax.plot(point_coords[0], point_coords[1],
+                        ".", color="orange", markersize=20)
 
     for node in model.marble_eater_nodes:
         assert torch.numel(node.pos) == 2
         point_coords = node.pos.detach().numpy().reshape((2))
-        ax.plot(point_coords[0], point_coords[1], "x", color="black", markersize= 7)
-    
+        eaters, = ax.plot(
+            point_coords[0], point_coords[1], "x", color="black", markersize=7)
+
     for marble in model.marbles:
         assert torch.numel(marble.pos) == 2
         point_coords = marble.pos.detach().numpy().reshape((2))
-        ax.plot(point_coords[0], point_coords[1], ".", color="lime", markersize= 10)
-    
+        marbles, = ax.plot(
+            point_coords[0], point_coords[1], ".", color="lime", markersize=10)
+
+    ax.legend([nodes, (nodes, eaters), marbles],
+              ["Nodes", "MarbleEaterNodes", "Marbles"])
+
     return ax
