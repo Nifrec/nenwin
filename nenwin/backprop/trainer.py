@@ -82,6 +82,24 @@ class NenwinTrainer:
                      num_steps_till_read_output: int,
                      do_validate: bool = False,
                      checkpoint_interval: int = 1):
+        """
+        Arguments:
+            * num_epochs: amount of full iterations of the training set
+                should be ran (to train the model).
+            * step_size: amount of time to pass between discrete
+                simulation time-steps
+            * num_steps_till_read_output: amount of timesteps after
+                inputting a new sample after which the output
+                should be read.
+            * do_validate: if True, the model will be evaluated
+                on one epoch on the validation set after each
+                epoch after the training set. 
+                These stats will be added to Trainer.stats.
+            * checkpoint_interval: amount of epochs between
+                making a checkpoint for the model.
+                Making a checkpoint = storing the current state of the model
+                to a file.
+        """
 
         for epoch in range(num_epochs):
 
@@ -129,15 +147,19 @@ class NenwinTrainer:
         self.__stats.add_validation_loss(val_loss)
 
     def __make_checkpoint_if_needed(self, epoch: int, checkpoint_interval: int):
-        if epoch % checkpoint_interval == 0:
+        # +1, as epochs start counting at 0.
+        if (epoch+1) % checkpoint_interval == 0:
             print(f"Epoch {epoch}: saving model...")
             filename = self.__save_model(True)
             print(f"Model saved as {filename}")
 
-    def __save_model(self, is_checkpoint: bool):
+    def __save_model(self, is_checkpoint: bool) -> str:
         filename = self.__filename_gen.gen_filename(is_checkpoint)
         with open(filename, "w") as file:
             file.write(repr(self.__model))
+            file.write("\n# Num finished epochs: "
+                       f"{len(self.__stats.train_losses)}")
+        return filename
 
     def evaluate_model(self,
                        step_size: float,
