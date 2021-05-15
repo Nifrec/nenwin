@@ -22,10 +22,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Differentiable loss function for using a Nenwin model for classification.
 """
-from typing import Callable, List, Optional, Sequence, Set, Tuple
+from typing import Optional, Sequence, Set, Tuple
 import torch
 from enum import Enum
-import warnings
 
 from nenwin.marble_eater_node import MarbleEaterNode
 from nenwin.node import Marble, Node
@@ -165,7 +164,7 @@ class NenwinLossFunction:
     def __compute_loss_case_no_prediction(self, expected: int):
         target_node = self.__output_nodes[expected]
         loss = find_min_weighted_distance_to(
-            self.__output_nodes[expected],
+            target_node,
             self.__model,
             self.__pos_weight,
             self.__vel_weight)
