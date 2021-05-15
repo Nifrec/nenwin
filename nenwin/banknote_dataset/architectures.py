@@ -59,8 +59,7 @@ def gen_architecture(which: ARCHITECTURES
                      ) -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     """
     Generate either architecture A, B or C.
-    All architectures have the same input region,
-    and all have two output MarbleEaterNodes,
+    All architectures have two output MarbleEaterNodes,
     but the number & location of the other nodes vary.
     Arguments:
         * which: indicates which of the three architectures should
@@ -77,7 +76,7 @@ def gen_architecture(which: ARCHITECTURES
     if which == ARCHITECTURES.B:
         return gen_architecture_b()
     elif which == ARCHITECTURES.C:
-        raise NotImplementedError()
+        return gen_architecture_c()
     else:
         raise ValueError(f"Unknown architecture label '{which}'")
 
@@ -90,10 +89,13 @@ def gen_architecture_a() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
         * There are two MarbleEaterNodes, at (-10, 0) and (10, 0)
         * There are four normal Nodes, at (0, -5), (-5, 0), (5, 0) and (0, 5).
 
+    So the normal Nodes surround the input-region, 
+    and the MarbleEaterNodes are to the left and right of this.
+
     Returns:
-        * Model holding the architecture descibed above
+        * Model holding the architecture descibed above.
         * VelInputPlacer with the input region as described above.
-        * Tuple of the two MarbleEaterNodes
+        * Tuple of the two MarbleEaterNodes.
     """
 
     eater_positions = [(-10, 0), (10, 0)]
@@ -120,10 +122,13 @@ def gen_architecture_b() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     (normal Nodes, no MarbleEaterNodes) at:
         * (2.5, 2.5), (-2.5, 2.5), (2.5, -2.5), (-2.5, -2.5)
 
+    So the normal Nodes surround the input-region, 
+    and the MarbleEaterNodes are to the left and right of this.
+
     Returns:
-        * Model holding the architecture descibed above
+        * Model holding the architecture descibed above.
         * VelInputPlacer with the input region as described above.
-        * Tuple of the two MarbleEaterNodes
+        * Tuple of the two MarbleEaterNodes.
     """
 
     eater_positions = [(-10, 0), (10, 0)]
@@ -132,6 +137,39 @@ def gen_architecture_b() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
 
     input_region_pos = np.array((-2.5, -1))
     input_region_size = np.array((5, 2))
+    mass = 1
+    radius = 0.5
+
+    attraction_function = NewtonianGravity()
+
+    nodes = gen_nodes(attraction_function, mass, node_positions)
+    eater_nodes = gen_eater_nodes(attraction_function, mass,
+                                  radius, eater_positions)
+    model = NenwinModel(nodes+eater_nodes)
+    input_placer = VelInputPlacer(input_region_pos, input_region_size)
+
+    return model, input_placer, eater_nodes
+
+def gen_architecture_c() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
+    """
+    Generate the following architecture:
+        * The input region is at (0, 0) and has size (6, 1)
+            (So it has vertices {(0, 0), (0, 1), (6, 0), (6, 1)})
+        * There are two MarbleEaterNodes, at (1, 4) and (5, 4)
+        * There are five normal Nodes, 
+            at (1, 2), (2, 3), (3, 2), (4, 3) and (5, 2).
+
+    Returns:
+        * Model holding the architecture descibed above.
+        * VelInputPlacer with the input region as described above.
+        * Tuple of the two MarbleEaterNodes.
+    """
+
+    eater_positions = [(1, 4), (5, 4)]
+    node_positions = [(1, 2), (2, 3), (3, 2), (4, 3), (5, 2)]
+
+    input_region_pos = np.array((0, 0))
+    input_region_size = np.array((6, 1))
     mass = 1
     radius = 0.5
 
