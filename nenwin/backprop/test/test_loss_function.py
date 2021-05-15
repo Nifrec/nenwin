@@ -461,7 +461,7 @@ class LossFunctionCallNoPredTestCase(unittest.TestCase):
 
 class LossFunctionCallWrongPredTestCase(unittest.TestCase):
     """
-    Testcases for NenwinLossFunction.__call__() in another than the target
+    Testcases for NenwinLossFunction.__call__() for when another than the target
     output-MarbleEaterNodes has eaten a Marble.
     """
 
@@ -602,6 +602,98 @@ class LossFunctionCallWrongPredTestCase(unittest.TestCase):
         self.assertLess(new_loss.item(), self.loss.item())
 
 
+class LossFunctionMultiplePredTestCase(unittest.TestCase):
+    """
+    Testcases for NenwinLossFunction.__call__() 
+    when multiple output-MarbleEaterNodes have eaten a Marble.
+    The losses should count up.
+    """
+
+    def setUp(self):
+        """
+
+        Sketch:
+
+         |
+        ↑| M_1                  M_3
+        y|  ↓                    ↓
+         |            
+        0| N_1        ←M_2      N_0
+         |             
+         |
+         +-------------------------------
+           -10         0         10   x→
+
+
+        Marbles M_1 and M_2 are moving towards N_1,
+        but should arrive at N_0.
+        M_3 arrives correctly at N_0, at the same moment.
+
+        """
+        self.pos_weight = 0.5
+        self.vel_weight = 0.5
+
+        self.nodes = (gen_node_at(torch.tensor([10.0, 0])),
+                      gen_node_at(torch.tensor([-10.0, 0])))
+        self.marble_1 = gen_marble_at(ZERO,
+                                    vel=torch.tensor([-3.0, 0]),
+                                    datum="M_1")
+        self.marble_2 = gen_marble_at(torch.tensor([-10.0, 10.0]),
+                                    vel=torch.tensor([0, -3.0]),
+                                    datum="M_2")
+        self.marble_3 = gen_marble_at(torch.tensor([10.0, 10.0]),
+                                    vel=torch.tensor([0, -3.0]),
+                                    datum="M_3")
+        marbles = [self.marble_1, self.marble_2, self.marble_3]
+        self.model = NenwinModel(self.nodes, marbles)
+
+        for _ in range(50):  # Should be enough for the Marble to be eaten
+            self.model.make_timestep(0.1)
+
+        print(self.model.marbles)
+        assert len(self.model.marbles) == 0, "Testcase badly designed."
+        
+
+        self.loss_fun = NenwinLossFunction(self.nodes, self.model,
+                                           vel_weight=self.vel_weight,
+                                           pos_weight=self.pos_weight)
+
+        self.target_index = 0
+        self.wrong_node_index = 1
+        self.loss = self.loss_fun(self.target_index)
+
+
+    def test_value_loss_wrong_pred_no_marble_left(self):
+        """
+        For the two wrong Marbles (M_1 and M_2), 
+        their loss should equal the velocity-weighted distance
+        of the target Node to the nearest Marble,
+        plus the *negative reciprocal* of the distance of the wrong node
+        (self.nodes[1]) to the Marble.
+
+        For the correcly arrived Marble, the loss should equal 0.
+        
+        Case where no non-eaten Marble is available 
+        at time of loss computation. 
+        Not that this should matter, as a correct Marble was eaten!
+        """
+        target_node = self.nodes[self.target_index]
+        wrong_node = self.nodes[self.wrong_node_index]
+
+        expected = 0.0
+        for marble in [self.marble_1, self.marble_2]:
+            # Note that the distance to M_3 is used,
+            # which is clearly the closest to the target.
+            # This term will be very small!
+            expected += velocity_weighted_distance(target_node, self.marble_3,
+                                                pos_weight=self.pos_weight,
+                                                vel_weight=self.vel_weight)
+            expected -= 1/velocity_weighted_distance(wrong_node, marble,
+                                                    pos_weight=self.pos_weight,
+                                                    vel_weight=self.vel_weight)
+        torch.testing.assert_allclose(self.loss, expected)
+
+
 def gen_node_at(pos: torch.Tensor, mass: float = 10) -> MarbleEaterNode:
     output = MarbleEaterNode(pos, vel=ZERO, acc=ZERO,
                              mass=mass,
@@ -622,7 +714,7 @@ def gen_marble_at(pos: torch.Tensor,
     output = Marble(pos=pos, vel=vel, acc=ZERO,
                     mass=mass,
                     attraction_function=NewtonianGravity(),
-                    marble_attraction=1,
+                    marble_attraction=0,
                     marble_stiffness=1,
                     node_attraction=0,
                     node_stiffness=0,
