@@ -259,14 +259,9 @@ class NenwinLossFunction:
 
         activated_nodes = self.__get_activated_nodes()
         if len(activated_nodes) > 1:
-            # print("Multiple Nodes are giving output")
             if self.__output_nodes[expected].num_marbles_eaten > 0:
-                print(self.__output_nodes[expected])
-                print(self.__output_nodes[expected].num_marbles_eaten)
-                # print("Including the target")
                 return LossCases.multi_correct_and_wrong
             else:
-                # print("All wrong")
                 return LossCases.multi_wrong
         elif len(activated_nodes) == 0:
             return LossCases.no_prediction
