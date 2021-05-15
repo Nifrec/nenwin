@@ -113,6 +113,8 @@ class NenwinTrainer:
 
             self.__make_checkpoint_if_needed(epoch, checkpoint_interval)
 
+            print(f"Finished epoch {epoch}: loss = {epoch_loss}")
+
         print(f"Last epoch {epoch} finished: saving model...")
         filename = self.__save_model(False)
         print(f"Model saved as {filename}")
