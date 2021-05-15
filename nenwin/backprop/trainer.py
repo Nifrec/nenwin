@@ -141,9 +141,9 @@ class NenwinTrainer:
                 self.__model.clamp_all_particles()
 
                 epoch_loss += loss.item()
-            except RuntimeError as e:
+            except Exception as e:
                 print(f"Skipping epoch due to error: {e}")
-                
+
         self.__model.reset()
         return epoch_loss
 
