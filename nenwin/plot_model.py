@@ -26,27 +26,15 @@ Simple function to plot a Nenwin model using Matplotlib.
 """
 import torch
 import torch.nn
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.axes
-from typing import List, Tuple, Iterable
-from numbers import Number
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+from typing import Tuple
 
-from nenwin.constants import BANKNOTE_CHECKPOINT_DIR
-from nenwin.all_particles import Marble, Node, MarbleEmitterNode, MarbleEaterNode
 from nenwin.model import NenwinModel
-from nenwin.input_placer import InputPlacer
-from nenwin.grid_input_placer import VelInputPlacer
-from nenwin.attraction_functions.attraction_functions import NewtonianGravity, AttractionFunction
-from nenwin.backprop.filename_gen import FilenameGenerator
-from nenwin.backprop.trainer import NenwinTrainer
-from nenwin.backprop.training_stats import TrainingStats
-from nenwin.backprop.loss_function import NenwinLossFunction
-from nenwin.banknote_dataset.load_dataset import load_banknote_dataset, BanknoteDataset
-from nenwin.creation_functions import gen_nodes, gen_eater_nodes
 
 
-def plot_model(model: NenwinModel) -> matplotlib.axes.Axes:
+def plot_model(model: NenwinModel) -> Tuple[Figure, Axes]:
     """
     Plot the particles of a NenwinModel in a Matplotlib graph.
     Each Node will be rendered as an orange dot,
@@ -63,7 +51,7 @@ def plot_model(model: NenwinModel) -> matplotlib.axes.Axes:
         assert torch.numel(node.pos) == 2
         point_coords = node.pos.detach().numpy().reshape((2))
         nodes, = ax.plot(point_coords[0], point_coords[1],
-                        ".", color="orange", markersize=20)
+                         ".", color="orange", markersize=20)
 
     for node in model.marble_eater_nodes:
         assert torch.numel(node.pos) == 2
@@ -80,8 +68,8 @@ def plot_model(model: NenwinModel) -> matplotlib.axes.Axes:
 
     if model_has_marbles:
         ax.legend([nodes, (nodes, eaters), marbles],
-                ["Nodes", "MarbleEaterNodes", "Marbles"])
+                  ["Nodes", "MarbleEaterNodes", "Marbles"])
     else:
         ax.legend([nodes, (nodes, eaters)], ["Nodes", "MarbleEaterNodes"])
 
-    return ax
+    return fig, ax
