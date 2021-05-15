@@ -72,4 +72,7 @@ def plot_model(model: NenwinModel) -> Tuple[Figure, Axes]:
     else:
         ax.legend([nodes, (nodes, eaters)], ["Nodes", "MarbleEaterNodes"])
 
+    ax.set_xlabel("$x \\rightarrow$")
+    ax.set_ylabel("$y \\rightarrow$")
+
     return fig, ax
