@@ -5,7 +5,7 @@ the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 Author: Lulof Pirée
 May 2021
 
-Copyright (C) 2021 Lulof Pirée, 
+Copyright (C) 2021 Lulof Pirée
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 --------------------------------------------------------------------------------
 
 Collection of functions that generate a Nenwin architecture
-to train on the banknote dataset. 
+to train on the banknote dataset.
 The architectures are simply called A, B and C.
 """
 import torch
@@ -75,16 +75,17 @@ def gen_architecture(which: ARCHITECTURES
     if which == ARCHITECTURES.A:
         return gen_architecture_a()
     if which == ARCHITECTURES.B:
-        raise NotImplementedError()
+        return gen_architecture_b()
     elif which == ARCHITECTURES.C:
         raise NotImplementedError()
     else:
         raise ValueError(f"Unknown architecture label '{which}'")
 
+
 def gen_architecture_a() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     """
     Generate the following architecture:
-        * The input region is at (-2.5, -1) and has size (5, 2) 
+        * The input region is at (-2.5, -1) and has size (5, 2)
             (So it has vertices {(-2.5, -1), (-2.5, 1), (2.5, -1), (2.5, 1)})
         * There are two MarbleEaterNodes, at (-10, 0) and (10, 0)
         * There are four normal Nodes, at (0, -5), (-5, 0), (5, 0) and (0, 5).
@@ -97,6 +98,38 @@ def gen_architecture_a() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
 
     eater_positions = [(-10, 0), (10, 0)]
     node_positions = [(0, -5), (-5, 0), (5, 0), (0, 5)]
+    input_region_pos = np.array((-2.5, -1))
+    input_region_size = np.array((5, 2))
+    mass = 1
+    radius = 0.5
+
+    attraction_function = NewtonianGravity()
+
+    nodes = gen_nodes(attraction_function, mass, node_positions)
+    eater_nodes = gen_eater_nodes(attraction_function, mass,
+                                  radius, eater_positions)
+    model = NenwinModel(nodes+eater_nodes)
+    input_placer = VelInputPlacer(input_region_pos, input_region_size)
+
+    return model, input_placer, eater_nodes
+
+
+def gen_architecture_b() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
+    """
+    Same as architecture A, but with four additional Nodes
+    (normal Nodes, no MarbleEaterNodes) at:
+        * (2.5, 2.5), (-2.5, 2.5), (2.5, -2.5), (-2.5, -2.5)
+
+    Returns:
+        * Model holding the architecture descibed above
+        * VelInputPlacer with the input region as described above.
+        * Tuple of the two MarbleEaterNodes
+    """
+
+    eater_positions = [(-10, 0), (10, 0)]
+    node_positions = [(0, -5), (-5, 0), (5, 0), (0, 5),
+                      (2.5, 2.5), (-2.5, 2.5), (2.5, -2.5), (-2.5, -2.5)]
+
     input_region_pos = np.array((-2.5, -1))
     input_region_size = np.array((5, 2))
     mass = 1
