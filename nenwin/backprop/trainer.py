@@ -3,7 +3,7 @@ Nenwin-project (NEural Networks WIthout Neurons) for
 the AI Honors Academy track 2020-2021 at the TU Eindhoven.
 
 Author: Lulof Pirée
-April 2021
+May 2021
 
 Copyright (C) 2021 Lulof Pirée, 
 
@@ -130,6 +130,8 @@ class NenwinTrainer:
 
             for _ in range(num_steps_till_read_output):
                 self.__model.make_timestep(step_size)
+                if self.get_current_model_output() is not None:
+                    break
 
             loss = self.__loss_funct(sample.label)
             self.__optim.zero_grad()
