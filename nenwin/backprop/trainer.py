@@ -128,18 +128,22 @@ class NenwinTrainer:
             marbles = self.__input_placer.marblelize_data(sample.inputs)
             self.__model.add_marbles(marbles)
 
-            for _ in range(num_steps_till_read_output):
-                self.__model.make_timestep(step_size)
-                if self.get_current_model_output() is not None:
-                    break
+            try:
+                for _ in range(num_steps_till_read_output):
+                    self.__model.make_timestep(step_size)
+                    if self.get_current_model_output() is not None:
+                        break
 
-            loss = self.__loss_funct(sample.label)
-            self.__optim.zero_grad()
-            loss.backward()
-            self.__optim.step()
-            self.__model.clamp_all_particles()
+                loss = self.__loss_funct(sample.label)
+                self.__optim.zero_grad()
+                loss.backward()
+                self.__optim.step()
+                self.__model.clamp_all_particles()
 
-            epoch_loss += loss.item()
+                epoch_loss += loss.item()
+            except RuntimeError as e:
+                print(f"Skipping epoch due to error: {e}")
+                
         self.__model.reset()
         return epoch_loss
 
