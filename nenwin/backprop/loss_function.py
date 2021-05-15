@@ -36,6 +36,8 @@ class LossCases(Enum):
     correct_prediction = 0
     no_prediction = 1
     wrong_prediction = 2
+    multi_correct_and_wrong = 3
+    multi_wrong = 4
 
 
 def find_closest_marble_to(particle: Node, model: NenwinModel):
@@ -75,6 +77,7 @@ def find_most_promising_marble_to(particle: Node,
         return velocity_weighted_distance(particle, m, pos_weight, vel_weight)
 
     return min(other_marbles, key=key)
+
 
 def find_min_weighted_distance_to(particle: Node,
                                   model: NenwinModel,
@@ -157,6 +160,17 @@ class NenwinLossFunction:
         elif current_case == LossCases.wrong_prediction:
             return self.__compute_loss_case_wrong_prediction(expected)
 
+        elif current_case == LossCases.multi_correct_and_wrong:
+            return self.__compute_loss_term_foreach_wrong_pred(expected)
+
+        elif current_case == LossCases.multi_wrong:
+            if len(self.__model.marbles) > 0:
+                loss = self.__compute_loss_case_no_prediction(expected)
+            else:
+                loss = 0
+            loss += self.__compute_loss_term_foreach_wrong_pred(expected)
+            return loss
+
         else:
             raise RuntimeError("Unrecognized case of loss function. "
                                "This can never happen.")
@@ -170,31 +184,48 @@ class NenwinLossFunction:
             self.__vel_weight)
         return loss
 
-    def __compute_loss_case_wrong_prediction(self, expected: int):
+    def __compute_loss_case_wrong_prediction(self, expected: int
+                                             ) -> torch.Tensor:
         activated_node = self.__get_activated_nodes()[0]
-        wrong_marble = activated_node.marbles_eaten[0]
+        loss = 0
+        for marble in activated_node.marbles_eaten:
+            # Negative term for Marble at wrong EaterNode
+            loss = -1/velocity_weighted_distance(
+                activated_node, marble, pos_weight=self.__pos_weight,
+                vel_weight=self.__vel_weight)
 
-        # Negative term for Marble at wrong EaterNode
-        loss = -1/velocity_weighted_distance(activated_node, wrong_marble,
-                pos_weight=self.__pos_weight, vel_weight=self.__vel_weight)
+            # Positive loss term for missing Marble at expected EaterNode.
+            target_node = self.__output_nodes[expected]
+            loss += self.__compute_loss_term_missing_marble_case_wrong_output(
+                target_node, marble, expected)
 
-        # Positive loss term for missing Marble at expected EaterNode.
-        target_node = self.__output_nodes[expected]
-        loss += self.__compute_loss_term_missing_marble_case_wrong_output(
-            target_node, wrong_marble, expected)
-        
         return loss
-    
-    def __compute_loss_term_missing_marble_case_wrong_output(self,
-        target_node: MarbleEaterNode, wrong_marble: Marble,
-        expected_node_idx: int):
+
+    def __compute_loss_term_missing_marble_case_wrong_output(
+            self, target_node: MarbleEaterNode, wrong_marble: Marble,
+            expected_node_idx: int) -> torch.Tensor:
         try:
-            return  self.__compute_loss_case_no_prediction(expected_node_idx)
+            return self.__compute_loss_case_no_prediction(expected_node_idx)
         except RuntimeError:
             # There are no other Marble than the eaten Marble.
             # So *also* blame the eaten Marble for not being at the right place.
             return velocity_weighted_distance(target_node, wrong_marble,
-                pos_weight=self.__pos_weight, vel_weight=self.__vel_weight)
+                                              pos_weight=self.__pos_weight, 
+                                              vel_weight=self.__vel_weight)
+
+    def __compute_loss_term_foreach_wrong_pred(self, expected: int
+                                               ) -> torch.Tensor:
+        loss = 0
+        for activated_node in self.__get_activated_nodes():
+            # Ignore any potential correct predictions.
+            # Only penalize the wrong arrivals.
+            if self.__output_nodes.index(activated_node) != expected:
+                for marble in activated_node.marbles_eaten:
+                    loss += -1/velocity_weighted_distance(
+                        activated_node, marble,
+                        pos_weight=self.__pos_weight,
+                        vel_weight=self.__vel_weight)
+        return loss
 
     def __get_activated_nodes(self) -> Tuple[MarbleEaterNode]:
         """
@@ -213,14 +244,31 @@ class NenwinLossFunction:
             * No prediction is made, as no Marble has been eaten 
                 by any of the output Nodes.
             * The correct prediction has been made 
-                (i.e. the correct Node has eaten a Marble)
+                (i.e. the correct Node has eaten a Marble).
             * A wrong prediction has been made
-                (i.e. a Marble has been eaten but by the wrong Node)
+                (i.e. a Marble has been eaten but by the wrong Node).
+            * Multiple predictions have been made, 
+                including the correct prediction
+                (i.e. multiple MarbleEaterNodes did eat a Marble,
+                    and they include the target MarbleEaterNode).
+            * Multiple predictions have been made, ALL wrong
+                (i.e. multiple MarbleEaterNodes, 
+                    but not the target MarbleEaterNode,
+                    did eat a Marble).
         """
-        activated_nodes = self.__get_activated_nodes()
-        assert len(activated_nodes) <= 1, "Multiple Nodes are giving output"
 
-        if len(activated_nodes) == 0:
+        activated_nodes = self.__get_activated_nodes()
+        if len(activated_nodes) > 1:
+            # print("Multiple Nodes are giving output")
+            if self.__output_nodes[expected].num_marbles_eaten > 0:
+                print(self.__output_nodes[expected])
+                print(self.__output_nodes[expected].num_marbles_eaten)
+                # print("Including the target")
+                return LossCases.multi_correct_and_wrong
+            else:
+                # print("All wrong")
+                return LossCases.multi_wrong
+        elif len(activated_nodes) == 0:
             return LossCases.no_prediction
         else:
             output_index = self.__output_nodes.index(activated_nodes[0])
