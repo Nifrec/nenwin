@@ -81,7 +81,8 @@ class NenwinTrainer:
                      step_size: float,
                      num_steps_till_read_output: int,
                      do_validate: bool = False,
-                     checkpoint_interval: int = 1):
+                     checkpoint_interval: int = 1,
+                     batch_size:int=1):
         """
         Arguments:
             * num_epochs: amount of full iterations of the training set
@@ -99,12 +100,20 @@ class NenwinTrainer:
                 making a checkpoint for the model.
                 Making a checkpoint = storing the current state of the model
                 to a file.
+            * batch_size: amount of batches to complete
+                (and gradients to accumulate) before
+                performing a parameter update.
         """
+        if batch_size > 1:
+            for param in self.__model.parameters():
+                param.register_hook(lambda grad : grad/batch_size)
 
         for epoch in range(num_epochs):
 
             epoch_loss = self.__run_one_trainset_epoch(
-                step_size, num_steps_till_read_output)
+                step_size, 
+                num_steps_till_read_output,
+                batch_size)
             self.__stats.add_train_loss(epoch_loss)
 
             if do_validate:
@@ -120,29 +129,46 @@ class NenwinTrainer:
         print(f"Model saved as {filename}")
 
     def __run_one_trainset_epoch(self, step_size: float,
-                                 num_steps_till_read_output: int) -> float:
+                                 max_timesteps: int,
+                                 batch_size:int=1) -> float:
         """
         Returns the total loss.
+
+        Arguments:
+            * step_size: amount of time between discrete-time simulation
+                steps.
+            * max_timesteps: maximum amount of simulated timesteps
+                per sample. If no output occurred after max_timesteps,
+                the loss will be computed for the empty output.
+            * batch_size: amount of batches to complete
+                (and gradients to accumulate) before
+                performing a parameter update.
+
         """
+
         epoch_loss = 0
+        batch_idx = 0
         for sample in self.__dataset.iter_train():
             self.__model.reset()
             marbles = self.__input_placer.marblelize_data(sample.inputs)
             self.__model.add_marbles(marbles)
 
             try:
-                for _ in range(num_steps_till_read_output):
+                for _ in range(max_timesteps):
                     self.__model.make_timestep(step_size)
                     if self.get_current_model_output() is not None:
                         break
-
+                
                 loss = self.__loss_funct(sample.label)
-                self.__optim.zero_grad()
                 loss.backward()
-                self.__optim.step()
-                self.__model.clamp_all_particles()
 
-                epoch_loss += loss.item()
+                batch_idx += 1
+                if (batch_idx+1)%batch_size == 0:
+                    self.__optim.step()
+                    self.__optim.zero_grad()
+                    self.__model.clamp_all_particles()
+
+                    epoch_loss += loss.item()
             except Exception as e:
                 print(f"Skipping epoch due to error: {e}")
 

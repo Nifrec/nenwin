@@ -46,7 +46,8 @@ def create_trainer(model: NenwinModel,
                    dataset: BanknoteDataset,
                    loss_pos_weight: float,
                    loss_vel_weight: float,
-                   architecture: ARCHITECTURES) -> NenwinTrainer:
+                   architecture: ARCHITECTURES,
+                    ) -> NenwinTrainer:
 
     loss_funct = NenwinLossFunction(output_nodes, model, loss_vel_weight,
                                     loss_pos_weight)
