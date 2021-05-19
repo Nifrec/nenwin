@@ -1,0 +1,116 @@
+\textsc{Nenwin} is able to simulate other computational mechanisms \footnote{or, equivalently, other computational mechanisms can be reduced to \textsc{Nenwin}. 'Reduction' causes less ambiguity than 'simulate', as \textsc{Nenwin} is implemented via an simulation itself.}. In particular, this section will demonstrate that \textsc{Nenwin} is able to simulate all required components to implement a CPU. A CPU is an implementation of the RAM-model, which is equivalent to a Turing machine \cite{RAM_cook_reckhow}.
+
+This section will demonstrate that \textsc{Nenwin} is able to simulate the following components, when using Marbles as data-carrying signals:
+\begin{itemize}
+    \item A Boolean NAND-gate with interfaces that use Marbles to transmit and receive information. Note that compositions of NAND-gates can be build to simulate all logical functions such as OR, AND, NOT, NOR, etc.
+    \item A single-bit register that can store a state 0 or 1. Note that an arbitrary large composition of bit registers can store an arbitrary large amount of data.
+    \item A clock that creates periodically a signal.
+    \item A 'divider': a component that upon intercepting one Marble, creates multiple Marbles with velocities in different directions. In the context of wires and electricity such devices are not needed, but in the context of discrete Marbles it is required.
+\end{itemize}
+
+These reductions are not necessary of any practical use, as it is slower than directly implementing/simulating the other computational mechanisms, but it demonstrates that \textsc{Nenwin} is theoretically powerful enough to solve the same problems as these mechanisms.
+These reductions use very artificial hand-made (in contrast to automatically optimized) architectures that do not use the dynamic nature of \nenwin: using immovable Nodes result in simpler proofs than with moving Nodes. 
+
+\nenwin is by default non-terminating, but it can simulate terminating algorithms when a consistent rule is used when to read output.
+One natural such rule is to read output when all Marble's have disappeared, as the output will not change anymore after this point.
+
+Consider a variant of Newton's gravity function, called the 'threshold gravity', that rounds the force to 0 when the radius is sufficiently large:
+\begin{equation}
+    threshold\_gravity(p_1, p_2, \theta) = \begin{cases}
+        \vec{0} & \text{ if } \norm{p_1.pos - p_2.pos} > \theta \\
+        \frac{p_1.m \cdot p_2.m}{\norm{p_1.pos - p_2.pos}^2} & \text{otherwise}
+        \end{cases} \label{eq:tresholdgrav}
+\end{equation}
+
+Unless stated otherwise, this threshold-gravity force function \eqref{eq:tresholdgrav} will be used as attraction function by all particles in this section.
+
+\subsection{NAND-gate}
+\input{nand}
+
+\subsection{Tunnel}
+
+Using the the threshold-gravity attraction function \eqref{eq:tresholdgrav}, is it possible to construct an architecture within a rectangular region that can 'steer' a Marble to any other side of the rectangle, and such that it does not interfere with the architecture outside the rectangle. This is proven in the lemma below. The result can be used as a black box in other proofs to 'tunnel' Marbles from one location to another.
+
+\begin{lemma}[Tunnel] \label{lemma:tunnel}
+    Let $R = [x_0, x_1] \times [y_0, y_1]$ be a rectangle in $\mathbb{R}^2$. Let $R$ be free of attraction forces from Nodes and Marbles not in $R$. Let $m$ be a Marble with nonzero mass that enters (not only intersects) $R$ via an edge $l$. Then for any point $p = (x_e, y_e)$ on the edges of $R$ that are not $l$, there exist finite numbers $\epsilon, \theta \in \mathbb{R}$ and a finite set of Nodes such that when placed in $R$, $m$ leaves $R$ via $p$.
+\end{lemma}
+\begin{proof}
+
+    Without loss of generality, assume that $l$ is parallel to the $x$ axis, so all points on $l$ have $x$ coordinates in $[x_0, x_1]$, and the same $y$ coordinate $y_l$. Let $q = (x_q, y_l) \in l$ be the point where $m$ enters $R$.
+    
+    Let $h$ be the line segment between $q$ and the point $k$, where $k$ is the point where $m$ would have left $R$ if there were no other particles in $R$. Clearly $m$ would move through $R$ in a straight line segment if $R$ were free of other particles, as $R$ is free of forces from particles outside $R$, and hence $m$ would have 0 acceleration. Hence $k$ exists.
+    
+    If $x_0 < x_q < x_1$, then it is possible to place a Node $n$ with threshold gravity at threshold $\theta + \epsilon$, $\theta, \epsilon > 0$ at $(x_n + \theta, y_n) \in R$ such that the entire attraction field of $n$ is in $R$, $(x_n, y_n) \in h$, $(x_n, y_n) \neq q$ and $0 < \theta \in \mathbb{R}$. If we set $n.mass \leftarrow 0$, then $m$ will leave $R$ at $h$. 
+    
+    If we make the magnitude of $n.mass$ greater, and set $\sgn{n.mass} \leftarrow \sgn{m.mass}$, and hence the Node's attraction will change $m$'s course more towards the positive $x$ direction; by correct adjustment of $\theta$ and $n.mass$ can clearly adjust the strength of the acceleration and the duration, and hence can steer $m$ to leave $R$ at any point $(x_e, y_e)$ with $x_e > x$ on one of the non-$l$ edges of $R$.
+    
+    In a similar way, if we set $\sgn{n.mass} \leftarrow -1 \cdot \sgn{m.mass}$ and place $n$ at $(x_n - \theta, y_n) \in R$ instead, then we can steer $m$ to end up any point $(x_e, y_e)$ with $x_e < x$ on on of the non-$l$ edges of $R$.
+    
+    % If $x_q = x_0$ or $x_q = x_1$, then we can add a second node $n'$ at $(x_q + \theta', y_q)$ or $(x_q - \theta', y_q)$ respectively, with a threshold $\epsilon'$ much smaller than $\theta$. If we would not add a node $n$, then clearly $m$ would exit $R$ at a point $k = (x_k, y_k) \in R$ such that $x_0 < x_k < x_1$. Then let $h$ be the line segment between $q$ and $k$, and we can proceed the proof in a similar way as the case  $x_0 < x_q < x_1$.
+    
+    If $x_q = x_0$ or $x_q = x_1$, we can use the requirement that $m$ enters $R$, which implies that:
+    \begin{enumerate}
+        \item If $x_q = x_0$, then the $x$-component of $m.vel$ must be positive, otherwise $m$'s path would only intersect $R$ (move parallel to an edge or only pass the point $q$ no other point of $R$), but not enter it.
+        \item If $x_q = x_1$, then the $x$-component of $m.vel$ must negative positive, by a similar argument.
+    \end{enumerate}
+    In both cases $k$ and $h$ will be well defined, and the construction as of the case $x_0 < x_q < x_1$ can be used.
+\end{proof}
+
+See \ref{fig:tunnel} for a visualization of the construction of the proof. 
+
+A conceptually much simpler, but less efficient, method of implementing a 'tunnel' would be to use MarbleEmitterNodes and Marbles, both with 0 Node-attraction and Marble-attraction, in a region of the simulation where no external forces apply: here the Marbles can travel in straight lines between the MarbleEmitterNodes, which provides a method of controlling the movement of Marbles in a sufficiently simple way that it can be designed by hand. One major advantage of this method is that delays can be added to the MarbleEmitterNodes: this way it can be precisely regulated when a Marble will reach the end of the 'tunnel'. Also the velocity magnitude and direction of the resulting Marble emitted by the last MarbleEmitterNode can easily be adjusted.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{figures/tunnel_v2.pdf}
+    \caption{Construction as used in the proof of Lemma \ref{lemma:tunnel}. The horizontal top edge represents $l$, bounded by $x$-positions $x_0$ and $x_1$. $m$ is the Marble, depicted at the position where it intersects the rectangle $R$ first. The red line represents the path of $m$ if there would be no Node in $R$. The orange point is the node $n$, and the radius of its threshold function has been drawn in transparent orange. Note that $n$ is $\theta$-distance away from $h$, horizontally, hence the radius of the attraction will overlap a little with $h$, which ensures that the movement of $m$ can be influenced by $n$. The black lines represent possible paths trough $R$ of $m$ for two different mass-values of $n$.}
+    \label{fig:tunnel}
+\end{figure}
+
+\subsection{Bit register}
+\input{bit_v2}
+
+\subsection{Clock and divider}
+Implementing a clock in \textsc{Nenwin} is trivial: a MarbleEmitterNode with a large amount of \texttt{stored\_mass} (e.g. a value of $\infty$) and a positively-valued delay will already periodically emit a Marble. Since Marbles are used to represent signals, this suffices to implement a periodical signal-creating device. However, the signal needs to reach multiple components after a sufficiently large delay, and a single Marble can be absorbed only once. Multiple clocks could be used, but a solution that reduces the amount of clocks needed is to use 'splitters':
+\begin{lemma}
+    Given a finite region $R \subset \mathbb{R}^x$ ($x \geq 2$) in a \textsc{Nenwin} architecture with no external forces, it is possible to construct an architecture in $R$ such that when a Marble $m$ with mass $\alpha$ enters $R$ at a designated point $q$ at $t_0$, that this causes any fixed amount $n \geq 0$ Marbles to be emitted from $R$ with velocities in different directions, at a time $t_0 < t_1 < \infty$. This architecture in $R$ will not emit Marbles or exerts forces outside $R$ otherwise.
+    \label{lemma:splitter}
+\end{lemma}
+\begin{proof}
+    The case when $n = 0$ is trivial, a single MarbleEaterNode positioned in $R$ with 0 Marble- and Node-attraction and a radius that intersects $q$.
+    
+    For $n \geq 1$, consider the following architecture (where all particles have a Marble- and Node-stiffness of 1 unless denoted otherwise) (see also Fig. \ref{fig:splitter}):
+    \begin{itemize}
+        \item Let $P$ be a rectangle on a plane though $R$ with maximal surface area.
+        \item A 'signal-emitter': a MarbleEmitterNode, positioned such in $P$ with such a radius that the border of the radius intersects the border of $R$. It has a delay of $\delta$.
+        \item Let $l$ be the ray parallel to $P$ that starts in the signal-emitter and that intersects the center of $P$.
+        \item A 'signal-Marble': the Marble that can be emitted by the signal-emitter. Let it have a mass of $\alpha$ and a velocity direction parallel to the $l$ (towards the centre of $P$) and a velocity magnitude of $v_{signal}$. 
+        \item Two 'locker-Nodes': two Nodes with the same negative mass, placed in $P$, both on a line $l'$ in $P$ orthogonal to $l$ that also intersects the center of $P$, each at a different side of $l$, each at an equal distance from $l$. Their threshold distance of their attraction functions have the same positive value. Let these Nodes have a Marble-attraction of 0 and a Node-attraction of 1.
+        \item A 'moving-emitter': a MarbleEmitterNode initially placed with a specific positive mass and a specific velocity $v_{Node}$ at a specific point $p'$ on $l'$ where the distance to the clostest locker-Node is $d + \varepsilon$, such that it will be deaccelerated by locker-Node untill it halts on a point $p$ at a distance $d$ from this locker-Node, and will reverse its direction when it is a distance $d$ from that locker-Node: hence $p'$ is an extreme point of the harmonic motion this moving-emitter will show. Let $\delta$ be the period of the harmonic motion. Let the moving-emitter have a delay of $\frac{delta}{2\cdot n}$. Let this Node be the only Node in $R$ with a Marble- and Node-stiffness both of 0.
+        \item Let $v_{signal}$ equal $\frac{\frac{\varepsilon}{v_{Node}}}{z}$  where $z$ is the smallest component parallel to $l$ of the distance form the point where the signal-Marble is emitted to the border of the radius of the moving-emitter (which equals the distance from the point where the signal-Marble is created to the closest border of the signal-emitter when the latter is in the point $p$).
+        \item $n$ 'output-emitters' named $O_1, O_2, \dots, O_n$, placed in $P$ on the opposite side of $l'$ as the signal-emitter is, such that at a time $t_0 + i \cdot \frac{\delta}{2 \cdot n} \mod \delta$ the moving-emitter is in a position where a line-segment $k_i$ exists in $P$ that is parallel to $l$ and intersects both the moving-emitter and $O_i$ for $1 \leq i \leq n$, and such that the position and radius have that the border of their radius intersect the border of $R$. 
+        \item Let the 'split-Marbles' be the Marbles emitted by the moving-emitter with a mass of $\frac{\alpha}{2}$ and a velocity parallel to $l$ (away from the center of $P$).
+    \end{itemize}
+    Note that the distance between each line segment $k_i$ and $k_j$, $1 \leq i < j \leq n$ is not necessarily equal as the moving-emitter does not have a constant velocity and hence does not travel a fixed amount of distance in the same time span.
+    
+    Now if $m$ is consumed by the signal-emitter at time $t = t_0$, it will emit a signal-Marble. By construction of the moving-emitter, it will be at point $p$ at time $t = t_1 = t_0 + \frac{\varepsilon}{v_{Node}}$. But by construction, this is also the time required by the signal-Marble to travel to the point where it would be consumed by the moving-emitter if it were at point $p$. Since the moving-emitter is at point $p$, it will consume the Marble. By definition of point $p$, this is the point where the direction of the velocity of the moving emitter reverses in direction. So at time $t = t_1 + \frac{delta}{2\cdot n}$, by construction, the moving-emitter will be positioned on $k_1$. Since its first delay has been satisfied, it will emit the first split-Marble, which is created in such a position where it will move in a direct line to $O_1$. Now the \texttt{stored\_mass} of the moving-emitter is $\alpha - \frac{\alpha}{n}$. The same process is repeated for $O_2$, $O_3$, \dots, $O_n$. Let $\hat{p}$ the point that is the image of $p$ when mirroring $p$ in $l$ on $P$. Because of the harmonic motion, the moving-emitter will reverse its direction again at point $\hat{p}$, but at this point its \texttt{stored\_mass} is 0. Hence on the 'return trip' to $p$ it will not emit any Marble. Now each of the output-emitters $O_1$, $O_2$, \dots, $O_n$ has received exactly one split-Marble. Since each of the output-emitters intersects the boundary of $R$, each can create an output Marble outside $R$ with a mass of $\frac{\alpha}{n}$, each in a different direction.
+    
+    At time $t = \delta$, the moving-emitter is at point $p'$ again with a \texttt{stored\_mass} of 0, and if the velocity of the split-Marbles is large enough and the delay of the output-Marbles is small enough, all particles in $R$ will be in the exact same state as at $t_0$.
+    
+    It remains to prove the harmonic motion of the moving-emitter. Note that if the threshold-distance of the locker-Nodes is at least as far as the distance to the other locker-Node, that the situation is equivalent to the physical model of simple harmonic motion under Newton's model of gravity \cite{principia}. It is beyond the scope of this report to prove simple harmonic motion, but the reader is referred to, for example, \cite{uni_physics}.
+\end{proof}
+Note that the NAND-gate requires both positively and negatively massed Marbles as 'power' from the clock to operate. This can be implemented by using two synchronized MarbleEmitterNodes, one which emits positively massed Marbles, and the other negatively massed Marbles.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{figures/splitter_v4.pdf}
+    \caption{Construction as used in the proof of Lemma \ref{lemma:splitter}. The naming of objects is analogous with the proof. The black dotted arrows denote the directions of velocity of the moving-emitter, the red dotted arrows denote possible directions of velocity of the output Marbles, the green dotted arrows denote the last segment of the movement of the split-Marbles that are released by the moving-emitter, and the continuous green arrows denote the movement of the input-Marble and the signal-Marble.}
+    \label{fig:splitter}
+\end{figure}
+
+
+
+\subsection{Section conclusion}
+It is beyond the scope of this report to describe a complete implementation of a CPU in \textsc{Nenwin}, but sufficient important components have been described to abstract from the implementations of components, and reason on the (sequential) logical circuit level of abstraction. How to design a CPU with such circuits has been described in many sources, such as \cite{comp_architecture} and \cite{comp_org_design}.
+
+\clearpage

@@ -1,0 +1,25 @@
+\nenwin can simulate a single-bit register (i.e. an off-on switch).
+For this register the following requirements have been made:
+Using an externally created Marble with a certain velocity:
+\begin{enumerate}
+    \item It must be possible to detect the 0 state
+    \item It must be possible to detect the 1 state
+    \item It must be possible to set the bit to 0
+    \item It must be possible to set the bit to 1
+\end{enumerate}
+Points 1 and 2 can be realized if the external Marble, in this case the 'reader-Marble', will be reflected to a predicable direction depending on the state of the bit, which is not the reverse of its original direction. In this case an EaterNode can be placed at a certain distance from the bit, in the direction the writer-Marble will be reflected for the 0 and the 1 state respectively.
+
+Writing the bit is more involved, as experimentation showed that tuning the speed of the external Marble (the 'writer-Marble') required a higher accuracy than numerically possible using standard 64-bit floating point numbers.
+
+It is difficult to provide a formal proof of the bit-register implementation, but an experimentally verified solution will be presented instead. Note that a single example is sufficient to proof a $\exists$-statement, and \textit{under the assumption that our simulation accurately simulates \nenwin}, this implementation should be sufficiently convincing. \hl{Not that I am actually that sure if it really is convncing...}
+
+\subsubsection{Design}
+The bit register is implemented by using three identical 'locker' Nodes arranged in a triangle, using the threshold gravity function with a radius large enough the cover up to the center of the triangle. As a result, there is a local minimum of attraction force in the gravity field in the exact center of the triangle. When using a Marble (the 'bit Marble') with a mass of opposite sign as the locker Nodes, the local neighbourhood of the triangle center will have an gravity force accelerating the bit Marble to the center. If the velocity of the bit Marble is small enough, it will remain in a small oscillation near the center. Experimental evidence supports this finding.
+
+Note that locker Nodes have both their Marble- and Node-stiffness set to 1. The bit Marble has a Marble-stiffness of 1, but a lower Node-stiffness and a nonzero Marble-attraction.
+
+\subsubsection{Reading}
+When the bit is in the state '0', reading is straightforward:
+all that is needed is a MarbleEmitterNode that received the external read command (implemented as a Marble that enters the radius of this Node), and an EaterNode which represents the output of the read operation. The two Nodes will be positioned on opposing sides of the triangle's center. When the MarbleEmitterNode will emit a Marble in direction of the Eater, with a Node-stiffness of 1, it will pass in a straight line to the Eater and become consumed.
+
+To read a node in the state '1', we can use the same MarbleEmitterNode, and give the emitted Marble a Marble-stiffness of 0\footnote{Any value in $[0, 1)$ would suffice}, then its course of direction will be affected by the bit Marble. If the reading Marble approaches the bit in a straight line to the center of the bit it will be recoiled in exactly the opposite direction as it approached, which would result in it being consumed by the Eater that originally emitted it. Instead the line of movement of the reading Marble should be off the center of the bit if the state were '0' (we adjust the position or the radius of the '0' EaterNode accordingly). In this case it will recoil at an angle (whose value is a function of the angle between a straight line from the MarbleEmitterNode and the actual path of the emitted reading Marble). At a sufficient distance from the bit we can now add an EaterNode to register the '1' state

@@ -1,0 +1,39 @@
+For practical applications, input values will not be given as a set of Marbles. A function is needed to map input data to a set of Marbles with a certain location in the \textsc{Nenwin} architecture. The amount of input data and its values are unknown beforehand, so a flexible 'input-placer' function is required such that:
+\begin{enumerate}
+    \item The Marbles it produces are evenly spaced in the \textsc{Nenwin} architecture.
+    \item The structure of the dataset is somehow retained in the mapping.
+\end{enumerate}
+First follows a mathematical approach of 1, after that a method is described of solving 2, and lastly the implementation of these methods.
+
+\subsubsection{Evenly distribution inputs}
+In this section we assume that all input Marbles behave in the same way and that there is no inherent structure in the data. Then the situation is as follows, an (infinite) sequence of coordinates in the domain such that we can pick the first $n$ terms and place the points corresponding to it in a satisfactory way. In mathematical literature this is called a quasi-random sequence and there are many examples.
+
+In \cite{rand_sequences}, an online article discussing this subject, a good method with low discrepancy is introduced using the Kronecker sequence as a starting point and extending the Fibonacci sequence to multiple dimensions. The sequence outlined by the algorithm below results in placing an amount of points in a deterministic manner that reduces the likelihood of clustering (discrepancy) whilst still ensuring that the entire space is uniformly covered (‘blue noise samples’).
+
+The following sequence $R_d(\phi_d)$ with dimension equal to $d$ is described as follows:
+First solve the equation $x^{d+1} = x + 1$, this needs to be done numerically for $d > 4$. The unique positive real solution is called $\phi_d$. Now Let $a = (\frac{1}{\phi_d}, \frac{1}{\phi_d^2}, ..., \frac{1}{\phi_d^d})$ a vector with $d$ dimensions. The points are described by a sequence  of $d$-dimensional points $t_i$ as $t_n = na \mod 1$, which is essentially the fractional part at each place of the vector, a $d$-dimensional vector.
+
+This is currently the best in acquiring low discrepancy, the details can be found in \cite{rand_sequences}, the fact that $\phi = \phi_1$ as found by the Fibonacci sequence is the "most" irrational real number suggests that this sequence might be the absolute best in acquiring low discrepancy.
+
+\subsubsection{Finding $\phi_d$}
+In the methods described above, a solution $\phi_d$ must be found where
+\begin{equation}
+    \phi_d > 0, \quad \phi_d^{d+1} = \phi_d + 1, \quad d \in \mathbb{N}
+\end{equation}
+It is well-known in the literature that $d = 1$ results in the Fibonacci constant, and $d = 2$ in the so-called Plastic constant. The sequence defined as above is called the harmonious sequence and are the same as the limit of
+\begin{equation}
+    F_n = F_{n-d-1} + F_{n-d}.
+\end{equation} In the paper of S. Kak \cite{Meru} these can be found as the numbers corresponding to Meru $2d -1$ on page 6.
+
+In implementation the Newton-Raphson method for finding the $\phi_d$’s is used. For demonstration purposes the list below consist of $\phi_d$ for $1 \leq d \leq 20$ up to $10^{-14}$ accuracy.\\
+$$ [1.61803398874, 1.32471795724, 1.220744084605,  1.167303978261, 1.134724138401, 1.112775684278, $$\ $$1.096981557798, 1.08507024549, 1.075766066086, 1.068297188920, 1.06216916786, 1.057050575221, ]$$
+
+The error analysis follows. The maximum distance between the actual point and the point computed by this method is given by the distance of the vectors which are smaller or equal to $\frac{\sqrt{n}}{\phi_n^n - (\phi_n + \text{error})^n}$. In this case if we replace $\phi_n$ by $\phi_n - e$ (this is done because the exact answer is not known but this gives an estimate): In our case, the error is given by $\frac{\sqrt{20}}{(1.034397396133807 - 10^-14)^{20} - (1.034397396133807 + 2*10^-14)^{20}}$, which is approximately $4 \cdot10^{-12}$. Which is clearly sufficient.
+
+\subsubsection{Input placer program}
+The program below is constructed according to the following structure:
+\begin{itemize}
+    \item Establish dimension and amount of input points 1 up to n.\
+    \item Use stored value of $\phi_d$ to calculate optimal placement of general points in the domain and number them 1 up to i.\ 
+    \item Use a mapping to put input points close in sequence (n) close in the input domain. Start with the bottom-left-most point of the input domain, call it $m_1$ and construct a new sequence of points where $m_{j+1}$ is the closest point to $m_{j}$ not yet in the (m). Then map (n) to (m) bijectively by 1 to 1. We have chosen this method because it seemed sturdy enough to handle multiple dimensions while still being fairly intuitive and simple, there are probably methods which result in better cohesion.\
+\end{itemize}
