@@ -7,11 +7,15 @@ This particular dataset was chosen because it required only few particles to enc
 
 The implementation is available at \url{https://github.com/Nifrec/nenwin} under the open-source AGPL-3.0 licence\cite{AGPL_3}.
 
+Note that these experiments are intended to give an indication of trainability and parameter sensitivity of the \textsc{Nenwin} framework. 
+A full search-space evaluation is beyond the scope of this report (and would require a more optimized implementation).
+
 \subsection{Dataset description}
 The classification task is to classify banknotes as genuine or as forgeries, 
 given four derived features from the images. 
 Class 0 has 762 samples and represent the genuine banknotes,
-class 1 has 610 represents the forgeries.
+class 1 has 610 represents the forgeries. 
+This split is close to a 50\%/50\% split, meaning that random classification would yield an accuracy around 50\%.
 The derived features (of Wavelet-transformed image) have been pre-computed, and are:
 \begin{enumerate}
 	\item Variance
@@ -66,4 +70,53 @@ Same as Architecture A, but with additional Nodes at (2.5, 2.5), (-2.5, 2.5), (2
 
 \subsection{Setup}
 For each experiment, one of the architectures A, B or C was generated, and other hyperparameters were chosen.
-The For each epoch
+In particular, the batch size and the input placer were varied. 
+
+The training procedure used was as follows:
+during each epoch, the samples of the training set are iterated in a random order. 
+Each sample in the training set converted to Marbles by the chosen input placer.
+Then the simulation is run until at least one MarbleEaterNode ate a Marble, 
+or until a maximum number of steps is reached. 
+Then the loss is computed according to \eqref{eq:classification_loss_full},
+and gradients of parameters with respect to this loss are computed via backpropagation.
+Finally the parameters are updated using the Adam optimization technique.
+
+The average gradient is used in case the batch size is larger than 1. 
+The samples are still processed in sequential order, but the gradients of their losses are accumulated.
+The Adam update rule is only used after the last sample in the batch.
+
+Because of practical resource and time constraints, this maximum amount of timesteps was set to only 20 steps, with a stepsize of 0.1. 
+With this configuration it took several hours to train an architecture\footnote{Training was run on a a Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz.}. 
+
+\subsection{Results}
+
+Numerical results of various training-runs have been summarized in Table \ref{table:banknote_exp}. 
+
+\begin{table}[hb]
+	\begin{tabular}{lll|lll}
+		\textbf{Architecture} &
+		\textbf{Timesteps} &
+		\textbf{\begin{tabular}[c]{@{}l@{}}input\\ placer\end{tabular}} &
+		\textbf{\begin{tabular}[c]{@{}l@{}}batch\\ size\end{tabular}} &
+		\textbf{\begin{tabular}[c]{@{}l@{}}validation\\ accuracy\end{tabular}} &
+		\textbf{\begin{tabular}[c]{@{}l@{}}training\\ loss\end{tabular}} \\ \hline
+		A & 20 & VelInputPlacer & 1 & 0.17518 & 20307.7 \\
+		A & 20 & VelInputPlacer & 2 & 0.11679 & \hl{13209.3} \\
+		A & 20 & VelInputPlacer & 5 & 0.05109 & \hl{5320.1} \\
+		B & 20 & VelInputPlacer & 1 & 0.12409 & 24788.9 \\
+		C & 20 & VelInputPlacer & 1 & 0.08029 & 33143.6
+	\end{tabular}
+	\caption{Results of training a \textsc{Nenwin} architecture on the banknote-authentication dataset. Each row represents an independent training run. The accuracy is the total amount of correct predictions divided over the size of the validation set. Absence of output is counted as a wrong prediction. The loss accumulation of losses of the last epoch of the train set.}
+	\label{table:banknote_exp}
+\end{table}
+
+Using the VelInputPlacer appears to providing poor results. A plot of the performance per epoch shows that the training initially makes progress, but converge too quickly to mediocre performance. See Fig. \ref{fig:velinputplacer_performance}. One possible explanation is that the VelInputPlacer gives the input Marbles a high initial velocity in varying directions. With a very limited amount of Nodes the model may not posses the flexibility handle all combinations of initial velocity directions of the Marbles. 
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.4]{figures/A_batch1_velinputplacer.pdf}
+	\caption{Performance of Architecture A as measured during each epoch of training. The VelInptPlacer was used to map the four banknote features to four Marbles. The batch size was 1. Note how the improvement of the accuracy on the validation set already seems to destabilize and cease rapid growth in less than 20 epochs. Given that the decrease in train set loss also flattened out at this time, it would seem unlikely that running more epochs would significantly increase the validation set accuracy.}
+	\label{fig:velinputplacer_performance}
+\end{figure}
+
+\clearpage
