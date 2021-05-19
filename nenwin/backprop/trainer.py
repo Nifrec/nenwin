@@ -161,14 +161,14 @@ class NenwinTrainer:
                 
                 loss = self.__loss_funct(sample.label)
                 loss.backward()
+                epoch_loss += loss.item()
 
                 batch_idx += 1
                 if (batch_idx+1)%batch_size == 0:
                     self.__optim.step()
                     self.__optim.zero_grad()
                     self.__model.clamp_all_particles()
-
-                    epoch_loss += loss.item()
+  
             except Exception as e:
                 print(f"Skipping epoch due to error: {e}")
 
