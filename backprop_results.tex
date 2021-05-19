@@ -7,18 +7,20 @@ This particular dataset was chosen because it required only few particles to enc
 
 The implementation is available at \url{https://github.com/Nifrec/nenwin} under the open-source AGPL-3.0 licence\cite{AGPL_3}.
 
-\subsection{Task description}
+\subsection{Dataset description}
 The classification task is to classify banknotes as genuine or as forgeries, 
 given four derived features from the images. 
 Class 0 has 762 samples and represent the genuine banknotes,
 class 1 has 610 represents the forgeries.
-The derived features have been pre-computed, and are:
+The derived features (of Wavelet-transformed image) have been pre-computed, and are:
 \begin{enumerate}
 	\item Variance
 	\item Skewness
 	\item Kurtosis
 	\item Entropy
 \end{enumerate}
+
+For the experiments, the samples of the dataset were shuffled in a random order and split in a 80\%/10\%/10\% train/validation/test set split. This split was cached and reused for each experiment (i.e. each experiment had the same train, validation and test set).
 
 \subsection{Architectures}
 Three different architectures have been designed and were evaluated. See also Fig. \ref{fig:banknote_architectures}.
@@ -61,3 +63,7 @@ Same as Architecture A, but with additional Nodes at (2.5, 2.5), (-2.5, 2.5), (2
 	\caption{\textsc{Nenwin} Architectures used for training on the banknote dataset.}
 	\label{fig:banknote_architectures}
 \end{figure}
+
+\subsection{Setup}
+For each experiment, one of the architectures A, B or C was generated, and other hyperparameters were chosen.
+The For each epoch
