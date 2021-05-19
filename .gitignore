@@ -1,2 +1,8 @@
 .deprecated/*
 .aux/*
+aux/*
+deprecated/*
+.aux
+.deprecated
+aux
+deprecated
