@@ -55,7 +55,8 @@ class ARCHITECTURES(enum.Enum):
     C = "C"
 
 
-def gen_architecture(which: ARCHITECTURES
+def gen_architecture(which: ARCHITECTURES,
+                     input_placer_type: type = VelInputPlacer
                      ) -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     """
     Generate either architecture A, B or C.
@@ -64,6 +65,11 @@ def gen_architecture(which: ARCHITECTURES
     Arguments:
         * which: indicates which of the three architectures should
             be generated.
+        * input_placer_type: subclass of InputPlacer to be used.
+            Constructor should accept 2 arguments:
+                1. np.ndarray: the lower-left-corner 
+                               position of the input region.
+                2. np.ndarray: the size of the input region.
 
     Returns:
         * Model holding the generated architecture.
@@ -72,16 +78,17 @@ def gen_architecture(which: ARCHITECTURES
     """
 
     if which == ARCHITECTURES.A:
-        return gen_architecture_a()
+        return gen_architecture_a(input_placer_type)
     if which == ARCHITECTURES.B:
-        return gen_architecture_b()
+        return gen_architecture_b(input_placer_type)
     elif which == ARCHITECTURES.C:
-        return gen_architecture_c()
+        return gen_architecture_c(input_placer_type)
     else:
         raise ValueError(f"Unknown architecture label '{which}'")
 
 
-def gen_architecture_a() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
+def gen_architecture_a(input_placer_type: type
+                       ) -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     """
     Generate the following architecture:
         * The input region is at (-2.5, -1) and has size (5, 2)
@@ -111,12 +118,14 @@ def gen_architecture_a() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     eater_nodes = gen_eater_nodes(attraction_function, mass,
                                   radius, eater_positions)
     model = NenwinModel(nodes+eater_nodes)
-    input_placer = VelInputPlacer(input_region_pos, input_region_size)
+
+    input_placer = input_placer_type(input_region_pos, input_region_size)
 
     return model, input_placer, eater_nodes
 
 
-def gen_architecture_b() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
+def gen_architecture_b(input_placer_type: type
+                       ) -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     """
     Same as architecture A, but with four additional Nodes
     (normal Nodes, no MarbleEaterNodes) at:
@@ -146,11 +155,13 @@ def gen_architecture_b() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     eater_nodes = gen_eater_nodes(attraction_function, mass,
                                   radius, eater_positions)
     model = NenwinModel(nodes+eater_nodes)
-    input_placer = VelInputPlacer(input_region_pos, input_region_size)
+    input_placer = input_placer_type(input_region_pos, input_region_size)
 
     return model, input_placer, eater_nodes
 
-def gen_architecture_c() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
+
+def gen_architecture_c(input_placer_type: type
+                       ) -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     """
     Generate the following architecture:
         * The input region is at (0, 0) and has size (6, 1)
@@ -179,6 +190,6 @@ def gen_architecture_c() -> Tuple[NenwinModel, VelInputPlacer, Tuple[Node]]:
     eater_nodes = gen_eater_nodes(attraction_function, mass,
                                   radius, eater_positions)
     model = NenwinModel(nodes+eater_nodes)
-    input_placer = VelInputPlacer(input_region_pos, input_region_size)
+    input_placer = input_placer_type(input_region_pos, input_region_size)
 
     return model, input_placer, eater_nodes
