@@ -100,11 +100,12 @@ Numerical results of various training-runs have been summarized in Table \ref{ta
 		\textbf{\begin{tabular}[c]{@{}l@{}}batch\\ size\end{tabular}} &
 		\textbf{\begin{tabular}[c]{@{}l@{}}validation\\ accuracy\end{tabular}} &
 		\textbf{\begin{tabular}[c]{@{}l@{}}training\\ loss\end{tabular}} \\ \hline
-		A & 20 & VelInputPlacer & 1 & 0.17518 & 20307.7 \\
-		A & 20 & VelInputPlacer & 2 & 0.11679 & \hl{13209.3} \\
-		A & 20 & VelInputPlacer & 5 & 0.05109 & \hl{5320.1} \\
-		B & 20 & VelInputPlacer & 1 & 0.12409 & 24788.9 \\
-		C & 20 & VelInputPlacer & 1 & 0.08029 & 33143.6
+		A & 20 & VelInputPlacer  & 1 & 0.17518 & 20307.7 \\
+		A & 20 & VelInputPlacer  & 2 & 0.13869 & 21173.4 \\
+		A & 20 & VelInputPlacer  & 5 & 0.06569 & 28580.8 \\
+		A & 20 & MassInputPlacer & 1 & 0.0     & 13.5    \\
+		B & 20 & VelInputPlacer  & 1 & 0.12409 & 24788.9 \\
+		C & 20 & VelInputPlacer  & 1 & 0.08029 & 33143.6
 	\end{tabular}
 	\caption{Results of training a \textsc{Nenwin} architecture on the banknote-authentication dataset. Each row represents an independent training run. The accuracy is the total amount of correct predictions divided over the size of the validation set. Absence of output is counted as a wrong prediction. The loss accumulation of losses of the last epoch of the train set.}
 	\label{table:banknote_exp}
