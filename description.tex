@@ -1,7 +1,7 @@
 This section will describe the basic design of the \nenwin scheme. Note that \nenwin represents a class of algorithms, similar to neural networks: each network encodes a different algorithm, but the underlying mechanics are the same. Here the underlying mechanics of \nenwin will be explained.
 
 \subsection{Objects}
-\nenwin is best described by defining a family of objects known as particles. The scheme uses a subspace of $\mathbb{R}^n$, often $n=2$ is used in this report to support visualizations, but any higher dimensionality can be used as well. Each particle has a position, a velocity and an acceleration, which are all vectors in $\mathbb{R}^n$. Each particle has a mass (i.e. a decimal value, \textit{allowed to be negative}) as well, and its acceleration is at any point in governed by Newton's Second Law \cite{principia}:
+\nenwin is best described by defining a family of objects known as particles. The scheme uses a subspace of $\mathbb{R}^n$, often $n=2$ is used in this report to support visualizations, but any higher dimensionality can be used as well. Each particle has a position, a velocity and an acceleration, which are all vectors in $\mathbb{R}^n$. Each particle has a mass (i.e. a decimal value, \textit{allowed to be negative}) as well, and its acceleration is at any point in governed by Newton's Second Law \cite{principia} and a force vector $\vec{f}$:
 \begin{equation}
     p.acc = \frac{1}{p.mass} \sum_{\vec{f} \text{ acting on } p}\vec{f}
 \end{equation}
@@ -11,30 +11,36 @@ Note that these forces can only be caused by other particles. Each particle has 
 \begin{equation}
     \norm{\vec{f}} = \frac{p_1.mass \cdot p_2.mass}{\norm{p_1.pos - p_2.pos}^2}. \label{eq:newton_grav_force}
 \end{equation}
-The direction of the force is the direction from the first particle to the second particle, i.e.
+The direction of the force is the direction from the first particle to the second particle, so the force vector is given by:
 \begin{equation}
     \vec{f} = \frac{p_1.pos - p_2.pos}{\norm{p_1.pos - p_2.pos}} \cdot\frac{p_1.mass \cdot p_2.mass}{\norm{p_1.pos - p_2.pos}^2}. \label{eq:newton_grav_force}
 \end{equation}
 
-Particles are divided into two general subclasses: Nodes and Marbles. Nodes are used to represent an architecture, they are the fixed part of a \nenwin network that encodes an algorithm. Nodes are further subdivided into MarbleEaterNodes and MarbleEmtterNodes, as described later. Marbles represent input and output data, and are created at runtime. Marbles can keep an optional reference to the datum they represent.
+Particles are divided into two general subclasses: Nodes and Marbles. Nodes are used to represent an architecture, they are the fixed part of a \nenwin network that encodes an algorithm. Nodes are further subdivided into MarbleEaterNodes and MarbleEmitterNodes, as described later. Marbles represent input and output data, and are created at runtime. Marbles can keep an optional reference to the datum they represent.
 
-Each particle has attributes \texttt{marble\_stiffness} and \texttt{node\_stiffness}, which act as multipliers for forces exerted upon itself by Marbles and Nodes respectively. Furthermore, there are also the attributes \texttt{marble\_attraction} and \texttt{node\_attraction}, which in a similar way act as multipliers of the force that the current particle exerts onto other Marbles and Nodes respectively. All four of these attributes are real-values in the interval $[0, 1]$. 
+Particles \textit{experience} forces exerted on them by other particles, but also \textit{exert forces onto} other particles. Unlike in classical mechanics, \nenwin does not require these forces to be symmetric. 
+To regulate the \textit{experienced} forces, each particle $p$ has the attributes \texttt{marble\_stiffness} and \texttt{node\_stiffness}. These act as multipliers for experienced forces, and are required to be real values in $[0, 1]$.
+The forces that each particle $p$ exerts onto other particles, is regulated in a similar way: $p$ has two attributes\texttt{marble\_attraction} and \texttt{node\_attraction}, act as multipliers of the force that $p$ exerts onto other particles. Also these attributes must be real values in $[0, 1]$. 
 
 To summarize, the motion of a particle $p$ is described by the following differential equations:
 \begin{align}
-    p.pos &= p.pos_0 + \nabla p.pos \cdot t  = p.pos_0 + p.vel \cdot t \label{eq:def_pos} \\
-    p.vel &= p.vel_0 + \nabla p.vel \cdot t = p.vel_0 + p.acc \cdot t \label{eq:def_vel}\\
-    \vec{f}_{net} & = \texttt{marble\_stiffness} \cdot \sum_{\text{Mables $m$ acting on $p$}} \frac{p.mass \cdot m.mass}{\norm{p.pos - m.pos}^2} \nonumber \\
-    & + \texttt{node\_stiffness} \cdot \sum_{\text{Nodes $n$ acting on $p$}} \frac{p.mass \cdot n.mass}{\norm{p.pos - n.pos}^2} \label{eq:def_f_net}\\
-    p.acc &= \frac{\vec{f}_{net}}{p.mass} \label{eq:def_acc}
+    &p.pos = p.pos_0 + \nabla p.pos \cdot t  = p.pos_0 + p.vel \cdot t \label{eq:def_pos} \\
+    &p.vel = p.vel_0 + \nabla p.vel \cdot t = p.vel_0 + p.acc \cdot t \label{eq:def_vel}\\
+    &\vec{f}_{net}  = \texttt{marble\_stiffness} \cdot \sum_{\text{Mables $m$ acting on $p$}} \frac{p.mass \cdot m.mass}{\norm{p.pos - m.pos}^2} \nonumber \\
+    & \qquad + \texttt{node\_stiffness} \cdot \sum_{\text{Nodes $n$ acting on $p$}} \frac{p.mass \cdot n.mass}{\norm{p.pos - n.pos}^2} \label{eq:def_f_net}\\
+    &p.acc = \frac{\vec{f}_{net}}{p.mass} \label{eq:def_acc}
 \end{align}
-Where $t$ denoted the amount of time passed, and $p.pos_0$ and $p.vel_0$ the initial position and velocity respectively of the particle when it was created.
-Note that the acceleration of $p$ depends on its relative position with respect to other Marbles and Nodes (the denominators in \eqref{eq:def_f_net} are distance measures), which depend on the value of $p.pos$ and the motion of other values. Hence $p.pos$, $p.val$ and $p.acc$ are highly dependent on the other particles in a \textsc{Nenwin} model, and can vary at infinitesimally small change in time.
+Where $t$ denotes the amount of time passed, and $p.pos_0$ and $p.vel_0$ the initial position and velocity respectively of the particle when it was created.
+The acceleration of $p$ depends the forces $p$ experiences. These forces are a function of $p$'s relative distances to other Marbles and Nodes (the denominators in \eqref{eq:def_f_net} are distance measures). These distances depend on the value of $p.pos$ and the motion of other particles. Hence $p.pos$, $p.val$ and $p.acc$ are highly dependent on the other particles in a \textsc{Nenwin} model, and can change significantly even when only an very small amount of time passes.
 
-To enable output production, a special subclass of Node called the MarbleEaterNode is used: this class stores an additional real-valued radius. When, in the simulation, the distance between a Marble and a MarbleEaterNode becomes less than the radius of the MarbleEaterNode, then the Marble will be removed from the simulation, as it was 'eaten' by the MarbleEaterNode. The MarbleEaterNode keeps a count of the amount of Marbles consumed, and a set of references to the associated data of the consumed Marble's.
+To enable output production, a special subclass of Node called the MarbleEaterNode is used: this class stores an additional real-valued radius. When, in the simulation, the distance between a Marble and a MarbleEaterNode becomes smaller than the radius of the MarbleEaterNode, then the Marble will be removed from the simulation: it was 'eaten' by the MarbleEaterNode. The MarbleEaterNode keeps both a count of the amount of Marbles consumed, and a set of references to the associated data of the consumed Marbles.
 
 \subsection{Motivation Emitter Nodes}
-Turing Machines can create entropy on their tape. As a simple example, consider a simple Turing Machine that has only a single state, writes the same symbol (e.g. '1') every step, and moves the head left every step. If this machine is given an blank tape (i.e. all cells contain the empty symbol '$\Box$'), and set to run for $n \rightarrow \infty$ steps, then the resulting tape will approach a tape with half of the cells blank, and the other half carrying the symbol '1'. The entropy of the blank tape is 1, as the probability that a cell is blank is 1. The tape will approach an entropy of $\infty$ when $n \rightarrow \infty$, as for each tape cell with index $i$ we have:
+\nenwin will have a nonincreasing amount of particles if only Marbles, Nodes and MarbleEaterNode would be used.
+Marbles can be removed when eaten by a MarbleEaterNode, but the there is no internal way the system can produce new Marbles (other than awaiting new input).
+This would imply that the amount of information that can be stored in a \nenwin simulation is also nonincreasing in a \nenwin architecture.
+
+Turing Machines, on the other hand, can \textit{increase} the information stored on their tape. As a simple example, consider a simple Turing Machine that has only a single state, writes the same symbol (e.g. '1') every step, and moves the head left every step. If this machine is given an blank tape (i.e. all cells contain the empty symbol '$\Box$'), and set to run for $n \rightarrow \infty$ steps, then the resulting tape will approach a tape with half (the cells left of the starting position) of the cells blank, and the other half carrying the symbol '1'. The entropy of the blank tape is 0, as the probability that a cell is blank is 1. The tape will approach an entropy of $\infty$ when $n \rightarrow \infty$, as for each tape cell with index $i$ we have:
 \begin{equation}
     entropy(Tape[i]) = -\sum_{x \in \{\Box, 1\}}p(Tape[i] == x)\cdot\log_2(p(Tape[i] == x)) = 1
 \end{equation}
