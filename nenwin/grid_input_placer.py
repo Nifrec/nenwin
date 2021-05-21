@@ -159,7 +159,7 @@ class MassGridInputPlacer(GridInputPlacer):
 
 class NoGradMassGridInputPlacer(MassGridInputPlacer):
     """
-    Same as MassGridInputPlaces, but sets .requires_grad() to False
+    Same as MassGridInputPlacer, but sets .requires_grad() to False
     for all generated Marbles.
     """
 
@@ -170,6 +170,29 @@ class NoGradMassGridInputPlacer(MassGridInputPlacer):
             marble.requires_grad_(False)
         return output
 
+class ConstVelMassInputPlacer(GridInputPlacer):
+    """
+    Same as MassInputPlacer, but with a configurable
+    constant velocity given to each Marble.
+    """
+
+    def __init__(self, input_pos: np.ndarray, 
+                       input_region_sizes: np.ndarray,
+                       marble_vel: torch.Tensor | np.ndarray):
+        super().__init__(input_pos, input_region_sizes)
+        self.marble_vel = torch.tensor(marble_vel, dtype=torch.float)
+
+    def _map_value_to_mass(self, value: float) -> float:
+        """
+        Hook method used by marblelize_data()
+        to find the *mass* of the Marble
+        that is to be associated with with a certain entry (value)
+        in the given input_data.
+        """
+        return value
+
+    def _map_value_to_vel(self, value: float) -> torch.Tensor:
+        return self.marble_vel
 
 class VelInputPlacer(GridInputPlacer):
     """
