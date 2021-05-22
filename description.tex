@@ -45,19 +45,20 @@ Turing Machines, on the other hand, can \textit{increase} the information stored
 \subsection{EmitterNode}
 To make \nenwin able to increase the amount of information, we define an additional particle called the EmitterNode (or, more specifically, a MarbleEmitterNode\footnote{Note that there is no theoretical objection against creating EmitterNodes that emit other Nodes, other than the fact that EaterNodes cannot eat each other at the same time.}). This Node will create another particle at its own position when a certain condition is met.
 
-There are many different ways to choose the exact behaviour of EmitterNodes, but in this paper we use the following:
+There are many different ways to choose the exact behaviour of MarbleEmitterNodes, but in this paper we use the following:
 \begin{itemize}
-    \item An EmitterNode is a special case of a MarbleEaterNode, and tracks also the cumulative mass of Marbles it has consumed in a field \texttt{stored\_mass}.
-    \item The EmitterNode can only create Marbles with predefined parameters (mass, initial velocity, etc.) at its own position.
-    \item At a fixed time interval, the EmitterNode will create a new Marble and subtract its mass from \texttt{stored\_mass}, unless \texttt{stored\_mass} is smaller than the mass of the would-be created Marble. \\
-    In case the mass of the Marble is negative, it will only be created as long as the \texttt{stored\_mass} is \textit{at most} the value of the mass of the Marble (i.e. also negative with a magnitude at least as great as the mass of the Marble).
-    \item The created Marble must be within the radius or at an infinitesimal distance from the border of the radius of the EmitterNode. In case the Marble is within the radius it will be consumed immediately, hence only the infinitesimal distance is practical. In implementation, where infinitesimal numbers cannot be represented, a small constant $\epsilon$ can be defined such that we require (if $emitter$ is the EmitterNode that creates Marble $m$):
+    \item A MarbleEmitterNode is a special case of a MarbleEaterNode, and tracks also the cumulative mass of Marbles it has consumed in a field \texttt{stored\_mass}.
+    \item The MarbleEmitterNodes can only create Marbles with predefined parameters (mass, initial velocity, etc.) \textit{near} its own position.
+    \item At a fixed time interval, the MarbleEmitterNode will create a new Marble and subtract its mass from \texttt{stored\_mass}, unless \texttt{stored\_mass} is smaller than the mass of the would-be created Marble. \\
+    In case the mass of the Marble is negative, it will only be created as long as the \texttt{stored\_mass} is \textit{at most} the value of the mass of the Marble (i.e. the \texttt{stored\_mass} is also negative, and has a magnitude at least as great as the magnitude of the mass of the Marble).
+    \item The created Marble must be within the radius or at an infinitesimal distance from the border of the radius of the MarbleEmitterNode. In case the Marble is within the radius it will be consumed immediately, hence only the infinitesimal distance is a practical option. In implementation, where infinitesimal numbers cannot be represented, a small constant $\epsilon > 0$ can be defined such that we require (if $emitter$ is the MarbleEmitterNode that creates Marble $m$):
     \begin{align}
-        \epsilon > 0 \quad \land \quad distance(emitter.pos, m.pos) \leq emitter.radius + \epsilon
+        emitter.radius < distance(emitter.pos, m.pos) \leq emitter.radius + \epsilon
     \end{align}
+	(More informally, MarbleEmitterNodes may only emit Marbles as close to the circumference of their radius as possible, but without immediately eating the Marble again).
 \end{itemize}
 
-To see how EmitterNodes can be used to create any arbitrary amount of entropy, consider an EmitterNode that generates Marbles with infinitesimally small mass, or even 0 mass. After eating a Marble with a finite mass, it will be able to generate infinitely many new Marbles. Each of these new Marbles can take on a unique positions, if a dynamic system guides their movement, since they are not created at the same moment. Hence an infinite entropy can be created.
+To see how EmitterNodes can be used to create any arbitrary amount of entropy, consider an EmitterNode that generates Marbles with infinitesimally small mass, or even 0 mass. After eating a Marble with a finite mass, it will be able to generate infinitely many new Marbles. If a dynamic system guides the movement of the Marbles, then each can eventually take on a unique position (since they are not created at the same moment, and the system is dynamic, they will follow a different path). Any information can be encoded in the distribution of these Marbles, which implies that the amount of information in the simulation can be increased in the same way as a Turing Machine can increase the information on its tape.
 
 See \ref{fig:particles_class_diagram} for a diagram the complete particle hierarchy. 
 
@@ -69,7 +70,7 @@ See \ref{fig:particles_class_diagram} for a diagram the complete particle hierar
 \end{figure}
 
 \subsection{Particle attributes}
-An overview of the different attributes per particle subclass is given in Table \ref{table:attributes} 
+An overview of the different attributes per particle subclass is given in Table \ref{table:attributes}.
 
 \begin{table}[h]
 \begin{tabular}{llllll}
@@ -90,12 +91,21 @@ An overview of the different attributes per particle subclass is given in Table 
 \multicolumn{1}{l|}{\texttt{prototype\_marble}}    & \multicolumn{1}{l|}{Marble}         &   &   &   & \checkmark
 \end{tabular}
 \caption{A summary of different attributes used by different particles. $\mathcal{P}$ is used to denote the set of all particles in a given architecture. Here \texttt{pos}, \texttt{vel} and \texttt{acc} are the position, velocity and acceleration of a particle, which are real vectors defined in $\mathbb{R}^n$ where $n$ is the dimensionality of the architecture. The stiffness and attraction values are real numbers in the interval $[0, 1]$. The attraction function maps two particles to a vector of the same shape as \texttt{acc}. The \texttt{datum} is any data-element that a Marble represents, and this attribute is allowed to be valueless. \texttt{eaten\_marbles} is a stack of all Marbles a MarbleEaterNode (or its subclass, a MarbleEmitterNode) has consumed, with the latest consumed Marble on top of the stack. This stack is allowed to be empty. The \texttt{radius} of a MarbleEaterNode is the maximum distance such that, if a Marble is at this distance or at a smaller distance to the MarbleEaterNode, it will be consumed. The \texttt{stored\_mass} is the cumulative mass of the Marbles in \texttt{eaten\_marbles} of a MarbleEmitterNode, minus the cumulative mass of emitted Marbles. This value is allowed to be negative, which is required to emit negatively-massed Marbles. The \texttt{spawnpos} is the relative position from the center of an MarbleEmitterNode at which a Marble can be created when emitted, this point is at most \texttt{radius} + $\varepsilon$ away from the center of the MarbleEmitterNode, where $\varepsilon$ is an infinitesimal number. The prototype Marble is a 'blueprint' of the Marble that is emitted: all its attributes are copied to a new Marble that is being emitted, except the position (which is governed by the combination of the position of the MarbleEmitterNode and \texttt{spawnpos}), the velocity and the acceleration (which are set to $\vec{0}$).}
-\label{table:attribute}
+\label{table:attributes}
 \end{table}
 
 \clearpage
-\subsection{Pseudocode}
-See Algorithm \ref{alg:Nenwin_V1} below for a pseudo-code description how a \nenwin network is being simulated. Note that in implementation the functionality will be subdivided into different modules. It is for example equally fast, but from an Object-Oriented point of view preferable, to first create Marble instances for new inputs and then sending them over the channel rather than sending the raw data itself.
+\subsection{AI application}
+\nenwin is designed to fulfil the role of a decision-making agent, for example as an alternative to neural networks in reinforcement learning or classification tasks. Besides the particle simulation, this would also require the system to receive input and produce output. 
+
+For example, if a \nenwin simulation is used as an agent to play a game, say chess, then it must be able to perceive the current state of the game, and to choose a move to make. As for another example, if a \nenwin simulation is used for an image classification task, then it must be able to read the images, and output a predicted class.
+
+Adding inputs is straightforward: a region in $\mathbb{R}^D$ (where $D$ is the chosen dimensionality of the \nenwin architecture) is chosen as the \textit{input region} $R$. If input datapoints are given in $\mathbb{R}^n$, then one can define a function that maps $\mathbb{R}^n$ to a set of Marbles located in $R$. The inputs can be stored in an bi-directional input/output buffer, called a \textit{channel}. The simulation will then check the channel each timestep, and map any data in the channel to Marbles, and insert these into the simulation.
+
+To produce output, MarbleEaterNodes are used. At each timestep, the simulation outputs a vector containing a natural number for each present MarbleEaterNode into the output of the channel. This natural number encodes the total number of Marbles eaten by each MarbleEaterNode. For even more detailed output, one can allow external functions to read the exact set of Marbles eaten by each MarbleEaterNode. This latter extension was used for classification training described in a later section.
+
+\subsubsection{Simulation}
+See Algorithm \ref{alg:Nenwin_V1} below for a pseudo-code description how a \nenwin network is being simulated, including input-output handling. Note that in implementation the functionality will be subdivided into different modules. It is for example equally fast, but from an Object-Oriented point of view preferable, to first create Marble instances for new inputs and then sending them over the channel rather than sending the raw data itself. This does not affect the behaviour of the algorithm.
 
 \begin{algorithm}[h]
 	\label{alg:Nenwin_V1}
