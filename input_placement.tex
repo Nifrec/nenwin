@@ -1,11 +1,14 @@
-Marbles are used to represent input data, which can either be tabular data, an image, a stream of sound or video, etc.
-From the algorithm's side, as described in \ref{alg:Nenwin_V1}, 
+Marbles are used to represent input data, which can for example be tabular data, an image, a stream of sound or video, etc.
+From the algorithm's side,
 this simply means that a new set of Marbles can be added to the simulation at each timestep.
-However, it is required to map the input data (together with a designated \textit{input region}) to a set of Marbles first, by means of an \textit{input placer}.
-This can be done in very many ways. For example, a datapoint could be used to generate a single Marble, in which the datum is mapped to an attribute of the Marble, such as the position, the mass, the velocity, etc.. It is also possible to use information multiple datapoints to create a single Marble. Furthermore, it is also possible to define a trainable input placer, which can be optimized using marchine learning techniques.
+However, it is required to map the input data (together with a designated \textit{input region}) to a set of Marbles first, by means of an function called an \textit{input placer}.
+Such input placers could be defined in many different ways. 
+For example, a datapoint could be used to generate a single Marble, in which the datum is mapped to an attribute of the Marble, such as the position, the mass, the velocity, etc..
+It is also possible to use information multiple datapoints to create a single Marble.
+Furthermore, it is also possible to define a trainable input placer, which can be optimized using machine learning techniques.
 
-It was chosen to use an input placer (the "GridInputPlacer") that simply spreads the Marbles evenly in a grid over the input region (in order of the input vector, from left to right, top to bottom). This input placer creates a Marble for each datapoint.
-Note that this choice is rather arbitrary: as of current there are no arguments why aligning the Marbles in another pattern (such as on a circle) would be less effective.
+It was chosen to use an input placer (the "GridInputPlacer") that simply spreads the Marbles evenly in a two-dimensional grid over the input region (in order of the input vector, from left to right, top to bottom). This grid-placement generalizes to higher dimensions. The GridInputPlacer creates a Marble for each datapoint at a unique grid-point.
+Note that this choice is rather arbitrary: as of current there are no arguments why aligning the Marbles in another pattern (such as on a circle) would be less suitable for AI applications.
 
 Two variants of the GridInputPlacer were used:
 \begin{itemize}
