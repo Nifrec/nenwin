@@ -24,6 +24,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Simple function to plot a Nenwin model using Matplotlib.
 """
+from __future__ import annotations
+
 import torch
 import torch.nn
 import matplotlib.pyplot as plt
@@ -34,18 +36,25 @@ from typing import Tuple
 from nenwin.model import NenwinModel
 
 
-def plot_model(model: NenwinModel) -> Tuple[Figure, Axes]:
+def plot_model(model: NenwinModel, ax: Axes = None
+               ) -> Tuple[Figure, Axes] | None:
     """
     Plot the particles of a NenwinModel in a Matplotlib graph.
     Each Node will be rendered as an orange dot,
     and each Marble as a green dot.
     Only supports models where the position of particles is two-dimensional.
+
+    Returns a new Matplotlib Figure and Axes containing the resulting plot.
+    Alternatively, an axis can be provided to which the plot will be added.
     """
 
     partiles = set(model.nodes)
     partiles.update(model.marbles)
 
-    fig, ax = plt.subplots(1, 1)
+    ax_provided = True
+    if ax is None:
+        ax_provided = False
+        fig, ax = plt.subplots(1, 1)
 
     for node in model.nodes:
         assert torch.numel(node.pos) == 2
@@ -75,4 +84,5 @@ def plot_model(model: NenwinModel) -> Tuple[Figure, Axes]:
     ax.set_xlabel("$x \\rightarrow$")
     ax.set_ylabel("$y \\rightarrow$")
 
-    return fig, ax
+    if not ax_provided:
+        return fig, ax
