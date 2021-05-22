@@ -25,18 +25,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Simple function to plot a Nenwin model using Matplotlib.
 """
 from __future__ import annotations
+from matplotlib import patches
 
 import torch
 import torch.nn
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from typing import Tuple
+from typing import Optional, Sequence, Tuple
+import numpy as np
 
 from nenwin.model import NenwinModel
 
 
-def plot_model(model: NenwinModel, ax: Axes = None
+def plot_model(model: NenwinModel,
+               ax: Optional[Axes] = None,
+               input_region: Optional[Sequence[np.ndarray, np.ndarray]] = None
                ) -> Tuple[Figure, Axes] | None:
     """
     Plot the particles of a NenwinModel in a Matplotlib graph.
@@ -46,6 +50,18 @@ def plot_model(model: NenwinModel, ax: Axes = None
 
     Returns a new Matplotlib Figure and Axes containing the resulting plot.
     Alternatively, an axis can be provided to which the plot will be added.
+
+    Arguments:
+        * model: the Nenwin model to visualize
+        * [optional] ax: matplotlib.Axis instance to draw the plot on
+        * [optional] input_region: sequence describing 
+            the input region as [(x_pos, y_pos), (width, height)].
+            If None provided (default), then no input-region will be drawn.
+
+    Returns:
+        * (Figure, Axis), matplotlib objects holding the plot. 
+        * None, if the "ax" argument is provided.
+
     """
 
     partiles = set(model.nodes)
@@ -75,14 +91,29 @@ def plot_model(model: NenwinModel, ax: Axes = None
         marbles, = ax.plot(
             point_coords[0], point_coords[1], ".", color="lime", markersize=10)
 
-    if model_has_marbles:
-        ax.legend([nodes, (nodes, eaters), marbles],
-                  ["Nodes", "MarbleEaterNodes", "Marbles"])
-    else:
-        ax.legend([nodes, (nodes, eaters)], ["Nodes", "MarbleEaterNodes"])
-
     ax.set_xlabel("$x \\rightarrow$")
     ax.set_ylabel("$y \\rightarrow$")
+
+    if input_region:
+        rect = patches.Rectangle(input_region[0],
+                                 input_region[1][0],
+                                 input_region[1][1],
+                                 lw=2,
+                                 facecolor="#ff250080", # Transparent red
+                                 edgecolor="#ff2500") # Red
+        ax.add_patch(rect)
+
+    if model_has_marbles and input_region:
+        ax.legend([nodes, (nodes, eaters), marbles, rect],
+                  ["Nodes", "MarbleEaterNodes", "Marbles", "Input region"])
+    elif model_has_marbles:
+        ax.legend([nodes, (nodes, eaters), marbles],
+                  ["Nodes", "MarbleEaterNodes", "Marbles"])
+    elif input_region:
+        ax.legend([nodes, (nodes, eaters), rect],
+                  ["Nodes", "MarbleEaterNodes", "Input region"])
+    else:
+        ax.legend([nodes, (nodes, eaters)], ["Nodes", "MarbleEaterNodes"])
 
     if not ax_provided:
         return fig, ax
