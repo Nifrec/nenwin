@@ -100,16 +100,21 @@ An overview of the different attributes per particle subclass is given in Table 
 
 For example, if a \nenwin simulation is used as an agent to play a game, say chess, then it must be able to perceive the current state of the game, and to choose a move to make. As for another example, if a \nenwin simulation is used for an image classification task, then it must be able to read the images, and output a predicted class.
 
-Adding inputs is straightforward: a region in $\mathbb{R}^D$ (where $D$ is the chosen dimensionality of the \nenwin architecture) is chosen as the \textit{input region} $R$. If input datapoints are given in $\mathbb{R}^n$, then one can define a function that maps $\mathbb{R}^n$ to a set of Marbles located in $R$. The inputs can be stored in an bi-directional input/output buffer, called a \textit{channel}. The simulation will then check the channel each timestep, and map any data in the channel to Marbles, and insert these into the simulation.
+Adding inputs is straightforward: a region in $\mathbb{R}^D$ (where $D$ is the chosen dimensionality of the \nenwin architecture) is chosen as the \textit{input region} $R$. If input datapoints are given in $\mathbb{R}^n$, then one can define a function (an \textit{input placer}) that maps $\mathbb{R}^n$ to a set of Marbles located in $R$. The inputs can be stored in an bi-directional input/output buffer, called a \textit{channel}. The simulation will then check the channel each timestep, and map any data in the channel to Marbles, and insert these into the simulation.
 
-To produce output, MarbleEaterNodes are used. At each timestep, the simulation outputs a vector containing a natural number for each present MarbleEaterNode into the output of the channel. This natural number encodes the total number of Marbles eaten by each MarbleEaterNode. For even more detailed output, one can allow external functions to read the exact set of Marbles eaten by each MarbleEaterNode. This latter extension was used for classification training described in a later section.
+To produce output, MarbleEaterNodes are used. At each timestep, the simulation outputs a vector containing a natural number for each present MarbleEaterNode into the output of the channel. These natural numbers encode the total number of Marbles eaten by each MarbleEaterNode. This vector can, for example, be interpreted as a one-hot encoding for classification (it contains only one '1' when read as soon as the first Marble has been eaten).
+For even more detailed output, one can allow external functions to read the exact set of Marbles eaten by each MarbleEaterNode. This latter extension was used for classification training described in a later section.
+
+\subsubsection{Input Placement}
+\input{input_placement}
 
 \subsubsection{Simulation}
-See Algorithm \ref{alg:Nenwin_V1} below for a pseudo-code description how a \nenwin network is being simulated, including input-output handling. Note that in implementation the functionality will be subdivided into different modules. It is for example equally fast, but from an Object-Oriented point of view preferable, to first create Marble instances for new inputs and then sending them over the channel rather than sending the raw data itself. This does not affect the behaviour of the algorithm.
+See Algorithm \ref{alg:Nenwin_V1} below for an abstract pseudocode description how a \nenwin can be simulated. This pseudocode includes input-output handling. Note that in implementation the functionality will be subdivided into different modules. 
+It is for example equally fast, but from an Object-Oriented point of view preferable, to first create Marble instances for new inputs and then sending them over the channel rather than sending the raw data itself. This does not affect the behaviour of the algorithm.
 
 \begin{algorithm}[h]
-	\label{alg:Nenwin_V1}
 	\caption{\\\textsc{Nenwin}\textnormal{\texttt{(nodes, input\_space, placement\_function, mass\_function, channel, attraction\_function)}}}
+	\label{alg:Nenwin_V1}
 	\newcommand{\dataStyle}[1]{\textbf{\texttt{#1}}}
 	\SetAlgoLined
 	\SetKwSty{texttt}
@@ -117,7 +122,7 @@ See Algorithm \ref{alg:Nenwin_V1} below for a pseudo-code description how a \nen
 	% Setup variables
 	\SetKwData{nodes}{nodes}
 	\SetKwData{input}{input\_space}
-	\SetKwData{placement}{placement\_function}
+	\SetKwData{placement}{input\_placer}
 	\SetKwData{channel}{channel}
 	\SetKwData{node}{Node}
 	\SetKwData{grav}{attraction\_function}
@@ -126,12 +131,11 @@ See Algorithm \ref{alg:Nenwin_V1} below for a pseudo-code description how a \nen
 	\SetKwData{emitters}{emitter\_nodes}
 	% Input and output
 	\KwIn{
-		\nodes: A set of \node objects, each having a position, velocity and acceleration in $\mathbb{R}^n$ and a stiffness and a mass in $\mathbb{R}$.\\
-		\input: A rectangular region of $\mathbb{R}^n$.\\
-		\placement: A function: $\mathbb{N} \rightarrow \input$ that maps the index of an element in input to a position in \input.\\
-		\mass: A function: $object \rightarrow \mathbb{R}$ that maps any datum to a mass-value.\\
-		\channel: A bi-directional communication channel (of finite capacity) over which any finite bit sequences can be sent.\\
-		\grav: A function: $\mathbb{R}^3 \rightarrow \mathbb{R}$ that maps the masses of two particles plus their distance to an attraction force.		
+		\nodes: A set of \node objects, each having a position, velocity and acceleration in $\mathbb{R}^D$ and a stiffness and a mass in $\mathbb{R}$.\\
+		\input: A (hyperrectangular) subspace of $\mathbb{R}^D$.
+		\placement: A function that maps input vectors (in $\mathbb{R}^n$) to Marbles located in \input.\\
+		\channel: A bi-directional communication channel over which any finite real-valued vectors can be sent.\\
+		\grav: A function that maps two Marbles (usually using their masses and their relative distance) to an attraction force vector.		
 	}
 	\KwOut{\texttt{None}}
 	$particles \leftarrow \nodes$ \;
@@ -140,15 +144,8 @@ See Algorithm \ref{alg:Nenwin_V1} below for a pseudo-code description how a \nen
 	$\emitters \leftarrow [node: node \in \nodes \land node \text{ is a } \textsc{MarbleEmitterNode}]$ \;
 	\While{\texttt{True}}{
 		\If{there is input on the channel}{
-			\For{$(object, index) \in \channel$}{
-				$position \leftarrow \placement(index)$ \;
-				$mass \leftarrow \mass(object)$ \;
-				$velocity \leftarrow \vec{0}$ \;
-				$acceleration \leftarrow \vec{0}$ \;
-				$node\_stiffness, marble\_stiffness, marble\_attraction \rightarrow 0$ \;
-				$node\_attraction \rightarrow 1$ \;
-				$particles \leftarrow particles \cup \{\texttt{Marble}(position, velocity, acceleration, mass, $
-				$node\_stiffness, marble\_stiffness, marble\_attraction, node\_attraction)\}$
+			\For{$\vec{v} \in \channel$}{
+				$particles \leftarrow particles \cup \{\placement(\vec{v})\}$\;
 			}
 		}
 		\If{there is an output request on the channel}{
@@ -158,43 +155,28 @@ See Algorithm \ref{alg:Nenwin_V1} below for a pseudo-code description how a \nen
 			}
 			Place $output$ on the channel \;
 		}
-		\For{$particle \in particles$}{
-			$forces \leftarrow 0$ \;
-			\For{$other \in particles \setminus \{particle\}$}{
-				$difference \leftarrow other.pos - particle.pos$ \;
-				$direction \leftarrow \frac{difference}{\norm{difference}}$ \;
-				$forces += direction \cdot \grav(particle.mass, other.mass, \norm{\norm{difference}})$
-			}
+		\For{$p \in particles$}{
+			$\vec{f} \leftarrow \sum_{o \in particles \setminus\{p\}} \frac{o.pos - p.pos}{\doublenorm{o.pos - p.pos}} \cdot \grav(p, o)$ \;
 			\tcc{Newton's Second Law}
-			$particle.acc \leftarrow particle.mass \cdot forces$ \;
+			$p.acc \leftarrow p.mass \cdot \vec{f}$ \;
 		}
-		\For{$emitter \in \emitters$}{
-		    \If{$\norm{emitter.stored\_mass} \geq \norm{emitter.prototype\_marble.mass} \land \sgn{emitter.stored\_mass} = \sgn{emitter.prototype\_marble.mass}$}{
-		    $particles \leftarrow particles \cup (\text{a copy of $emitter.prototype\_marble$ at position $emitter.pos + emitter.spawnpos$})$
+		\For{$e \in \emitters$}{
+		    \If{$\norm{e.stored\_mass} \geq \norm{e.prototype\_marble.mass} \land \sgn{e.stored\_mass} = \sgn{e.prototype\_marble.mass}$}{
+		    $particles \leftarrow particles \cup (\text{a copy of $e.prototype\_marble$ at position $e.pos + e.spawnpos$})$
 		    }
 		}
 		\For{$particle \in particles$}{
-			Numerically compute and update $particle$'s next position and velocity given their current acceleration. \;
+			Compute and update $particle$'s next position and velocity given their current acceleration (using numerical integration). \;
 		}
-		$\dots$ \;
+		\For {$marble \in particles \setminus nodes$}{
+			\For{$node \in \eaters$}{
+				\If{$distance(marble.pos, node.pos) \leq node.radius$}{
+					$particles \leftarrow particles \setminus \{marble\}$ \;
+					$node.stored\_mass \leftarrow node.stored\_mass + marble.mass$ \; $node.eaten\_marbles \leftarrow node.eaten\_marble \cup \{marble\}$\;
+				}
+			}
+		}
 		}
 \end{algorithm}
 
-\begin{algorithm}
-    \setcounter{AlgoLine}{30}
-    \SetKwData{eaters}{eater\_nodes}
-    \SetKwBlock{Begin}{$\dots$}{end}
-    
-    \SetAlgoVlined
-    \SetAlgoLined
-    \Begin{\For {$marble \in particles \setminus nodes$}{
-		    \For{$node \in \eaters$}{
-			    \If{$distance(marble.pos, node.pos) \leq node.radius$}{
-			        $particles \leftarrow particles \setminus \{marble\}$ \;
-			        $node.stored\_mass \leftarrow node.stored\_mass + marble.mass$ \; $node.eaten\_marbles \leftarrow node.eaten\_marble \cup \{marble\}$\;
-			        }
-			    }
-			    }
-		}
-\end{algorithm}
 \clearpage
