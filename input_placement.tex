@@ -12,7 +12,7 @@ Note that this choice is rather arbitrary: as of current there are no arguments 
 
 Two variants of the GridInputPlacer were used:
 \begin{itemize}
-	\item MassInputPlacer: maps each datapoint to a Marble, whose mass is set to the value of the datapoint. The velocity is set to $\vec{0}$.
+	\item MassInputPlacer: maps each datapoint to a Marble, whose mass is set to the value of the datapoint. The initial velocity is by default set to $\vec{0}$. When another velocity vector $\vec{v}$ is used, the notation MassInputPlacer$(\vec{v})$ will be used.
 	\item VelInputPlacer: maps each datapoint to a Marble, whose velocity is set to a vector of which each element equals the value of the datapoint. It sets the mass of each Marble to 1.0.
 \end{itemize}
 
