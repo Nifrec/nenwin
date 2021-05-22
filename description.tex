@@ -40,18 +40,12 @@ To enable output production, a special subclass of Node called the MarbleEaterNo
 Marbles can be removed when eaten by a MarbleEaterNode, but the there is no internal way the system can produce new Marbles (other than awaiting new input).
 This would imply that the amount of information that can be stored in a \nenwin simulation is also nonincreasing in a \nenwin architecture.
 
-Turing Machines, on the other hand, can \textit{increase} the information stored on their tape. As a simple example, consider a simple Turing Machine that has only a single state, writes the same symbol (e.g. '1') every step, and moves the head left every step. If this machine is given an blank tape (i.e. all cells contain the empty symbol '$\Box$'), and set to run for $n \rightarrow \infty$ steps, then the resulting tape will approach a tape with half (the cells left of the starting position) of the cells blank, and the other half carrying the symbol '1'. The entropy of the blank tape is 0, as the probability that a cell is blank is 1. The tape will approach an entropy of $\infty$ when $n \rightarrow \infty$, as for each tape cell with index $i$ we have:
-\begin{equation}
-    entropy(Tape[i]) = -\sum_{x \in \{\Box, 1\}}p(Tape[i] == x)\cdot\log_2(p(Tape[i] == x)) = 1
-\end{equation}
-As there are infinite tape cells, the entropy of the whole tape will approach $\infty$. Hence a Turing Machine can create any arbitrary amount of entropy in its 'working memory'.
-
-The \nenwin scheme so far described is not able to create any arbitrary amount of entropy. There is only a finite amount of information (and hence entropy) that can be encoded in a finite set of particles.
+Turing Machines, on the other hand, can \textit{increase} the information stored on their tape. For example, consider a Turing machine that writes down all binary numbers, starting with 0. Let this Turing machine be constructed such that it leaves a blank ('$\Box$') to the left of this 0, and then writes the next number (1), and leaves another blank and writes the next number (01), and so on. Then if given a tape of only blanks, it will continue to write an infinite amount of binary numbers on it. For any reasonable definition of information, this would clearly increase the total amount of information on the tape. 
 
 \subsection{EmitterNode}
-To make \nenwin able to create more entropy, we add an additional Node called an EmitterNode \footnote{or, more specifically, a MarbleEaterNode. Note that there is no theoretical objection against creating EmitterNodes that emit other Nodes, other than the fact that EaterNodes cannot eat each other.}. This Node will create another particle at its own position when a certain condition is met.
+To make \nenwin able to increase the amount of information, we define an additional particle called the EmitterNode (or, more specifically, a MarbleEmitterNode\footnote{Note that there is no theoretical objection against creating EmitterNodes that emit other Nodes, other than the fact that EaterNodes cannot eat each other at the same time.}). This Node will create another particle at its own position when a certain condition is met.
 
-There are many different ways to choose the exact behavior of EmitterNodes, but in this paper we use the following:
+There are many different ways to choose the exact behaviour of EmitterNodes, but in this paper we use the following:
 \begin{itemize}
     \item An EmitterNode is a special case of a MarbleEaterNode, and tracks also the cumulative mass of Marbles it has consumed in a field \texttt{stored\_mass}.
     \item The EmitterNode can only create Marbles with predefined parameters (mass, initial velocity, etc.) at its own position.
