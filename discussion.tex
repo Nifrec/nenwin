@@ -25,3 +25,12 @@ The performance reached in training is a random variable,
 since each epoch over the train-set was iterated in a random order.
 It would have been more informative to report mean performance measures (including a Confidence Interval), 
 computed over many independent runs.
+
+\subsection{A broader view}
+In a very broad sense, \nenwin is an experiment to use backpropagation and Adam (a variant of Gradient Descent)
+on a system that is not typically used for machine learning. 
+In particular, the chosen system was a simplistic particle simulation. 
+The question can be asked if other systems exist, 
+such as scientific simulations of physics, chemistry, biology, etc., 
+that are potential candidates as machine learning agents 
+(which can be trained with backpropagation and Gradient Descent).
