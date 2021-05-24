@@ -22,7 +22,7 @@ The output of the model changes over time, and hence it is practical to define t
 \subsubsection{Classification loss}
 Consider an application where a \textsc{Nenwin} model is used to classify an input as one out of $k$ classes. Let each class-prediction be represented by a single MarbleEaterNode. Now since only one class is needed, the output $\hat{\vec{y}}$ can be read when the first Marble is eaten, or when the time $t = t_{max}$. More formally, let 
 \begin{equation}
-    t_{end} \leftarrow \min \{t \; | \; 1 \leq \norm{\vec{M}(t)}\}\cup \{t_{max}\}.
+    t_{end} \leftarrow \min \left(\{t \; | \; 1 \leq \norm{\vec{M}(t)}\}\cup \{t_{max}\}\right).
 \end{equation}
 Now there are three possible cases for the output $\hat{\vec{y}}$:
 \begin{enumerate}
@@ -59,12 +59,20 @@ In summary, the loss $L(\hat{\vec{y}}, \vec{y})$ is defined as:
 \begin{equation}
     L(\hat{\vec{y}}, \vec{y}) = \begin{cases}
         0 & \text{if } \hat{\vec{y}} = \vec{y} \\
-        - \frac{1}{f(m', n', t_{end})} + \min_{m \in Marbles} f(m, n, t_{end}) & \text{if } \vec{y} \neq \hat{\vec{y}} \neq 0  \\
-        \min_{m \in Marbles} f(m, n, t_{end}) & \text{otherwise}\\
+        - \frac{1}{f(m', n', t_{end})} + \min_{m \in Marbles} f(m, n, t_{end}) & \text{if } \vec{y} \neq \hat{\vec{y}} \neq \vec{0}  \\
+        \min_{m \in Marbles} f(m, n, t_{end}) & \text{if } \hat{\vec{y}} = \vec{0}\\
     \end{cases}
     \label{eq:classification_loss_full}
 \end{equation}
 Where $n$ is the node at the unique index $i$ where $y_i = 1$, $Marbles$ is the set of all Marbles in the model, and $m'$ is \textit{the} Marble eaten by some node $n' \neq n$ in the case $\vec{y} \neq \hat{\vec{y}} \neq 0$.
+
+\subsubsection{Multiple outputs}
+Eq. \eqref{eq:classification_loss_full} assumes that at most one Marble will be eaten. It is possible that multiple Marbles will be eaten at the same time. Especially in simulation this is not unlikely, where discrete finite-sized time steps are taken. In this case, $\hat{\vec{y}}$ can be written as the sum of unit vectors. If $k$ Marbles have been eaten at the same time, then one can rewrite $\hat{\vec{y}} = \hat{\vec{y}}_1 + \hat{\vec{y}}_2 + \dots + \hat{\vec{y}}_k$. Here we require that $\hat{\vec{y}}_i$ is a unit vector of zeros and a single one, for each $i=1, 2, \dots, k$. Now the loss can be computed as:
+\begin{equation}
+	L_{total}(\hat{\vec{y}}, \vec{y}) = \sum_{i=1}^{k} L(\hat{\vec{y}}_i, \vec{y}).
+	\label{eq:classification_loss_multi_output}
+\end{equation}
+In other words, Eq. \eqref{eq:classification_loss_full} is simply computed for each Marble, and summed up to produce the total loss. 
 
 \subsubsection{Non-convexity}
 Eq. \eqref{eq:classification_loss_full} is not convex. This is not surprising given its relatively complex piece-wise definition. To simplify the notation, define the following extension of Definition \ref{def:cumul_output_vect}:
