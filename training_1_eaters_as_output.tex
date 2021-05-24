@@ -67,12 +67,23 @@ In summary, the loss $L(\hat{\vec{y}}, \vec{y})$ is defined as:
 Where $n$ is the node at the unique index $i$ where $y_i = 1$, $Marbles$ is the set of all Marbles in the model, and $m'$ is \textit{the} Marble eaten by some node $n' \neq n$ in the case $\vec{y} \neq \hat{\vec{y}} \neq 0$.
 
 \subsubsection{Multiple outputs}
-Eq. \eqref{eq:classification_loss_full} assumes that at most one Marble will be eaten. It is possible that multiple Marbles will be eaten at the same time. Especially in simulation this is not unlikely, where discrete finite-sized time steps are taken. In this case, $\hat{\vec{y}}$ can be written as the sum of unit vectors. If $k$ Marbles have been eaten at the same time, then one can rewrite $\hat{\vec{y}} = \hat{\vec{y}}_1 + \hat{\vec{y}}_2 + \dots + \hat{\vec{y}}_k$. Here we require that $\hat{\vec{y}}_i$ is a unit vector of zeros and a single one, for each $i=1, 2, \dots, k$. Now the loss can be computed as:
+Eq. \eqref{eq:classification_loss_full} assumes that at most one Marble will be eaten. It is possible that multiple Marbles will be eaten at the same time. Especially in simulation this is not unlikely, where discrete finite-sized time steps are taken.
+
+Let $k$ be the number of Marbles eaten at $t = t_{end}$, and let the Marbles be $m_1, m_2, \dots, m_k$. Let the corresponding MarbleEaterNodes be $n_1, n_2, \dots, n_k$. Note that these Nodes may not all be distinct, while the Marbles are all unique. Let $n$ be the Node of the correct output. Then we can extend \eqref{eq:classification_loss_full} to:
 \begin{equation}
-	L_{total}(\hat{\vec{y}}, \vec{y}) = \sum_{i=1}^{k} L(\hat{\vec{y}}_i, \vec{y}).
-	\label{eq:classification_loss_multi_output}
+	L_{total}(\hat{\vec{y}}, \vec{y}) = \mathbbm{1}(n\notin \{n_1, n_2, \dots, n_k\}) \min_{m \in Marbles} f(m, n, t_{end}) + \sum_{i=1}^{k}  - \frac{1}{f(m_i, n_i, t_{end})}
 \end{equation}
-In other words, Eq. \eqref{eq:classification_loss_full} is simply computed for each Marble, and summed up to produce the total loss. 
+Where $\mathbbm{1}(p)$ equals 1 if the proposition $p$ is true, and 0 if $p$ is false.
+In the very specific case that \textit{all} Marbles have been eaten by the wrong Nodes, the term $\min_{m \in Marbles} f(m, n, t_{end})$ will not be defined. It was chosen to simply leave this term out. If the penalty for the wrongly eaten Marbles causes sufficient change in the update rule, then (in the next iteration) there will be Marbles available to 'blame' for not being eaten by the correct MarbleEaterNode.
+
+In other words:
+\begin{itemize}
+	\item For each wrongly outputted Marble, the wrong-output penalty is added to the loss.
+	\item In case the correct output was not included, also the missing-output penalty is added once.
+\end{itemize}
+
+Note that this method does not penalize multiple Marbles arriving at the correct output Node, 
+which may in some contexts also be undesirable.
 
 \subsubsection{Non-convexity}
 Eq. \eqref{eq:classification_loss_full} is not convex. This is not surprising given its relatively complex piece-wise definition. To simplify the notation, define the following extension of Definition \ref{def:cumul_output_vect}:
