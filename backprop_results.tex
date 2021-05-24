@@ -29,6 +29,8 @@ For the experiments, the samples of the dataset were shuffled in a random order 
 \subsection{Architectures}
 Three different architectures have been designed and were evaluated. See also Fig. \ref{fig:banknote_architectures}.
 
+In all architectures, all Nodes have their mass, \texttt{marble\_stiffness},\texttt{node\_stiffness} and \texttt{marble\_attraction} set to 1, and their \texttt{node\_attraction} to 0. Note that these are only initial values for learnable parameters. The MarbleEaterNodes had their radius set to 0.5, which was not optimized by the implementation.
+
 \paragraph{Architecture A:}
 \begin{itemize}
 	\item Vertices of input region: (-2.5, -1), (-2.5, 1), (2.5, -1), (2.5, 1).
@@ -79,11 +81,20 @@ Then the simulation is run until at least one MarbleEaterNode ate a Marble,
 or until a maximum number of steps is reached. 
 Then the loss is computed according to \eqref{eq:classification_loss_full},
 and gradients of parameters with respect to this loss are computed via backpropagation.
-Finally the parameters are updated using the Adam optimization technique.
+Finally the parameters are updated using the Adam optimization technique \cite{adam}.
 
-The average gradient is used in case the batch size is larger than 1. 
+The average gradients over the batch are used in case the batch size is larger than 1. 
 The samples are still processed in sequential order, but the gradients of their losses are accumulated.
 The Adam update rule is only used after the last sample in the batch.
+
+The value of $\mu$ in \eqref{eq:classification_loss_one_marble} was set to 1. 
+Newton's gravity function (without gravitation constant, 
+\eqref{eq:newton_grav_force}) was used as the attraction function for all particles. 
+For all Marbles, 
+both the \texttt{marble\_stiffness} and \texttt{node\_attraction} were set to 1,
+and both the \texttt{node\_stiffness} and \texttt{marble\_attraction} to 0. 
+
+
 
 Because of practical resource and time constraints, this maximum amount of timesteps was set to only 20 steps, with a stepsize of 0.1. 
 With this configuration it took several hours to train an architecture\footnote{Training was run on a a Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz.}. 
@@ -129,7 +140,16 @@ The most surprising results are obtained with the MassInputPlacer with a velocit
 
 The train-set loss also shows an extreme outlier, which occurs at the first epoch in the accuracy on the validation set experienced a sudden increase. 
 
-Also see Fig. \ref{fig:arch_c_const_vel_50pc_architecture} for a comparison of Architecture C before and after 40 epochs of training. The architecture changed significantly. The output Nodes have been moved towards the input region.
+Also see Fig. \ref{fig:arch_c_const_vel_50pc_architecture} for a comparison of Architecture C before and after 40 epochs of training. The architecture has changed significantly. The output Nodes have been moved towards the input region. Also the mass of all Nodes has been decreased, among with some of the \texttt{attraction}- and \texttt{stiffness}-parameters (no Node had an increase). For example, the two MarbleEaterNodes had masses of 0.0753 and 0.0249\footnote{Rounded to four figures. Also the other parameter values in this paragraph have been rounded to four figures.} (the starting values were both 1). But the normal Nodes had much higher masses: as high as 0.7981 (the lowest was 0.0981).
+
+The same pattern was observed for the \texttt{marble\_attraction}: 
+it was much lower for the MarbleEaterNodes (0.0753 and 0.0015) 
+than for the other Nodes 
+(max: 0.7409, min: 0.0981, corresponding to the same 'normal' Nodes as the max and min mass).
+Apparently the model had learned that output Nodes should attract Marbles less strongly, 
+as both the mass and the \texttt{marble\_attraction} are used to compute the attraction force Marbles experience.
+
+The \texttt{marble\_stiffness} remained close to 1 for most Nodes: only 1 'normal' Node had an extremely low value of 0.2775, and one MarbleEaterNode 0.5573 (for all others it was above 0.84). Apparently, the model did not learn to keep all Nodes stationary. 
 
 \begin{figure}[hb]
 	\centering

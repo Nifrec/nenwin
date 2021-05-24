@@ -9,7 +9,7 @@ Where $p.acc$ and $p.mass$ are the acceleration and mass of any particle $p$.
 
 Note that these forces can only be caused by other particles. Each particle has an associated \textit{attraction function}, that describes what force the particle exerts on any other particle. Although many different functions can be used for this purpose, a natural first choice would be the gravity function (with the constant factor $G$ (the gravitational acceleration) replaced by 1):
 \begin{equation}
-    \norm{\vec{f}} = \frac{p_1.mass \cdot p_2.mass}{\norm{p_1.pos - p_2.pos}^2}. \label{eq:newton_grav_force}
+    \norm{\vec{f}} = \frac{p_1.mass \cdot p_2.mass}{\norm{p_1.pos - p_2.pos}^2}. \label{eq:newton_grav_force_norm}
 \end{equation}
 The direction of the force is the direction from the first particle to the second particle, so the force vector is given by:
 \begin{equation}
