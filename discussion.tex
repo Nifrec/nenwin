@@ -2,3 +2,26 @@
 The version of \textsc{Nenwin} present in this work can be seen as a specific subset of a more general computational scheme. This general scheme has a set of subclasses of particles (in the case of \textsc{Nenwin} there are two such subclasses, Marbles and Nodes), in which each particle has a \texttt{stiffness} and \texttt{attraction} parameter for each subclass in the architecture. Certain particles can 'eat' and/or 'emit' other particles of a specific class \footnote{One may object to allowing a particle to 'eat' its own subclass, it that it would have to eat itself. However, it is possible to make an exception for themselves, or to add another workaround (e.g. hollow absorption regions instead of sphere-shaped).}. One simple extension could be to introduce Nodes that can 'eat' and 'emit' other Nodes in a similar way to how MarbleEaterNodes and MarbleEmitterNodes eat and emit Marbles.
 
 The specific subset of this generalized scheme is chosen as it was a small (but not proven to be \textit{the smallest}) subset of particle-subclasses that was provably able to simulate a CPU.
+
+\subsection{Practical limitations}
+The empirical experiment in this work is of a very limited scope.
+It serves as an exploration of the trainability and hyperparameter-sensitivity of \nenwin,
+rather than a thorough scientific evaluation of the impact of specific parameters on classification performance.
+
+
+There are many hyperparameters that have been left unexplored. For example:
+\begin{itemize}
+	\item Only three arbitrary architectures, all with a limited number of Nodes have been used. No MarbleEmitterNodes or architectures with a large number of Nodes have been investigated.
+	\item The number of epochs were limited, it is worth investigating how the training process behaves over a longer time period.
+	\item The maximum amount of timesteps per sample was very limited. Because a computational graph over all previous timesteps is needed to perform backpropagation, a larger number of timesteps would demand much more memory. It is possible the number of timesteps have a major impact on the loss function (as the position of Marbles is different at another point in time). Hence also the outcome of the training may be very sensitive to the maximum amount of timesteps. This topic requires further investigation.
+	\item Only one attraction function, one (rather large) timestep-size value and one value of $\mu$ in \eqref{eq:classification_loss_one_marble} were used. 
+\end{itemize} 
+
+
+Also the statistical robustness is limited. 
+Because of the limited efficiency of the implementation, 
+each experiment was only run once. 
+The performance reached in training is a random variable, 
+since each epoch over the train-set was iterated in a random order.
+It would have been more informative to report mean performance measures (including a Confidence Interval), 
+computed over many independent runs.
