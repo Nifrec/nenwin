@@ -105,8 +105,8 @@ Numerical results of various training-runs have been summarized in Table \ref{ta
 		A & 20 & VelInputPlacer  & 5 & 0.06569 & 28580.8 \\
 		A & 20 & MassInputPlacer & 1 & 0.0     & 13.5    \\
 		C & 20 & MassInputPlacer($\begin{bmatrix} 1\\1\end{bmatrix}$) & 1 & 0.0 & 200.1 \\
-		B & 20 & VelInputPlacer  & 1 & 0.12409 & 24788.9 \\
-		C & 20 & VelInputPlacer  & 1 & 0.08029 & 33143.6 \\
+		B & 20 & VelInputPlacer  & 2 & 0.12409 & 24788.9 \\
+		C & 20 & VelInputPlacer  & 2 & 0.08029 & 33143.6 \\
 		C & 36 & MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) & 1 & \textbf{0.51825} & -1198.1 \\
 		C & 40 & MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) & 1 & 0.20438 & -4590.7
 	\end{tabular}
@@ -135,7 +135,7 @@ Also see Fig. \ref{fig:arch_c_const_vel_50pc_architecture} for a comparison of A
 	\centering
 	\includegraphics[scale=0.4]{figures/C_batch1_ConstVelInputPlacer([0.5, 0]])_epoch40_stats.pdf}
 	\caption{Learning curves of using Architecture C with 
-		a batch size of 1, MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) and 40 train-set epochs.}
+		a batch size of 2, MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) and 40 train-set epochs.}
 	\label{fig:arch_c_const_vel_50pc_learning_curve}
 \end{figure}
 
@@ -143,7 +143,7 @@ Also see Fig. \ref{fig:arch_c_const_vel_50pc_architecture} for a comparison of A
 	\centering
 	\includegraphics[scale=0.4]{figures/C_batch1_ConstVelInputPlacer([0.5, 0]])_epoch40.pdf}
 	\caption{Architecture C before training (left) and after training on 40 epochs with 
-		a batch size of 1, MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$).}
+		a batch size of 2, MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$).}
 	\label{fig:arch_c_const_vel_50pc_architecture}
 \end{figure}
 
