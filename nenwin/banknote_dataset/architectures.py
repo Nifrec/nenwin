@@ -29,24 +29,14 @@ The architectures are simply called A, B and C.
 import torch
 import torch.nn
 import numpy as np
-import matplotlib.pyplot as plt
-from typing import List, Tuple, Iterable
-from numbers import Number
+from typing import Tuple
 import enum
 
-from nenwin.constants import BANKNOTE_CHECKPOINT_DIR
-from nenwin.all_particles import Marble, Node, MarbleEmitterNode, MarbleEaterNode
 from nenwin.model import NenwinModel
-from nenwin.input_placer import InputPlacer
 from nenwin.grid_input_placer import VelInputPlacer
-from nenwin.attraction_functions.attraction_functions import NewtonianGravity, AttractionFunction
-from nenwin.backprop.filename_gen import FilenameGenerator
-from nenwin.backprop.trainer import NenwinTrainer
-from nenwin.backprop.training_stats import TrainingStats
-from nenwin.backprop.loss_function import NenwinLossFunction
-from nenwin.banknote_dataset.load_dataset import load_banknote_dataset, BanknoteDataset
+from nenwin.attraction_functions.attraction_functions import NewtonianGravity
+
 from nenwin.creation_functions import gen_nodes, gen_eater_nodes
-from nenwin.plot_model import plot_model
 
 
 class ARCHITECTURES(enum.Enum):
