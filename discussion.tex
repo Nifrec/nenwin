@@ -6,9 +6,9 @@ The specific subset of this generalized scheme is chosen as it was a small (but 
 \subsection{Practical limitations}
 The empirical experiment in this work is of a very limited scope.
 It serves as an exploration of the trainability and hyperparameter-sensitivity of \nenwin,
-rather than a thorough scientific evaluation of the impact of specific parameters on classification performance.
+rather than a thorough scientific evaluation of the impact of specific hyperparameters on classification performance.
 
-
+\subsubsection{Unexplored hyperparameters}
 There are many hyperparameters that have been left unexplored. For example:
 \begin{itemize}
 	\item Only three arbitrary architectures, all with a limited number of Nodes have been used. No MarbleEmitterNodes or architectures with a large number of Nodes have been investigated.
@@ -17,14 +17,16 @@ There are many hyperparameters that have been left unexplored. For example:
 	\item Only one attraction function, one (rather large) timestep-size value and one value of $\mu$ in \eqref{eq:classification_loss_one_marble} were used. 
 \end{itemize} 
 
-
-Also the statistical robustness is limited. 
+\subsubsection{Statistical significance}
+The comparison of different hyperparameter-configuration is potentially subject to heavy random noise.
 Because of the limited efficiency of the implementation, 
 each experiment was only run once. 
 The performance reached in training is a random variable, 
 since each epoch over the train-set was iterated in a random order.
-It would have been more informative to report mean performance measures (including a Confidence Interval), 
-computed over many independent runs.
+As a result, no statistically robust conclusions can be drawn
+of the influence of specific hyperparameters on the performance of the model. 
+It is left for future work to conduct many runs of each hyperparameter-configuration,
+and report the mean performance statistics (including confidence intervals).
 
 \subsection{Loss function}
 Two potential issues are observed from the empirical experiment:
