@@ -35,7 +35,7 @@ import enum
 from nenwin.model import NenwinModel
 from nenwin.grid_input_placer import VelInputPlacer
 from nenwin.attraction_functions.attraction_functions import NewtonianGravity
-
+from nenwin.all_particles import Node, Marble, MarbleEaterNode
 from nenwin.creation_functions import gen_nodes, gen_eater_nodes
 
 
