@@ -1,7 +1,73 @@
-Neural networks, such as Multilayer Perceptrons, Recurrent Neural Networks (e.g. the GRU \cite{gru_original}), Convolutional Neural Networks (e.g. the famous AlexNet \cite{alexnet}) and many more, are a popular class of trainable models for Artificial-Intelligence and datamining applications. Neural networks are a series of interconnected functions consisting of an affine map followed by a nonlinear activation function, such as the hyperbolic tangent. In essence, they are a trainable nonlinear functions. One may object that Recurrent Neural Networks are no functions, as they have a state. But they can be seen as a function that takes it own output back as an additional argument: their computation remains the same.
+Neural networks, such as Multilayer Perceptrons, Recurrent Neural Networks (e.g. the GRU \cite{gru_original}),
+Convolutional Neural Networks (e.g. the famous AlexNet \cite{alexnet}) and many more, 
+are a popular class of trainable models for Artificial-Intelligence and datamining applications. 
+Neural networks are a series of interconnected functions consisting of an affine map followed by a nonlinear activation function, 
+such as the hyperbolic tangent. 
+In essence, they are a trainable nonlinear functions. 
+One may object that Recurrent Neural Networks are no functions, as they have a state. 
+But they can be seen as a function that takes it own output back as an additional argument: 
+their computation remains the same.
 
-Humans, however, are not regarded as functions (the behavioral approach of psychology, which studied humans and other animals as functions, has now mostly been deprecated \cite{matlin2016cognition}). Their behaviour can change over time. Given the exact same environment at a later moment in time, humans may behave differently than they did the previous time.
+Simulation of physical particles is a well-established technology for scientific research, 
+for example used in astronomy and chemistry. 
+These simulations consist of a model incorporating physical laws, 
+and individual particles that interact according to these lays.
+This can for example be used to predict the motion of particles.
+Many textbooks and even more articles are available on this topic, for example \cite{computer_sim_liquids}, \cite{heinz_pairlist_alg} and \cite{BEEMAN1976}.  
 
-This work explores a new paradigm based on particle simulation, that is designed to capture this flexibility of behaviour better. It is based on classical Newtonian mechanics, so the interaction between particles can be compared to interactions between stars, planets and asteroids. A set of particles forms a model, and their \textit{initial} positions, \textit{initial} velocities and masses are their learnable parameters. Input data is represented by particles as well, and their movement is governed by gravitational interactions with the particles in the model. The eventual position of the input particles is used to determine the output. Because these input particles can also attract the particles of the model, the model can change its shape, which in turn changes its computations. Hence the algorithm encoded in the model can, in theory, change over time, without retraining. 
+Humans, however, are not regarded as functions (the behavioural approach of psychology, 
+which studied humans and other animals as functions, 
+has now mostly been deprecated \cite{matlin2016cognition}). 
+Their behaviour can change over time. 
+Given the exact same environment at a later moment in time, 
+humans may behave differently than they did the previous time.
 
-It should be noted that the new paradigm, to be called \textsc{Nenwin} from now onward, is designed for applications in which it either needs to act as an active agent, such as robotics or games, or needs to generate different output over time, such as music generation. For tasks such as image classification it does not provide any benefit over Neural Networks, and such tasks are only of interest for verification purposes.
+This work explores a new machine learning framework based on particle simulation, 
+that is designed to capture this flexibility of behaviour better. 
+It is based on classical Newtonian mechanics,
+so the interaction between particles can be compared to interactions between stars, planets and asteroids. 
+A set of particles forms a model, and their \textit{initial} positions, 
+\textit{initial} velocities and masses are their learnable parameters. 
+Input data is represented by particles as well, 
+and their movement is governed by gravitational interactions with the particles in the model. 
+The eventual position of the input particles is used to determine the output. 
+Because these input particles can also attract the particles of the model, 
+the model can change its shape, which in turn changes its computations. 
+Hence the algorithm encoded in the model can, 
+in theory, change over time, without retraining. 
+
+It should be noted that the new framework, to be called \textsc{Nenwin} from now onward, 
+is designed for applications in which it either needs to act as an active agent, 
+such as robotics or games, 
+or needs to generate different output over time, 
+such as music generation. 
+For tasks such as image classification it does not provide any benefit over Neural Networks, 
+and such tasks are only of interest for verification purposes.
+
+\subsection{Outline}
+This report will begin with a description the \nenwin framework: 
+the different particles involved, their parameters and the simulation algorithm. 
+Also the motivation for including certain particles will be explained.
+
+The second part of this work will elaborate on theoretical capabilities of \nenwin, namely Turing-completeness.
+It will be proven, relatively informally, that \nenwin is able to simulate a CPU of the RAM model of computation,
+which is equivalent in computational power to a Turing Machine.
+
+The third section will describe how the backpropagation algorithm can be applied to a \nenwin simulation.
+It will explain how various parameters are computationally related to the output of a \nenwin model,
+and a loss function for a classification tasks will be defined.
+
+The fourth section will present the empirical results of an implementation of the backpropagation algorithm.
+No robust statistical analysis of the impact of hyperparameters on the performance will be given,
+but instead the behaviour of the training algorithm will be elaborated for a particularly interesting run,
+in learning curves and an evaluation of the changes made to the model.
+
+The fifth and sixth section will analyse the runtime and memory issues of the implementation, 
+and propose modifications for the algorithm to improve on this.
+The implementation and empirical evaluation of those modifications were
+unfortunately beyond the scope of this study.
+
+Finally, the report will finish with a discussion of limitations and directions of future work,
+and summarize the main points in a conclusion.
+
+
