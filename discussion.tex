@@ -26,6 +26,21 @@ since each epoch over the train-set was iterated in a random order.
 It would have been more informative to report mean performance measures (including a Confidence Interval), 
 computed over many independent runs.
 
+\subsection{Loss function}
+Two potential issues are observed from the empirical experiment:
+\begin{itemize}
+	\item The loss function can become deeply negative. 
+		This is only to be expected based on Eq.  \ref{eq:classification_loss_full}.
+		However, it seems unintuitive: a loss of 0 could indicate a correct prediction 
+		while a lower loss of -4000 can follow from a wrong prediction. 
+	\item The term that penalizes wrong predictions in the loss function (Eq. \ref{eq:classification_loss_full}), 
+		namely $ -\frac{1}{f(m', n', t_{end})}$, can suddenly subtract a large value from the loss function.
+		Here 'suddenly' refers to a small adjustment from the previous parameter-update,
+		that made a wrong prediction start to occur.
+		This makes the loss function very noisy and sensitive, 
+		which may not be beneficial for the training progress.
+\end{itemize}
+
 \subsection{A broader view}
 In a very broad sense, \nenwin is an experiment to use backpropagation and Adam (a variant of Gradient Descent)
 on a system that is not typically used for machine learning. 

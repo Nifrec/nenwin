@@ -118,14 +118,15 @@ Numerical results of various training-runs have been summarized in Table \ref{ta
 		C & 20 & MassInputPlacer($\begin{bmatrix} 1\\1\end{bmatrix}$) & 1 & 0.0 & 200.1 \\
 		B & 20 & VelInputPlacer  & 2 & 0.12409 & 24788.9 \\
 		C & 20 & VelInputPlacer  & 2 & 0.08029 & 33143.6 \\
-		C & 36 & MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) & 1 & \textbf{0.51825} & -1198.1 \\
-		C & 40 & MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) & 1 & 0.20438 & -4590.7
+		C & 40 & MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) & 1 & 0.0 & 107.6 \\
+		C & 36 & MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) & 2 & \textbf{0.51825} & -1198.1 \\
+		C & 40 & MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) & 2 & 0.20438 & -4590.7
 	\end{tabular}
 	\caption{Results of training a \nenwin architecture on the banknote-authentication dataset. Each row represents an independent training run. The accuracy is the total amount of correct predictions divided over the size of the validation set. Absence of output is counted as a wrong prediction. The loss accumulation of losses of the last epoch of the train set.}
 	\label{table:banknote_exp}
 \end{table}
 
-Using the VelInputPlacer appears to providing poor results. A plot of the performance per epoch shows that the training initially makes progress, but converge too quickly to mediocre performance. See Fig. \ref{fig:velinputplacer_performance}. One possible explanation is that the VelInputPlacer gives the input Marbles a high initial velocity in varying directions. With a very limited amount of Nodes the model may not posses the flexibility handle all combinations of initial velocity directions of the Marbles. 
+Using the VelInputPlacer appears to providing poor results. A plot of the performance per epoch shows that the training initially makes progress, see Fig. \ref{fig:velinputplacer_performance}. The loss decreases roughly exponential during the first epochs, and the validation accuracy roughly increases logarithmically. but converge too quickly to mediocre performance. One possible explanation is that the VelInputPlacer gives the input Marbles a high initial velocity in varying directions. With a very limited amount of Nodes the model may not posses the flexibility handle all combinations of initial velocity directions of the Marbles. 
 
 \begin{figure}[hb]
 	\centering
@@ -136,7 +137,25 @@ Using the VelInputPlacer appears to providing poor results. A plot of the perfor
 
 \clearpage
 
-The most surprising results are obtained with the MassInputPlacer with a velocity vector of $\begin{bmatrix} 0.5\\0\end{bmatrix}$ starting with Architecture C. Note that Marbles will be moving towards the MarbleEaterNodes with this initial velocity in Architecture C. After 36 epochs this resulted in a validation-set accuracy above chance level, see Fig. \ref{fig:arch_c_const_vel_50pc_learning_curve}. However, the learning curve shows very eccentric patterns. The high validation set accuracy after 36 epochs quickly disappeared after more epochs. This might be due to overfitting, although it is a very sudden change. The high non-convexity of the training objective may be a more likely explanation. One hypothesis is that the optimization rule might have stepped a bit too far in a certain direction (by updating the parameters), and entered the domain of the loss function which has a different local minimum. This is for example possible if the optimization step caused a small adjustment that made a Marble being eaten early in the simulation, which would otherwise bypass the MarbleEaterNode. This would change the moment that the loss in computed. This may result in a very different loss, as the other Marbles will be at very different positions than at the end of the maximum simulation time.
+The most surprising results are obtained with the MassInputPlacer with a velocity vector of $\begin{bmatrix} 0.5\\0\end{bmatrix}$, 
+a batch size of 2, and using Architecture C as initial architecture. 
+Note that Marbles will be moving towards the MarbleEaterNodes with this initial velocity in Architecture C. 
+After 36 epochs this resulted in a validation-set accuracy above chance level, see Fig. \ref{fig:arch_c_const_vel_50pc_learning_curve}. 
+However, the learning curve shows very eccentric patterns. 
+The high validation set accuracy after 36 epochs quickly disappeared after more epochs. 
+This might be due to overfitting, although it is a very sudden change. 
+The high non-convexity of the training objective may be a more likely explanation. 
+
+One hypothesis is that the optimization rule might have stepped a bit too far in a certain direction (by updating the parameters), 
+and entered the domain of the loss function which has a different local minimum. 
+This is for example possible if the optimization step caused a small adjustment that made a Marble being eaten early in the simulation, 
+which would otherwise bypass the MarbleEaterNode. This would change the moment that the loss in computed. 
+This may result in a very different loss, as the other Marbles will be at very different positions than at the end of the maximum simulation time.
+The Marble $m'$ that was eaten may change the loss directly. 
+If $m'$ was eaten by a MarbleEaterNode $n'$ (and $n'$ represents the wrong prediction), 
+then a new term $- \frac{1}{f(m', n', t_{end})}$ will be included to the loss. 
+Since the distance of $m'$ to $n'$ will be very small, $f(m', n', t_{end})$ will be small,
+and the magnitude of the reciprocal term will be large.
 
 The train-set loss also shows an extreme outlier, which occurs at the first epoch in the accuracy on the validation set experienced a sudden increase. 
 
