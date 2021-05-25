@@ -33,17 +33,35 @@ To summarize, the motion of a particle $p$ is described by the following differe
 Where $t$ denotes the amount of time passed, and $p.pos_0$ and $p.vel_0$ the initial position and velocity respectively of the particle when it was created.
 The acceleration of $p$ depends the forces $p$ experiences. These forces are a function of $p$'s relative distances to other Marbles and Nodes (the denominators in \eqref{eq:def_f_net} are distance measures). These distances depend on the value of $p.pos$ and the motion of other particles. Hence $p.pos$, $p.val$ and $p.acc$ are highly dependent on the other particles in a \textsc{Nenwin} model, and can change significantly even when only an very small amount of time passes.
 
-To enable output production, a special subclass of Node called the MarbleEaterNode is used: this class stores an additional real-valued radius. When, in the simulation, the distance between a Marble and a MarbleEaterNode becomes smaller than the radius of the MarbleEaterNode, then the Marble will be removed from the simulation: it was 'eaten' by the MarbleEaterNode. The MarbleEaterNode keeps both a count of the amount of Marbles consumed, and a set of references to the associated data of the consumed Marbles.
+\subsection{MarbleEaterNodes}
+To enable output production, a subclass of Node called the \textit{EaterNode} (or more specifically, the \textit{MarbleEaterNode}) is defined: 
+each member of this class has a real-valued radius. 
+A Marble will be removed from the simulation as soon as the distance between the Marble and any MarbleEaterNode 
+becomes smaller than the radius of the MarbleEaterNode: it was 'eaten' by the MarbleEaterNode.
+The MarbleEaterNode keeps both a count of the amount of Marbles consumed, 
+and a set of references to the associated data of the consumed Marbles.
 
 \subsection{Motivation Emitter Nodes}
 \nenwin will have a nonincreasing amount of particles if only Marbles, Nodes and MarbleEaterNode would be used.
-Marbles can be removed when eaten by a MarbleEaterNode, but the there is no internal way the system can produce new Marbles (other than awaiting new input).
+Marbles can be removed when eaten by a MarbleEaterNode, 
+but the there is no internal way the system can produce new Marbles (other than awaiting new input).
 This would imply that the amount of information that can be stored in a \nenwin simulation is also nonincreasing in a \nenwin architecture.
 
-Turing Machines, on the other hand, can \textit{increase} the information stored on their tape. For example, consider a Turing machine that writes down all binary numbers, starting with 0. Let this Turing machine be constructed such that it leaves a blank ('$\Box$') to the left of this 0, and then writes the next number (1), and leaves another blank and writes the next number (01), and so on. Then if given a tape of only blanks, it will continue to write an infinite amount of binary numbers on it. For any reasonable definition of information, this would clearly increase the total amount of information on the tape. 
+Turing Machines, on the other hand, can \textit{increase} the information stored on their tape.
+For example, consider a Turing machine that writes down all binary numbers, 
+starting with 0. Let this Turing machine be constructed such that it leaves a blank ('$\Box$') to the left of this 0, 
+and then writes the next number (1), and leaves another blank and writes the next number (01), and so on. 
+Then if given a tape of only blanks, it will continue to write an infinite amount of binary numbers on it. 
+For any reasonable definition of information, 
+this would clearly increase the total amount of information on the tape. 
 
 \subsection{EmitterNode}
-To make \nenwin able to increase the amount of information, we define an additional particle called the EmitterNode (or, more specifically, a MarbleEmitterNode\footnote{Note that there is no theoretical objection against creating EmitterNodes that emit other Nodes, other than the fact that EaterNodes cannot eat each other at the same time.}). This Node will create another particle at its own position when a certain condition is met.
+To make \nenwin able to increase the amount of information, we define an additional particle called the \textit{EmitterNode}
+(or, more specifically, a \textit{MarbleEmitterNode}
+\footnote{Note that there is no theoretical objection against creating EmitterNodes that emit other Nodes, 
+other than the fact that EaterNodes cannot eat each other at the same time.}). 
+EmitterNodes are a subclass of MarbleEaterNodes, 
+but besides eating they can also (conditionally) create new particles at its own position.
 
 There are many different ways to choose the exact behaviour of MarbleEmitterNodes, but in this paper we use the following:
 \begin{itemize}
