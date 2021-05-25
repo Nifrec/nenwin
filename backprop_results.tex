@@ -24,12 +24,17 @@ The derived features (of Wavelet-transformed image) have been pre-computed, and 
 	\item Entropy
 \end{enumerate}
 
-For the experiments, the samples of the dataset were shuffled in a random order and split in a 80\%/10\%/10\% train/validation/test set split. This split was cached and reused for each experiment (i.e. each experiment had the same train, validation and test set).
+For the experiments, the samples of the dataset were shuffled in a random order and split in a 80\%/10\%/10\% train/validation/test set split. 
+This split was cached and reused for each experiment (i.e. each experiment had the same train, validation and test set).
 
 \subsection{Architectures}
 Three different architectures have been designed and were evaluated. See also Fig. \ref{fig:banknote_architectures}.
 
-In all architectures, all Nodes have their mass, \texttt{marble\_stiffness},\texttt{node\_stiffness} and \texttt{marble\_attraction} set to 1, and their \texttt{node\_attraction} to 0. Note that these are only initial values for learnable parameters. The MarbleEaterNodes had their radius set to 0.5, which was not optimized by the implementation.
+In all architectures, all Nodes have their mass, \texttt{marble\_stiffness},
+\texttt{node\_stiffness} and \texttt{marble\_attraction} set to 1, 
+and their \texttt{node\_attraction} to 0. 
+Note that these are only initial values for learnable parameters. 
+The MarbleEaterNodes had their radius set to 0.5, which was not optimized by the implementation.
 
 \paragraph{Architecture A:}
 \begin{itemize}
@@ -126,7 +131,16 @@ Numerical results of various training-runs have been summarized in Table \ref{ta
 	\label{table:banknote_exp}
 \end{table}
 
-Using the VelInputPlacer appears to providing poor results. A plot of the performance per epoch shows that the training initially makes progress, see Fig. \ref{fig:velinputplacer_performance}. The loss decreases roughly exponential during the first epochs, and the validation accuracy roughly increases logarithmically. but converge too quickly to mediocre performance. One possible explanation is that the VelInputPlacer gives the input Marbles a high initial velocity in varying directions. With a very limited amount of Nodes the model may not posses the flexibility handle all combinations of initial velocity directions of the Marbles. 
+Most hyperparameter-configurations appear to provide poor results. 
+A plot of the performance per epoch shows that the training initially makes progress, 
+see Fig. \ref{fig:velinputplacer_performance}. 
+The loss decreases roughly exponential during the first epochs, and the validation accuracy roughly increases logarithmically. 
+However, the training progress converges too quickly to mediocre performance. 
+
+One possible explanation for the poor performance of the VelInputPlacer, 
+is that it gives the input Marbles a high initial velocity in varying directions. 
+With a very limited amount of Nodes,
+the model may not possess the flexibility handle all combinations of initial velocity directions of the Marbles. 
 
 \begin{figure}[hb]
 	\centering
@@ -137,6 +151,7 @@ Using the VelInputPlacer appears to providing poor results. A plot of the perfor
 
 \clearpage
 
+\subsubsection{Evaluation best run}
 The most surprising results are obtained with the MassInputPlacer with a velocity vector of $\begin{bmatrix} 0.5\\0\end{bmatrix}$, 
 a batch size of 2, and using Architecture C as initial architecture. 
 Note that Marbles will be moving towards the MarbleEaterNodes with this initial velocity in Architecture C. 
@@ -168,7 +183,14 @@ than for the other Nodes
 Apparently the model had learned that output Nodes should attract Marbles less strongly, 
 as both the mass and the \texttt{marble\_attraction} are used to compute the attraction force Marbles experience.
 
-The \texttt{marble\_stiffness} remained close to 1 for most Nodes: only 1 'normal' Node had an extremely low value of 0.2775, and one MarbleEaterNode 0.5573 (for all others it was above 0.84). Apparently, the model did not learn to keep all Nodes stationary. 
+The \texttt{marble\_stiffness} remained close to 1 for most Nodes: 
+only 1 'normal' Node had an extremely low value of 0.2775, 
+and one MarbleEaterNode 0.5573 (for all others it was above 0.84). 
+Apparently, the model did not learn to keep all Nodes stationary. 
+
+The test set score of this model, as obtained after 40 epochs, is 0.2174.
+The corresponding loss is -24058.3422 (both numbers are rounded to four figures). 
+This is very close to the performance on the validation set. 
 
 \begin{figure}[hb]
 	\centering
