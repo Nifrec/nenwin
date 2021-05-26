@@ -3,13 +3,15 @@ As a NAND-gate is a Boolean function with only two Boolean input values, there a
 
 Let $\mathcal{M}$ denote the set of all possible marbles and $\mathcal{N}$ the set of all possible nodes. 
 \begin{lemma}[NAND-gate]
-There exists a mapping of two Boolean variables to a \nenwin  input $f:\{0, 1\} \rightarrow\mathcal{M}$,
+There exists an input placer mapping a vector of two Boolean variables to a set of Marbles $f:\{0, 1\}^2 \rightarrow\mathcal{M}^2$,
 a \textsc{Nenwin} architecture of only nodes $A \subseteq \N$, and a function to map the \nenwin output to a Boolean output $g:\mathbb{N}^2 \rightarrow \{\false, \true\}$,\\
 such that for two Boolean variables $b_1, b_2 \in \{\false, \true\}$, $g(\vec{y}) = \neg (b_1 \land b_2)$, where $\vec{y}$ is the output harvested from architecture $A$ with input $\{f(b_1), f(b_2)\}$ after all marbles were removes from the network.
+\label{lemmma:nand_simple}
 \end{lemma}
 \begin{proof}
 
-    For all particles we will use $node\_stiffness = 0,\; marble\_stiffness =1$, $node\_attraction=0$ and $marble\_attraction=1$.
+    For all particles we will use \texttt{node\_stiffness} = 0, 
+    \texttt{marble\_stiffness} = 1, \texttt{node\_attraction}=0 and \texttt{marble\_attraction}=1.
 
     Define 
     \begin{equation}
@@ -35,18 +37,30 @@ such that for two Boolean variables $b_1, b_2 \in \{\false, \true\}$, $g(\vec{y}
         \end{cases}
     \end{equation}
     
-    Note that the Marbles are placed in the middle of the line-segment between the two Nodes, and that positive masses attract positive masses and repel negative masses, and vice versa. Hence the Marbles will be accelerated in a straight line to the Node with the same polarity of mass, and will be absorbed by it.
+    Note that the Marbles are placed in the middle of the line-segment between the two Nodes, 
+    and that positive masses attract positive masses and repel negative masses, and vice versa. 
+    Hence each of the two Marbles will be accelerated in a straight line to the Node with the same polarity of mass as itself, 
+    and will be eaten by it.
     
     Now if the input is $(\true, \true)$, both Marbles will have a positive mass of 10, and both will be attracted to the left Node (at $pos[0] = 0$ with mass +10). This way both will be absorbed by the first Node, and the output will read $g(\begin{bmatrix}2\\0\end{bmatrix}) = \false$ as expected.
     
     If the input equals $(\true, \false)$, $(\false, \true)$, $(\false, \false)$, then at least one Marble will be attracted and eaten by the right node (at $pos[0] = 20$ with mass -10), and since there are only 2 Marbles, no more than one Marble will be eaten by the left Node, and the output is $g(\begin{bmatrix}1\\1\end{bmatrix})$ or $g(\begin{bmatrix}0\\2\end{bmatrix})$, either of which will evaluate to $\true$ as expected.
 \end{proof}
+See Fig. \ref{fig:nand_simple} for a visualization of the proof.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=1.5]{figures/nand_simple.pdf}
+	\caption{Construction of a NAND-gate in \nenwin as used by the proof of Lemma \ref{lemmma:nand_simple}. The left Node has a positive mass, and the right Node a negative mass. Note that only one dimension (the $x$-axis) is used, and that both Marbles are placed by the input placer on exactly the same position (at $x = 10$).}
+	\label{fig:nand_simple}
+\end{figure}
+\clearpage
 
 The above lemma does not show how a NAND-gate can be implemented as part of a larger circuit. To achieve this, all that is needed is a NAND-gate that has a finite region of $\mathbb{R}^3$ in which it attracts particles (so that the rest of the circuit can be implemented safely outside this region), and interfaces to the other parts of the circuit. 
 
 In this series of proofs, such interfaces are represented by MarbleEmitterNodes (and MarbleEaterNodes for output interfaces, which can easily be replaced by MarbleEmitterNodes). The main advantage of user MarbleEmitterNodes is that it gives more control over how the input signal is send into a circuit module (esp. in terms of velocity and direction), in comparison to allowing external Marbles to directly enter the module.
 
-The next lemma will show that is possible to extend the NAND-gate with interfaces to an external circuit. It uses a different encoding for \textsc{True} and \textsc{false}: the presence and absence respectively of positively massed Marbles (with a mass of $\alpha$). Note that the direction and velocity if the Marbles emitted by the output MarbleEmitterNodes can be configured. Furthermore, the NAND-gate requires external 'power' to operate: this can be compared to electoric NAND-gates requiring an operating voltage that is separate from the signal. This 'power' needs to be the same for each input, and hence does not externally provide information about the input.
+The next lemma will show that is possible to extend the NAND-gate with interfaces to an external circuit. It uses a different encoding for \textsc{True} and \textsc{false}: the presence and absence respectively of positively massed Marbles (with a mass of $\alpha$). Note that the direction and velocity if the Marbles emitted by the output MarbleEmitterNodes can be configured. Furthermore, the NAND-gate requires external 'power' to operate: this can be compared to electronic NAND-gates requiring an operating voltage that is separate from the signal. This 'power' needs to be the same for each input, and hence does not externally provide information about the input.
 
 \begin{lemma}
     Given positive constants $\alpha \in \mathbb{R}$, a finite cuboid $C \subseteq \mathbb{R}^3$, a finite set of particles in a plane $P \subset C$, and an external Marble $m_{power}$ with a mass of $-\alpha$, \nenwin is able to simulate a NAND-gate using two MarbleEmitterNodes at the boundaries of $C$ as interfaces, such that the particles in $C$ influences no particles beyond $C$ except for creating output Marbles, when \textsc{True} and \textsc{False} are encoded as presence and absence respectively of positively massed Marbles with a mass of $\alpha$. The NAND-gate creates an output after a finite amount of time, and at this time the NAND-gate returns to a state in which it will produce the same output for the same input.

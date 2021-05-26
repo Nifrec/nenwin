@@ -1,24 +1,33 @@
-\textsc{Nenwin} is able to simulate other computational mechanisms \footnote{or, equivalently, other computational mechanisms can be reduced to \textsc{Nenwin}. 'Reduction' causes less ambiguity than 'simulate', as \textsc{Nenwin} is implemented via an simulation itself.}. In particular, this section will demonstrate that \textsc{Nenwin} is able to simulate all required components to implement a CPU. A CPU is an implementation of the RAM-model, which is equivalent to a Turing machine \cite{RAM_cook_reckhow}.
+\textsc{Nenwin} is able to simulate other computational mechanisms\footnote{
+or, equivalently, other computational mechanisms can be reduced to \textsc{Nenwin}. 
+'Reduction' causes less ambiguity than 'simulate', as \textsc{Nenwin} is implemented via an simulation itself.}. 
+In particular, this section will demonstrate that \textsc{Nenwin} is able to simulate all required components to implement a CPU. 
+A CPU is an implementation of the RAM-model, which is equivalent to a Turing machine \cite{RAM_cook_reckhow}.
 
 This section will demonstrate that \textsc{Nenwin} is able to simulate the following components, when using Marbles as data-carrying signals:
 \begin{itemize}
-    \item A Boolean NAND-gate with interfaces that use Marbles to transmit and receive information. Note that compositions of NAND-gates can be build to simulate all logical functions such as OR, AND, NOT, NOR, etc.
+    \item A Boolean NAND-gate with interfaces that use Marbles to transmit and receive information. Note that all binary logical functions such as OR, AND, NOT, NOR, etc. can be implemented from compositions of NAND-gates.
     \item A single-bit register that can store a state 0 or 1. Note that an arbitrary large composition of bit registers can store an arbitrary large amount of data.
     \item A clock that creates periodically a signal.
-    \item A 'divider': a component that upon intercepting one Marble, creates multiple Marbles with velocities in different directions. In the context of wires and electricity such devices are not needed, but in the context of discrete Marbles it is required.
+    \item A \textit{divider}: a component that upon intercepting one Marble, creates multiple Marbles with velocities in different directions. In the context of wires and electricity such devices are not needed, but in the context of discrete Marbles it is required.
 \end{itemize}
 
-These reductions are not necessary of any practical use, as it is slower than directly implementing/simulating the other computational mechanisms, but it demonstrates that \textsc{Nenwin} is theoretically powerful enough to solve the same problems as these mechanisms.
-These reductions use very artificial hand-made (in contrast to automatically optimized) architectures that do not use the dynamic nature of \nenwin: using immovable Nodes result in simpler proofs than with moving Nodes. 
+These reductions demonstrate that \textsc{Nenwin} is theoretically powerful enough 
+to solve the same problems as the simulated components.  However, they are not necessary of any practical use otherwise, as it is slower than directly implementing/simulating the other computational mechanisms they simulate.
+These reductions use very artificial hand-made (in contrast to automatically optimized) architectures that 
+do not exploit the dynamic nature of \nenwin. This generally allows simpler proofs. 
+For example, immovable Nodes result in much less complex proofs than with moving Nodes. 
 
-\nenwin is by default non-terminating, but it can simulate terminating algorithms when a consistent rule is used when to read output.
-One natural such rule is to read output when all Marble's have disappeared, as the output will not change anymore after this point.
+\nenwin is by default non-terminating, 
+but it can simulate terminating algorithms when a consistent rule is used to determine the moment when output is read.
+One natural such rule is to read output when all Marble's have disappeared, 
+as the output will not change any more after this point.
 
 Consider a variant of Newton's gravity function, called the 'threshold gravity', that rounds the force to 0 when the radius is sufficiently large:
 \begin{equation}
     threshold\_gravity(p_1, p_2, \theta) = \begin{cases}
-        \vec{0} & \text{ if } \norm{p_1.pos - p_2.pos} > \theta \\
-        \frac{p_1.m \cdot p_2.m}{\norm{p_1.pos - p_2.pos}^2} & \text{otherwise}
+        \vec{0} & \text{ if } \doublenorm{p_1.pos - p_2.pos} > \theta \\
+        \frac{p_1.m \cdot p_2.m}{\doublenorm{p_1.pos - p_2.pos}^2} & \text{otherwise}
         \end{cases} \label{eq:tresholdgrav}
 \end{equation}
 
