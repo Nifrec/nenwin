@@ -33,6 +33,21 @@ Consider a variant of Newton's gravity function, called the 'threshold gravity',
 
 Unless stated otherwise, this threshold-gravity force function \eqref{eq:tresholdgrav} will be used as attraction function by all particles in this section.
 
+All figures will use the same convention of drawing particles. A legend of this convention is shown below in Fig. \ref{fig:legend}.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=1.1]{figures/legend.pdf}
+	\caption{Legend of the figures describing \nenwin architectures. 
+		Marbles are depicted as green dots, and nodes as orange disks.
+		MarbleEaterNodes and MarbleEmitterNodes have a special annotation, namely an '$\times$' for MarbleEaterNodes, 
+		and an arrow for MarbleEmitterNodes. 
+		This arrow indicates the direction of initial the velocity of emitted Marbles 
+		(or, equivalently, the direction of the velocity of the prototype Marble).
+		When relevant for the context, normal Nodes may also be annotated with the polarity of their mass.}
+	\label{fig:legend}
+\end{figure}
+
 \subsection{NAND-gate}
 \input{nand}
 
