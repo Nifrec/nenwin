@@ -19,15 +19,15 @@ Refer to Algorithm \ref{alg:Nenwin_V1}.
 Line 1 only copies a reference. Line 2 and 3 each do a constant amount of work for each Node, so are bounded by $\mathcal{O}(n)$
 By definition of $T$, line 4 is executed $T$ times. This is a loop with a long body, consisting of the following: 
 
-Line 19 iterates over all $n$ particles. Line 21, within this loop, iterates over all other $n-1$ particles. Lines 20 and 22-25 are all $\mathcal{O}(1)$. Hence the nested loops of lines 19-25 have an $\mathcal{O}(n^2)$ runtime.
+Line 13 iterates over all $n$ particles. Line 14, within this loop, iterates over all other $n-1$ particles. Line 15 is a $\mathcal{O}(1)$ operation. Hence the nested loops of lines 13-15 have an $\mathcal{O}(n^2)$ runtime.
 
-The loops of line 26 and 29 iterate over a subset of all particles and all particles respectively, only only execute a constant amount of work within the loop body, and are hence both $\mathcal{O}(n)$. Finally the loop of lines 32-37 iterates over all Marbles and all MarbleEaterNodes, which are at most $\frac{1}{2}n \times {1}{2}n = \mathcal{O}(n^2)$ iterations.
+The loops of line 16 and 19 iterate over a subset of all particles and all particles respectively, only only execute a constant amount of work within the loop body, and are hence both $\mathcal{O}(n)$. Finally the loop of lines 21-26 iterates over all Marbles and all MarbleEaterNodes, which are at most $\frac{1}{2}n \times {1}{2}n = \mathcal{O}(n^2)$ iterations.
 
 So in total, the loop of line 4 makes $\mathcal{O}(T \cdot n^ 2)$ iterations, which is therefore also the upper bound of the algorithm.
 \end{proof}
 
 \subsection{Backpropagation memory complexity}
-Backpropagation requires a computational graph to be created during the simulation. This computational graph stores all algebraic operations applied and all constants needed to derive the partical derivates of a loss with respect to all relevant the inputs and parameters of the simulation. This graph has a fixed size for a neural network, but in \textsc{Nenwin} it depends on the amount of simulated timesteps. To keep the theory brief, we will only consider \textsc{Nenwin} architectures without MarbleEaterNodes and MarbleEmitterNodes.
+Backpropagation requires a computational graph to be created during the simulation. This computational graph stores all algebraic operations applied and all constants needed to derive the partial derivates of a loss with respect to all relevant the inputs and parameters of the simulation. This graph has a fixed size for a neural network, but in \textsc{Nenwin} it depends on the amount of simulated timesteps. To keep the theory brief, we will only consider \textsc{Nenwin} architectures without MarbleEaterNodes and MarbleEmitterNodes.
 
 \begin{lemma}[Backpropagation memory complexity]
 Assume Beeman's algorithm \cite{beemans_alg} is used to compute a discrete approximation of \eqref{eq:def_pos}-\eqref{eq:def_acc}. Assume that Newtonian gravity \eqref{eq:newton_grav_force} is used as attraction function. Let $m$ be a \textsc{Nenwin} architecture. Let $T$ be the number of discrete timesteps the \textsc{Nenwin} algorithm is run on $m$. Assume no MarbleEmitterNodes or MarbleEaterNodes are present in $m$. Let $n$ be the number of particles in $m$. Let $d$ be amount of dimensions used in $m$ (i.e. the length of the $pos$, $vel$ and $acc$ vectors). 
@@ -39,11 +39,11 @@ Only the $pos$, $vel$ and $acc$ variables of a particle change in value. The $ma
 
 \eqref{eq:newton_grav_force} uses one multiplication, a division, vector subtraction, a norm and a scalar square. No non-parameter constants are involved, so this requires an $\mathcal{O}(1)$ amount of memory to store the operations.
 
-We proceed by considering the operations done on the $pos$, $vel$ and $acc$ of a single particle $p$ in one discrete timestep (referring to Algorithm \ref{alg:Nenwin_V1}):
+We proceed by considering the number of operations done on the $pos$, $vel$ and $acc$ of a single particle $p$ in one discrete timestep (referring to Algorithm \ref{alg:Nenwin_V1}). Note that it requires only $\mathcal{O}(1)$ memory to \textit{store a description} of a vector operation\footnote{Only the references to the two operants, plus the operation itself, need to be stored. This is in contrast with the runtime of \textit{performing} these operations, which depends on the size of the vectors. In case one of the operants is a constant vector literal it may need to be stored, but this is not the case in Algorithm \ref{alg:Nenwin_V1} (all vectors are variables).}.
 \begin{enumerate}
-    \item Lines 21-24 compute the net force on a particle. Line 22 uses a subtraction ($\mathcal{O}(1)$), line 23 a division ($\mathcal{O}(1)$) and a norm of a length-$d$ vector ($\mathcal{O}(1)$), and line 24 an addition ($\mathcal{O}(1)$) and Newton's gravity function ($\mathcal{O}(1)$, as shown above). This is done for each of the other $n-1$ particles (line 21), so a total of $\mathcal{O}(n)$ operations need to be stored.
-    \item Line 25 is a $\mathcal{O}(1)$ assignment.
-    \item Lines 29-30 execute Beeman's algorithm on each of the $n$ particles. Beeman's algorithm require the previous acceleration, the previous position and the previous-previous acceleration to be cached, but these values are needed for backpropagation. This can be seen as follows, the partial derivatives of Eq. \eqref{eq:beeman_pos} are:
+    \item Lines 13-14 compute the net force on a particle. Line 14 uses scalar subtraction and division (both take $\mathcal{O}(1)$ space), the norm of a length-$d$ vector ($\mathcal{O}(1)$), and multiplication of a vector with a scalar ($\mathcal{O}(1)$ operations). The \texttt{attraction\_function} is Newton's gravity function (bounded by $\mathcal{O}(1)$, as shown above). These operations are done for each of the other $n-1$ particles (line 21), so a total of $\mathcal{O}(n)$ operations need to be stored. 
+    \item Line 15 is a vector multiplication and an assignment, which take $\mathcal{O}(1)$ space to be stored.
+    \item Lines 19-20 execute Beeman's algorithm on each of the $n$ particles. Beeman's algorithm require the previous acceleration, the previous position and the previous-previous acceleration to be cached, but these values are needed for backpropagation. This can be seen as follows, the partial derivatives of Eq. \eqref{eq:beeman_pos} are:
     \begin{align}
         \frac{\partial p.pos(t)}{\partial p.pos(t-h)} & = 1 \\
         \frac{\partial p.pos(t)}{\partial p.vel(t-h)} & = h \\
@@ -52,9 +52,15 @@ We proceed by considering the operations done on the $pos$, $vel$ and $acc$ of a
     \end{align}
     which are all scalars. The same reasoning holds for the partial derivatives of Eq. \eqref{eq:beeman_vel}. Storing a fixed amount of scalars takes $\mathcal{O}(1)$ memory. Storing the operations itself also takes a $\mathcal{O}(1)$ amount of memory.
     
-    The total memory need for caching information for backpropagation for executing Beeman's algorithm on all particles is $\mathcal{O}(n)$ per timestep. 
+    Hence, the total memory need for caching information for backpropagation for executing Beeman's algorithm on all particles 
+    is $\mathcal{O}(n)$ per timestep. 
 \end{enumerate}
 Since there are $T$ timesteps, the total memory need is bounded by $\mathcal{O}(T \cdot n)$
 \end{proof}
 
-The expression $\mathcal{O}(T \cdot n)$ may hide a large constant factor, and in practice it seems it indeed does so. Furthermore, for advanced applications many particles and many timesteps may be needed. Especially for numerical accuracy a large number of timesteps is desirable. Hence, despite the polynomial complexity, this can easily lead to a high memory cost.
+The expression $\mathcal{O}(T \cdot n)$ may hide a large constant factor, 
+and in practice it seems it indeed does so. 
+Furthermore, for advanced applications many particles and many timesteps may be needed. 
+Especially for numerical accuracy a large number of timesteps is desirable. 
+Hence, despite the polynomial complexity, 
+this can easily lead to a high memory cost.
