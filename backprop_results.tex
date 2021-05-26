@@ -120,7 +120,8 @@ Numerical results of various training-runs have been summarized in Table \ref{ta
 		A & 20 & VelInputPlacer  & 2 & 0.13869 & 21173.4 \\
 		A & 20 & VelInputPlacer  & 5 & 0.06569 & 28580.8 \\
 		A & 20 & MassInputPlacer & 1 & 0.0     & 13.5    \\
-		C & 20 & MassInputPlacer($\begin{bmatrix} 1\\1\end{bmatrix}$) & 1 & 0.0 & 200.1 \\
+		A & 40 & MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) & 1 & 0.29927 & 154.8 \\
+		A & 20 & MassInputPlacer($\begin{bmatrix} 1\\1\end{bmatrix}$) & 1 & 0.0 & 200.1 \\
 		B & 20 & VelInputPlacer  & 2 & 0.12409 & 24788.9 \\
 		C & 20 & VelInputPlacer  & 2 & 0.08029 & 33143.6 \\
 		C & 40 & MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) & 1 & 0.0 & 107.6 \\
@@ -140,7 +141,9 @@ However, the training progress converges too quickly to mediocre performance.
 One possible explanation for the poor performance of the VelInputPlacer, 
 is that it gives the input Marbles a high initial velocity in varying directions. 
 With a very limited amount of Nodes,
-the model may not possess the flexibility handle all combinations of initial velocity directions of the Marbles. 
+the model may not possess the flexibility handle all combinations of initial velocity directions of the Marbles.
+The loss for the MassInputPlacer generally appears lower in Table \ref{table:banknote_exp}.
+However, note that this only a hypothesis based on evidence, and not a statistically significant result.
 
 \begin{figure}[hb]
 	\centering
@@ -151,7 +154,7 @@ the model may not possess the flexibility handle all combinations of initial vel
 
 \clearpage
 
-\subsubsection{Evaluation best run}
+\subsubsection{Evaluation eccentric run}
 The most surprising results are obtained with the MassInputPlacer with a velocity vector of $\begin{bmatrix} 0.5\\0\end{bmatrix}$, 
 a batch size of 2, and using Architecture C as initial architecture. 
 Note that Marbles will be moving towards the MarbleEaterNodes with this initial velocity in Architecture C. 
@@ -174,7 +177,7 @@ and the magnitude of the reciprocal term will be large.
 
 The train-set loss also shows an extreme outlier, which occurs at the first epoch in the accuracy on the validation set experienced a sudden increase. 
 
-Also see Fig. \ref{fig:arch_c_const_vel_50pc_architecture} for a comparison of Architecture C before and after 40 epochs of training. The architecture has changed significantly. The output Nodes have been moved towards the input region. Also the mass of all Nodes has been decreased, among with some of the \texttt{attraction}- and \texttt{stiffness}-parameters (no Node had an increase). For example, the two MarbleEaterNodes had masses of 0.0753 and 0.0249\footnote{Rounded to four figures. Also the other parameter values in this paragraph have been rounded to four figures.} (the starting values were both 1). But the normal Nodes had much higher masses: as high as 0.7981 (the lowest was 0.0981).
+Also see Fig. \ref{fig:arch_c_const_vel_50pc_accuracy} for a comparison of Architecture C before and after 40 epochs of training. The architecture has changed significantly. The output Nodes have been moved towards the input region. Also the mass of all Nodes has been decreased, among with some of the \texttt{attraction}- and \texttt{stiffness}-parameters (no Node had an increase). For example, the two MarbleEaterNodes had masses of 0.0753 and 0.0249\footnote{Rounded to four figures. Also the other parameter values in this paragraph have been rounded to four figures.} (the starting values were both 1). But the normal Nodes had much higher masses: as high as 0.7981 (the lowest was 0.0981).
 
 The same pattern was observed for the \texttt{marble\_attraction}: 
 it was much lower for the MarbleEaterNodes (0.0753 and 0.0015) 
@@ -194,7 +197,7 @@ This is very close to the performance on the validation set.
 
 \begin{figure}[hb]
 	\centering
-	\includegraphics[scale=0.4]{figures/C_batch1_ConstVelInputPlacer([0.5, 0]])_epoch40_stats.pdf}
+	\includegraphics[scale=0.4]{figures/C_batch2_ConstVelInputPlacer([0.5, 0]])_epoch40_stats.pdf}
 	\caption{Learning curves of using Architecture C with 
 		a batch size of 2, MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$) and 40 train-set epochs.}
 	\label{fig:arch_c_const_vel_50pc_learning_curve}
@@ -202,10 +205,44 @@ This is very close to the performance on the validation set.
 
 \begin{figure}[hb]
 	\centering
-	\includegraphics[scale=0.4]{figures/C_batch1_ConstVelInputPlacer([0.5, 0]])_epoch40.pdf}
+	\includegraphics[scale=0.4]{figures/C_batch2_ConstVelInputPlacer([0.5, 0]])_epoch40.pdf}
 	\caption{Architecture C before training (left) and after training on 40 epochs with 
 		a batch size of 2, MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$).}
-	\label{fig:arch_c_const_vel_50pc_architecture}
+	\label{fig:arch_c_const_vel_50pc_accuracy}
 \end{figure}
 
 \clearpage
+
+
+\subsubsection{A stable run with good performance}
+After the experiment described above, another configuration of hyperparameters was found that produced relatively good results 
+(although still far below change level). 
+This configuration uses Architecture A, a batch size of 1 and MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$). 
+The learning process is much more stable than the run above on Architecture C with the same input placer and batch size 2,
+but converges (with noise) before a high accuracy on the validation set is reached (see Fig. \ref{fig:arch_a_const_vel_mass_inp_placer_curves}).
+It seems plausible that this is due to underfitting: 
+with only four non-output Nodes, the model may have lacked adaptability.
+The test set accuracy of this model is only 0.0362 (rounded to four places).
+
+Note in Table \ref{table:banknote_exp} that this configuration is very similar 
+to the run with MassInputPlacer($\begin{bmatrix} 1\\1\end{bmatrix}$), 
+while resulting in vastly different results on the validation set. 
+However, from Fig. \ref{fig:arch_a_const_vel_mass_inp_placer_curves} 
+it becomes clear that the first model did not change much in performance after 20 epochs,
+so this does not explain the difference in performance.
+
+One hypothesis is that the nonzero horizontal component of the initial velocity biased 
+the model using MassInputPlacer($\begin{bmatrix} 1\\1\end{bmatrix}$) towards one of the two outputs (in Architecture A, 
+the MarbleEaterNodes are to the left and right of the input regions), 
+but this does not sufficiently explain the validation set accuracy of 0\%. 
+The number of epochs were not identical, 40 and 20 respectively. 
+
+\begin{figure}[hb]
+	\centering
+	\includegraphics[scale=0.4]{figures/A_batch1_ConstVelInputPlacer([0.5, 0]])_epoch40.pdf}
+	\caption{Learning curves of the run with Architecture A, a batch size of 1 and MassInputPlacer($\begin{bmatrix} 0.5\\0\end{bmatrix}$)
+		trained on 40 epochs. 
+		Note that the curves are much more stable than in \ref{fig:arch_c_const_vel_50pc_learning_curve}, although still noisy.
+		It can also appears that the learning profess converges to a steady noise after 5 to 10 epochs.}
+	\label{fig:arch_a_const_vel_mass_inp_placer_curves}
+\end{figure}
