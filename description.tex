@@ -120,7 +120,7 @@ The \texttt{spawnpos} is the relative position from the center of an MarbleEmitt
 
 \clearpage
 \subsection{Application to Machine Learning}
-\nenwin is designed to fulfil the role of a decision-making agent, for example as an alternative to neural networks in reinforcement learning or classification tasks. Besides the particle simulation, this would also require the system to receive input and produce output. 
+\nenwin is designed to fulfil the role of a decision-making agent, for example as an alternative to neural networks in reinforcement learning or classification tasks. Besides simulating particles, this would also require the system to receive input and produce output. 
 
 For example, if a \nenwin simulation is used as an agent to play a game, say chess, then it must be able to perceive the current state of the game, and to choose a move to make. As for another example, if a \nenwin simulation is used for an image classification task, then it must be able to read the images, and output a predicted class.
 
@@ -175,7 +175,7 @@ It is for example equally fast, but from an Object-Oriented point of view prefer
 		\If{there is an output request on the channel}{
 			$output \leftarrow \text{ a new empty list}$ \;
 			\For{$node \in \eaters$}{
-			    $output.append(node.num\_marbles\_eaten)$ \;
+			    $output.append(\norm{node.eaten\_marbles})$ \;
 			}
 			Place $output$ on the channel \;
 		}
@@ -186,7 +186,7 @@ It is for example equally fast, but from an Object-Oriented point of view prefer
 		}
 		\For{$e \in \emitters$}{
 		    \If{$\norm{e.stored\_mass} \geq \norm{e.prototype\_marble.mass} \land \sgn{e.stored\_mass} = \sgn{e.prototype\_marble.mass}$}{
-		    $particles \leftarrow particles \cup (\text{a copy of $e.prototype\_marble$ at position $e.pos + e.spawnpos$})$
+		    $particles \leftarrow particles \cup \{\text{a copy of $e.prototype\_marble$ at position $e.pos + e.spawnpos$}\}$
 		    }
 		}
 		\For{$particle \in particles$}{
