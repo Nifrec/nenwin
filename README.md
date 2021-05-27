@@ -5,7 +5,7 @@ Nenwin is an experiment at creating an alternative modelling framework to neural
 This repository contains the research report, and the Python code implementing Nenwin 
 (used for the experiments in the report, but more functionality is available than used for the report).
 
-For the algorithm design, backpropagation theory, research results, etc, see the report (PDF and LaTeX files available in this repository).
+For the algorithm design, backpropagation theory, research results, etc, see the [report](report.pdf).
 
 ## Installation:
 To resolve imports, Nenwin needs to be installed as a PIP package. This can be done with the following command:
