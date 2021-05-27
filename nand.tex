@@ -54,22 +54,41 @@ See Fig. \ref{fig:nand_simple} for a visualization of the proof.
 	\caption{Construction of a NAND-gate in \nenwin as used by the proof of Lemma \ref{lemmma:nand_simple}. The left Node has a positive mass, and the right Node a negative mass. Note that only one dimension (the $x$-axis) is used, and that both Marbles are placed by the input placer on exactly the same position (at $x = 10$).}
 	\label{fig:nand_simple}
 \end{figure}
-\clearpage
 
-The above lemma does not show how a NAND-gate can be implemented as part of a larger circuit. To achieve this, all that is needed is a NAND-gate that has a finite region of $\mathbb{R}^3$ in which it attracts particles (so that the rest of the circuit can be implemented safely outside this region), and interfaces to the other parts of the circuit. 
+The above lemma does not show how a NAND-gate can be implemented as part of a larger circuit. 
+To construct a NAND gate that can be used as a submodule, 
+it is required that the NAND-gate only attracts particles within a finite region of the real space 
+(in case three dimensions are used, this region will be a strict subset of $\mathbb{R}^3$). 
+This is needed to ensure that the rest of the circuit can be implemented safely outside this region. 
+Furthermore, the NAND gate needs to have interfaces to the other parts of the circuit at the boundary of this region. 
 
-In this series of proofs, such interfaces are represented by MarbleEmitterNodes (and MarbleEaterNodes for output interfaces, which can easily be replaced by MarbleEmitterNodes). The main advantage of user MarbleEmitterNodes is that it gives more control over how the input signal is send into a circuit module (esp. in terms of velocity and direction), in comparison to allowing external Marbles to directly enter the module.
+In the following lemma, such interfaces are represented by MarbleEmitterNodes. 
+The main advantage of user MarbleEmitterNodes is that it gives more control over how 
+the input signal is send into a circuit module (especially in terms of velocity direction), 
+in comparison to allowing external Marbles to directly enter the module.
 
-The next lemma will show that is possible to extend the NAND-gate with interfaces to an external circuit. It uses a different encoding for \textsc{True} and \textsc{false}: the presence and absence respectively of positively massed Marbles (with a mass of $\alpha$). Note that the direction and velocity if the Marbles emitted by the output MarbleEmitterNodes can be configured. Furthermore, the NAND-gate requires external 'power' to operate: this can be compared to electronic NAND-gates requiring an operating voltage that is separate from the signal. This 'power' needs to be the same for each input, and hence does not externally provide information about the input.
+The next lemma will show that is possible to extend the NAND-gate with interfaces to an external circuit. 
+It uses a the following encodings for \textsc{True} and \textsc{False}: 
+the presence and absence respectively of Marbles with a positive mass (of value $\alpha$). 
+Note that the direction and velocity if the Marbles emitted by the output MarbleEmitterNodes can be configured. Furthermore, the NAND-gate requires external 'power' to operate: 
+this can be compared to electronic NAND-gates requiring an operating voltage that is separate from the signal. 
+This 'power' needs to be the same for each input, and hence does not externally provide information about the input.
 
 \begin{lemma}
-    Given positive constants $\alpha \in \mathbb{R}$, a finite cuboid $C \subseteq \mathbb{R}^3$, a finite set of particles in a plane $P \subset C$, and an external Marble $m_{power}$ with a mass of $-\alpha$, \nenwin is able to simulate a NAND-gate using two MarbleEmitterNodes at the boundaries of $C$ as interfaces, such that the particles in $C$ influences no particles beyond $C$ except for creating output Marbles, when \textsc{True} and \textsc{False} are encoded as presence and absence respectively of positively massed Marbles with a mass of $\alpha$. The NAND-gate creates an output after a finite amount of time, and at this time the NAND-gate returns to a state in which it will produce the same output for the same input.
+    Given positive constants $\alpha \in \mathbb{R}$, a finite cuboid $C \subseteq \mathbb{R}^3$, 
+    a finite set of particles in a plane $P \subset C$, and an external Marble $m_{power}$ with a mass of $-\alpha$, 
+    \nenwin is able to simulate a NAND-gate using two MarbleEmitterNodes at the boundaries of $C$ as interfaces, 
+    such that the particles in $C$ influences no particles beyond $C$ except for creating output Marbles. 
+    Here \textsc{True} and \textsc{False} are encoded as presence and absence, respectively, 
+    of a Marbles with a mass of $+\alpha$. 
+    This NAND-gate creates an output after a finite amount of time, 
+    and at this time the NAND-gate returns to a state in which it will produce the same output for the same input.
     \label{lemma:nand_with_iface}
 \end{lemma}
 \begin{proof}
     The lemma will be proven using a construction. This construction is the concatenation of an AND-gate and a NOT-gate.
     
-    Define the following particles in the 'AND' part (also see Fig. \ref{fig:nand_with_iface}). All EmitterNodes and EaterNodes will be initialized with a \texttt{stored\_mass} of 0 and no attraction (which is achieved by setting their Marble-attraction and Node-attraction values to 0 \footnote{Alternatively, the state of no attraction could be achieved by giving the Nodes a mass of 0. This distinction is not relevant for the proof.}):
+    Define the following particles in the 'AND' part (also see Fig. \ref{fig:nand_with_iface}). All EmitterNodes and EaterNodes will be initialized with a \texttt{stored\_mass} of 0 and no attraction (which is achieved by setting their \texttt{marble\_attraction} and \texttt{node\_attraction} values to 0\footnote{Alternatively, the state of no attraction could be achieved by giving the Nodes a mass of 0. This distinction is not relevant for the proof.}:
     \begin{itemize}
         \item A signal-emitter: a MarbleEmitterNode in $P$ with a position and radius such that the border of the radius intersects the border of $C$ in one point $p$. This Node functions as the input interface of the NAND-gate, as zero up to two external Marbles serving as input can be consumed by the signal-emitter at point $p$. It has a positive emitting-delay of $\delta \in \mathbb{R}$.
         
@@ -129,3 +148,4 @@ The next lemma will show that is possible to extend the NAND-gate with interface
     \caption{Construction of a NAND-gate in \nenwin as used by the proof of Lemma \ref{lemma:nand_with_iface}. The axes of spatial coordinates $x$ and $y$ are parallel to the place $P$. For each MarbleEmitterNode, the emit-delay and the mass of the emitted marble (EM, 'Emitted Mass', for short) have been denoted. MarbleEmitterNodes are marked with an arrow that indicates the direction of the velocity of the Marble they can emit, and the MarbleEaterNodes (that is not also an EmitterNode) has been marked with a cross. Note that the distances between particles and the radii of the Nodes are not to scale.}
     \label{fig:nand_with_iface}
 \end{figure}
+\clearpage
