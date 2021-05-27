@@ -267,13 +267,13 @@ The position and the mass are special cases where the gradient of a loss with re
 
 It can be shown by using a general case. Consider an object with variable $v$ is created at a certain point in time $\hat{t} > 0$ where some time-varying variable $x(t)$ meets a certain threshold $\theta$. Then initial value of $v$ at $\hat{t}$, $v_0$, can be written as a function of $\theta$ and $x$. Let $\hat{v}$ be the predefined value that becomes \textit{assigned} to $v$ at $t = \hat{t}$. Note that \textit{the value of} $v_0$ is independent of the value of $x(t)$ and vice-versa ($v_0$ is only created when $x(t) \geq \theta$, hence we always have $ReLU(\text{sgn}(\norm{x(\hat{t}) - \theta})) = 1$ when $v_0$ is created).
 
-We have 
+For notational ease, let $A \equiv \text{sgn}(\norm{x(\hat{t}) - \theta})$ and $B \equiv \norm{x(\hat{t}) - \theta}$. Then we have 
 \begin{align}
-    v_0 &= v_0(x(t), \theta) = \hat{v} \cdot ReLU(\sgn(\norm{x(\hat{t}) - \theta})) \\
-    \frac{\partial v_0}{\partial x} &= \hat{v} \cdot \frac{\partial ReLU}{\partial \text{sgn}} \cdot \frac{\partial \text{sgn}}{\partial x} \\
-    \frac{\partial v_0}{\partial \theta} &= \hat{v} \cdot \frac{\partial ReLU}{\partial \text{sgn}} \cdot \frac{\partial \text{sgn}}{\partial \theta}
+    v_0 &= v_0(x(t), \theta) = \hat{v} \cdot ReLU(\sgn{\norm{x(\hat{t}) - \theta}}) \\
+    \frac{\partial v_0}{\partial x} &= \hat{v} \cdot \frac{\partial ReLU(A)}{\partial \sgn{B}} \cdot \frac{\partial \sgn{B}}{\partial x} \\
+    \frac{\partial v_0}{\partial \theta} &= \hat{v} \cdot \frac{\partial ReLU(A)}{\partial \sgn{B}} \cdot \frac{\partial \sgn{B}}{\partial \theta} \label{eq:partial_v0_theta}
 \end{align}
-\hl{Add arguments to ReLU and sgn!}
+Clearly, these expression do indeed not depend on any of the attributes (listed in Table \ref{table:attributes}) of the MarbleEmitterNode. Note that $x$ only depends on $t$. Also, $\theta$ is a parameter which does have a gradient defined, and can be optimized via backpropagation. However, the claim is that $\frac{\partial v_0}{\partial \theta}$ cannot be traced back to the MableEmitterNode, which becomes clear from Eq. \eqref{eq:partial_v0_theta}.
 
 %\subsubsection{Backpropagation with inputs}
 % \hl{
