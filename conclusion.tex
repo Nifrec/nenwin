@@ -1,0 +1,11 @@
+This work explored the possibility of using particle simulation as a trainable machine learning agent.
+A framework of particles, in particular Marbles and three types of Nodes, has been specified.
+It was informally shown that this framework is Turing-Complete.
+Theory has been devised for applying backpropagation and Adam (a variant of Gradient Descent) on the system.
+This includes an optimizable, albeit highly nonconvex, loss function.
+This theory has been implemented and several experiments on a classification task have been conducted.
+Evidence was found that the training can gradually increase the performance of models with the backpropagation-based training algorithm.
+However, no good performing choice of hyperparameters have been found.
+The best reached accuracy on the test set was 0.2174, while chance level is approximately 0.5.
+Furthermore, proposals have been made for improving the time and memory performance of the simulation,
+but these could not be tested empirically within the scope of this work.

@@ -1,0 +1,104 @@
+\documentclass{scrartcl}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{flafter}
+\usepackage{graphicx}
+\usepackage{appendix}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{mathtools} %for \smashoperator
+\usepackage{amsfonts}
+\graphicspath{ {./figures/} }
+\usepackage[algoruled, linesnumbered, noend, noline]{algorithm2e}
+\usepackage{hyperref} % For URLs
+\usepackage{caption} % For subfigures
+\usepackage{subcaption} % Also needed for subfigures
+
+% Command for |x| (length-of-vector-bars).
+\newcommand{\norm}[1]{\lvert #1 \rvert}
+\newcommand{\doublenorm}[1]{\lvert\lvert #1 \rvert\rvert}
+% Command for ceil(x) (Round up to nearest integer).
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}{Definition}
+\usepackage{xcolor}
+\usepackage{bbm}
+
+\newcommand{\hl}[1]{{\color{red}#1}} %usage \hl{<your text here>}
+
+\newcommand{\bigo}[1]{\mathcal{O}(#1)}
+\newcommand{\nenwin}{\textsc{Nenwin }}
+\newcommand{\true}{\textsc{True}}
+\newcommand{\false}{\textsc{False}}
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\sgn}[1]{\text{sgn}(#1)}
+% For the references
+\usepackage[block=ragged]{biblatex}
+\addbibresource{references.bib}
+
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0pt}
+
+\usepackage{subfiles} % Best loaded last in the preamble
+
+\title{Nenwin: an alternative to Neural Networks}
+\author{Lulof Pirée\\\footnotesize\texttt{lulof.piree@zoho.com}\\\small{Honors Academy - Eindhoven University of Technology}\\}
+
+\begin{document}
+    \maketitle
+    \input{abstract}
+    \includegraphics{teaser.pdf}
+    \newpage
+    
+    \tableofcontents
+    \newpage
+    
+    \section{Introduction}
+    \input{intro}
+    
+    \section{Algorithm Description}
+    \input{description}    
+    
+    \section{Reductions}
+    \input{reductions}
+    
+    \section{Training and backpropagation}
+    \input{training_intro}
+    
+    \subsection{EaterNodes as output}
+    \input{training_1_eaters_as_output}
+    
+    \section{Experimental results}
+    \input{backprop_results}
+    
+    \section{Complexity}
+    \input{complexity}
+    
+    \section{Runtime complexity optimization}
+    \input{optimization_revised}
+
+    \section{Discussion}
+    \input{discussion}
+    
+    \section{Conclusion}
+    \input{conclusion}
+    
+    \section{Acknowledgements}
+    I would like to thank Sibylle Hess for her technical advice and feedback,
+    and Daan de Geus for his practical advice on organizing a project.
+    
+    
+    \printbibliography[
+    heading=bibintoc,
+    title={References}
+    ]
+    
+    \appendix
+    
+    
+\end{document}
+

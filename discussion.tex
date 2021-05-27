@@ -1,0 +1,53 @@
+\subsection{Extendability of Nenwin}
+The version of \textsc{Nenwin} present in this work can be seen as a specific subset of a more general computational scheme. This general scheme has a set of subclasses of particles (in the case of \textsc{Nenwin} there are two such subclasses, Marbles and Nodes), in which each particle has a \texttt{stiffness} and \texttt{attraction} parameter for each subclass in the architecture. Certain particles can 'eat' and/or 'emit' other particles of a specific class \footnote{One may object to allowing a particle to 'eat' its own subclass, it that it would have to eat itself. However, it is possible to make an exception for themselves, or to add another workaround (e.g. hollow absorption regions instead of sphere-shaped).}. One simple extension could be to introduce Nodes that can 'eat' and 'emit' other Nodes in a similar way to how MarbleEaterNodes and MarbleEmitterNodes eat and emit Marbles.
+
+The specific subset of this generalized scheme is chosen as it was a small (but not proven to be \textit{the smallest}) subset of particle-subclasses that was provably able to simulate a CPU.
+
+\subsection{Practical limitations}
+The empirical experiment in this work is of a very limited scope.
+It serves as an exploration of the trainability and hyperparameter-sensitivity of \nenwin,
+rather than a thorough scientific evaluation of the impact of specific hyperparameters on classification performance.
+
+\subsubsection{Unexplored hyperparameters}
+There are many hyperparameters that have been left unexplored. For example:
+\begin{itemize}
+	\item Only three arbitrary architectures, all with a limited number of Nodes have been used. No MarbleEmitterNodes or architectures with a large number of Nodes have been investigated.
+	\item The number of epochs were limited, it is worth investigating how the training process behaves over a longer time period.
+	\item The maximum amount of timesteps per sample was very limited. Because a computational graph over all previous timesteps is needed to perform backpropagation, a larger number of timesteps would demand much more memory. It is possible the number of timesteps have a major impact on the loss function (as the position of Marbles is different at another point in time). Hence also the outcome of the training may be very sensitive to the maximum amount of timesteps. This topic requires further investigation.
+	\item Only one attraction function, one (rather large) timestep-size value and one value of $\mu$ in \eqref{eq:classification_loss_one_marble} were used. 
+\end{itemize} 
+
+\subsubsection{Statistical significance}
+The comparison of different hyperparameter-configuration is potentially subject to heavy random noise.
+Because of the limited efficiency of the implementation, 
+each experiment was only run once. 
+The performance reached in training is a random variable, 
+since each epoch over the train-set was iterated in a random order.
+As a result, no statistically robust conclusions can be drawn
+of the influence of specific hyperparameters on the performance of the model. 
+It is left for future work to conduct many runs of each hyperparameter-configuration,
+and report the mean performance statistics (including confidence intervals).
+
+\subsection{Loss function}
+Two potential issues are observed from the empirical experiment:
+\begin{itemize}
+	\item The loss function can become deeply negative. 
+		This is only to be expected based on Eq.  \ref{eq:classification_loss_full}.
+		However, it seems unintuitive: a loss of 0 could indicate a correct prediction 
+		while a lower loss of -4000 can follow from a wrong prediction. 
+	\item The term that penalizes wrong predictions in the loss function (Eq. \ref{eq:classification_loss_full}), 
+		namely $ -\frac{1}{f(m', n', t_{end})}$, can suddenly subtract a large value from the loss function.
+		Here 'suddenly' refers to a small adjustment from the previous parameter-update,
+		that made a wrong prediction start to occur.
+		This makes the loss function very noisy and sensitive, 
+		which may not be beneficial for the training progress.
+\end{itemize}
+
+\subsection{A broader view}
+In a very broad sense, \nenwin is an experiment to use backpropagation and Adam (a variant of Gradient Descent)
+on a system that is not typically used for machine learning. 
+In particular, the chosen system was a simplistic particle simulation. 
+The question can be asked if other systems exist, 
+such as scientific simulations of physics, chemistry, biology, etc., 
+that are potential candidates as machine learning agents 
+(which can be trained with backpropagation and Gradient Descent).

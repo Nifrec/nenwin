@@ -134,3 +134,12 @@ dmypy.json
 ungitted_experiments/
 TEST*
 nenwin/mnist/dataset/cached_dataset.pickle
+.deprecated/*
+.aux/*
+aux/*
+deprecated/*
+.aux
+.deprecated
+aux
+deprecated
+

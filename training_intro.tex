@@ -1,0 +1,21 @@
+As shown in the previous section, \nenwin is capable to simulate a CPU. Given that the RAM model is Turing complete, \nenwin is a Turing complete computational method as well. However, \nenwin has a very dynamic nature with complex interactions between particles, especially for larger architectures. This makes it unpractical to design architectures manually; automated optimization, or 'training', is needed for any practical application. 
+
+The goal of the training is to set up the architecture of Nodes, 
+such that on a specific input $x \in \mathbb{R}^n$, $n \in \mathbb{N^+}$, 
+given at a point in time $t = t_x$, 
+leads to a desired output $y \in \mathbb{R}^m$, 
+$m \in \mathbb{N^+}$ at a specific time $t = t_y > t_0$. 
+Note that the way $y$ is represented by the \nenwin model can be defined in multiple ways.
+
+Only optimizing an given set of Nodes for classification will be explored in this section\footnotemark.
+Classification tasks do not seem to exploit the dynamic nature of \nenwin, 
+but are among the simplest task for initial experiments.
+This optimization will be done using the gradient-based backpropagation algorithm that is also commonly used to train neural networks.
+For mapping the gradients to an parameter update an off-the-shelf algorithm such as Gradient Descent or Adam \cite{adam} can be used.
+For this reason, only the derivation of the parameters gradients and the objective loss function will be described.
+
+\footnotetext{
+It is certainly not impossible to design optimization methods that also change the number of Nodes.
+For example, evolutionary algorithms may be suitable for this task.
+However, such methods are beyond the scope of this work.
+}

@@ -1,0 +1,28 @@
+Marbles are used to represent input data, which can for example be tabular data, an image, a stream of sound or video, etc.
+From the algorithm's side,
+this simply means that a new set of Marbles can be added to the simulation at each timestep.
+However, it is required to map the input data (together with a designated \textit{input region}) to a set of Marbles first, by means of an function called an \textit{input placer}.
+Such input placers could be defined in many different ways. 
+For example, a datapoint could be used to generate a single Marble, in which the datum is mapped to an attribute of the Marble, such as the position, the mass, the velocity, etc..
+It is also possible to use information multiple datapoints to create a single Marble.
+Furthermore, it is also possible to define a trainable input placer, which can be optimized using machine learning techniques.
+
+It was chosen to use an input placer (the "GridInputPlacer") that simply spreads the Marbles evenly in a two-dimensional grid over the input region (in order of the input vector, from left to right, top to bottom). This grid-placement generalizes to higher dimensions. The GridInputPlacer creates a Marble for each datapoint at a unique grid-point.
+Note that this choice is rather arbitrary: as of current there are no arguments why aligning the Marbles in another pattern (such as on a circle) would be less suitable for AI applications.
+
+Two variants of the GridInputPlacer were used:
+\begin{itemize}
+	\item MassInputPlacer: maps each datapoint to a Marble, whose mass is set to the value of the datapoint. The initial velocity is by default set to $\vec{0}$. When another velocity vector $\vec{v}$ is used, the notation MassInputPlacer$(\vec{v})$ will be used.
+	\item VelInputPlacer: maps each datapoint to a Marble, whose velocity is set to a vector of which each element equals the value of the datapoint. It sets the mass of each Marble to 1.0.
+\end{itemize}
+
+All variants set, for each Marble, the remaining attributes as follows:
+\begin{itemize}
+	\item the radius of the threshold radius to 100.
+	\item the acceleration to $\vec{0}$.
+	\item the \texttt{marble\_stiffness} to 1.
+	\item the \texttt{node\_stiffness} to 0.
+	\item the \texttt{marble\_attraction} to 0
+	\item the \texttt{node\_attraction} to 1.
+\end{itemize}
+

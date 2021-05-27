@@ -1,0 +1,233 @@
+As shown above (Lemma \ref{lemma:runtime_complexity}), the runtime complexity of a single step of \textsc{Nenwin} is bounded by $\mathcal{O}(n^ 2)$. In practice, this complexity caused performance issues. However, these exist several approaches to improve the speed of the algorithm.
+
+\subsection{Limiting to neighbouring particles}
+By the nature of the gravity force function (Eq. \eqref{eq:newton_grav_force}), a pair of particles at a large radius do not have significant interactions. For performance reasons, it is worthwhile to skip computing the forces these particles exert on each other (which sacrifices some accuracy). One approach to achieve this is to keep a list of pairs of particles that \textit{do} interact, and only compute the interactions between these particles. If each particle is allowed to interact only with the nearest $K$ particles, then the runtime complexity for a single timestep can be reduced to $\mathcal{O}(K\cdot n)$, which is significant if $K << n$. \cite{computer_sim_liquids} and the introduction of \cite{heinz_pairlist_alg} give an overview of applicable methods:
+
+\begin{itemize}
+    \item \textbf{Verlet Neighbourhood list}: a maximum cutoff radius $r_c$ and a neighbourhood-list radius $r_l > r_c$ are chosen. For each particle $p$ a neighbourhood list is created. All particles within a distance of $r_l$ from $p$'s location are considered neighbours and added to this list. During movement updates, all neighbours are iterated, and if they are within a distance $r_c$ of $p$ then the interactions between $p$ and this neighbour is computed.
+    
+    The speedup is achieved by recomputing the neighbourhood lists only after several timesteps, say $k$ steps. The timesteps where the neighbourhood lists are not computed are faster, as only a strict subset (ideally small) of all possible particle pairs need to be compared.
+    The distance $r_l - r_c$ works as a buffer, or a 'skin', to avoid the scenario where a particle enters the radius $r_c$ of another particle $p$, without occurring on $p$'s neighbourhood list. 
+    
+    It was chosen not to use this method for \textsc{Nenwin}. It appears to be designed for predicable particles: for any of these predictable particles $p$, one can reasonably be sure that during $k$ steps no particle that was at a greater distance than $r_l$  from $p$ (during the last neighbourhood-list computation) will come within a distance $r_c$ of $p$. In \textsc{Nenwin}, the velocity of particles may vary quite heavily during a simulation, and the differences between the behaviour of architectures may be great. This makes it appear difficult to choose a safe value for $k$ that still gives a sufficient speedup.
+    
+    \item{Cell-index method with large cells}: the space in which particles live is divided into a grid of 'cells'. The dimensions of a cell exceed the cut-off distance $r_c$. Thus, when computing the interactions for a particle $p$ in cell $c$, one only needs to consider the particles in $c$ and the direct neighbouring cells of $c$. Assigning each particle to the correct cell is computationally cheap, and the limited set of potentially interacting neighbours for a particle $p$ provides a major speedup.
+    
+    \item{Cell-index method with very small cells}: it is also possible to divide the space in which particles live into small cells in which at most one particle fits. Assigning particles to the correct cell is still cheap, and it can easily be computed which cells fall into a radius $r_c$ (the cutoff-distance) of a given cell. This is not applicable to \textsc{Nenwin}, as Marbles and Nodes do not have a size (only MarbleEaterNodes and MarbleEmitterNodes have a \texttt{radius} attribute).
+    
+    \item{Heinz and Hünenberger (2004)}: the algorithm proposed in \cite{heinz_pairlist_alg} uses moderate-sized grid cells. It has three major steps: first, all particles are assigned to the grid cell they belong to. Then for each grid cell, the interacting cells are computing. Cells are interacting if the minimum distance between two particles of the different cells is below a threshold $r_c$. Finally, the interactions between particles are only considered for cells that were found to be interacting.
+\end{itemize}
+Note that all methods may still assign pairs particles with a larger distance than $r_c$ to be neighbours, as they gather neighbours from a larger region that a sphere with radius $r_c$ (for the first method the sphere has a radius $r_l > r_c$, and for the other method rectangular regions are used, at least in the 'vanilla' versions). 
+
+\subsection{Application to Nenwin}
+
+It was chosen to create an algorithm inspired by the above to optimize \textsc{Nenwin}. 
+It works as follows. The algorithm \textsc{PutParticlesInBoxes} (Algorithm \ref{alg:put_particles_in_boxes} below) creates a hyperrectangular grid over the space that contains all particles. In two dimensions this would be a regular grid of rectangles. The algorithm 'stretches' the grid such that it contains all particles. Then it simply creates a table, implemented as a tensor, mapping each grid cell to the containing particles. 
+
+The next step is to compute, for each box $b_i$, which other boxes are close enough for the particles to interact. It was not chosen to compute the minimum distance between any particle in $b_i$ to any particle in the other box, as proposed in \cite{heinz_pairlist_alg}. Instead, the minimum distance between (vertices of) boxes was used, regardless of the position of the particles within the box (this may be less accurate, but it is faster in the number of particles). This way, each neighbouring box of $b_i$ is located in a roughly hypersphere-shaped space around $b_i$. The shape of this 'sphere' of neighbouring boxes is the same for each box, so it suffices to compute a mask of relative indices that can be transposed to the location of each box. After transposition, the mask gives the indices of the neighbouring boxes. \textsc{ComputeMask} (Algorithm \ref{alg:compute_mask}) generates such a transpositable mask, given a cut-off distance $r_c$. Note that some indices of the mask will need to be discarded after transposition, as they fall beyond the grid of boxes. The correctness of \textsc{ComputeMask} is proven in Lemma \ref{lemma:compute_mask}. 
+
+Finally, it remains to integrate this procedure in the mainloop of \textsc{Nenwin} itself. textsc{DistributedNenwin} (Algorithm \ref{alg:DistributedNenwin}) is a modified version of Algorithm \ref{alg:Nenwin_V1}. Each timestep, groups closeby particles in boxes using \textsc{PutParticlesInBoxes}. Then it computes a neighbourhood mask, and for each box it computes the set of neighbouring boxes. A tuple of (1) the set of particles within a box and (2) the set of neighbours (including the particles themselves), is called a 'cluster'. Now the rest of the algorithm proceeds in a similar way as Algorithm \ref{alg:Nenwin_V1}, except that particle interactions are only computed between particles within a cluster (only the particles in the first set of the tuple are updated). This gives an opportunity for parallelism, as this can be done in parallel for the different clusters. Note that the processes need to synchronize between updating the movement and eating/emitting Marbles. 
+
+
+\textsc{EatMarbles}, \textsc{EmitMarbles}, \textsc{UpdateForces}, \textsc{UpdateMovement} are not described in depth, but correspond to the same operations in Algorithm \ref{alg:Nenwin_V1}. Only a few things are done differently:
+\begin{itemize}
+	\item Each operates only on a subset of the particles, instead of all particles present in the model.
+	\item \textsc{UpdateForces} only updates the acceleration of the particles in its first argument, after computer the forces exerted on each of them by the particles in its second argument. Note that it is only ever called with the second argument being a superset of the first argument.
+\end{itemize}
+
+
+The following notation has been used in the pseudocode below:
+\begin{itemize}
+	\item $\odot$ for the element-wise product of two vectors.
+	\item $indices(S)$ returns all tuples of valid indices for all tensors $t$ with dimensionality $S$ \footnote{Assuming $S$ is of the form $S = S_1 \times S_2 \times \dots \times S_n$ where each $S_i \in \mathbb{N}$.}.
+	\item For any tensor $T$ with $D$ dimensions and an index $\vec{i} \in \mathbb{N}^D$, $T[*\vec{i}]$ is used to denote $T$ indexed with the number in $\vec{i}$ of the corresponding dimension, for each dimension. E.g. $T[*[1, 4 3]] \equiv T[1][4][3]$.
+\end{itemize}
+
+\begin{algorithm}
+    \SetAlgoVlined
+	\label{alg:put_particles_in_boxes}
+	\caption{\\\textsc{PutParticlesInBoxes}
+	\textnormal{\texttt{(particles, $B$)}}}
+	\newcommand{\dataStyle}[1]{\textbf{\texttt{#1}}}
+	\SetAlgoLined
+	\SetKwSty{texttt}
+	\SetDataSty{dataStyle}
+	% Setup variables
+	\SetKwData{particles}{particles}
+	\SetKwData{boxes}{boxes}
+	\SetKwData{B}{$B$}
+	\SetKwData{To}{to}
+	% Input and output
+	\KwIn{
+		\particles $\neq \emptyset$: A set of \textsc{Nenwin} particles. \newline
+		$B \in \mathbb{N}\setminus\{0\}$: number of boxes in any given dimension.
+	}
+	\KwOut{\boxes: $\boxes$ a $D$-dimensional tensor (with $B$ indices per dimension), of sets of particles that are in the same 'box'. \newline
+	$\vec{l}_{tot}$: vector with the lengths of the edges of the hyperrectangle that contains the boxes (and all particles).}
+	Choose some arbitrary $v \in \particles$ \;
+	$D \leftarrow \dim(v)$ \;
+	Let $\vec{l}_{tot}$ be an an empty array of length $D$ \;
+	Let $\vec{m}$ be an an empty array of length $D$ \;
+	Let $\vec{l}_{box}$ be an an empty array of length $D$ \;
+	\For{$d = 1$ \To $D$}{
+		$\vec{m}[d] \leftarrow \min\{p.pos[dim] | p \in \particles\}$ \;
+	    $\vec{l}_{tot}[d] \leftarrow \max\{p.pos[dim] | p \in \particles\} - \vec{m}[d]$ \;
+	    $\vec{l}_{box}[d] \leftarrow \frac{L_{tot}[d]}{B}$ \;
+	}
+	Let $\boxes$ be a $\B^{D}$ tensor of empty sets.\;
+	Define $pos: \mathbb{N}^D \rightarrow \mathbb{R}^D$, 
+	where $ pos(\vec{i}) = [\vec{l}_{box}[d] \odot \vec{i}[d] + \frac{1}{2}\vec{l}_{box}[d] \; | \; d \in \{1, \dots, D\}]$ \;
+	\For{$p \in \particles$}{
+	    \If{$p.pos \neq p.prev\_pos$}{
+	        Let $index$ be an empty array of length $D$ \;
+	        \For{$d = 1$ \To $D$}{
+	            $index[d] \leftarrow \ceil{\frac{p.pos[dim]}{\vec{l}_{box}[dim]}} - 1$ \;
+	        }
+	        Add $p$ to $\boxes[*index]$ \;
+	    }
+	}
+	\Return \boxes, $\vec{l}_{tot}$ \;
+\end{algorithm}
+
+\clearpage
+
+\begin{algorithm}[h]
+	\label{alg:compute_mask}
+	\caption{\\\textsc{ComputeMask}\textnormal{\texttt{($H$, $g$, $r_c$)}}}
+	\newcommand{\dataStyle}[1]{\textbf{\texttt{#1}}}
+	\SetAlgoLined
+	\SetKwSty{texttt}
+	\SetDataSty{dataStyle}
+	% Setup variables
+	\SetKwData{particles}{particles}
+	\SetKwData{nodes}{nodes}
+	\SetKwData{node}{Node}
+	\SetKwData{grav}{attraction\_function}
+	\SetKwData{eaters}{eater\_nodes}
+	\SetKwData{emitters}{emitter\_nodes}
+	\SetKwData{To}{to}
+	% Input and output
+	\KwIn{
+		$H$: a hyperrectangle $H \subseteq \mathbb{R}^D$ for some $D \in \mathbb{N}\setminus\{0\}$.\newline
+		$g$: a natural number $g \in \mathbb{N}$, the number of grid cell indices per dimension (when partitioning $H$ into a regular grid of hyperrectangles).\newline
+		$r_c$: a cut-off radius $r_c \in \mathbb{R}_+$
+	}
+	\KwOut{A set of relative indice-tuples $\vec{i} \in \{1, 2, \dots, g\}^D$ of grids cells such that for each present index, the corresponding hyperrectangular grid cell partially overlaps with a hypersphere placed at the center of $H$ with radius $r_c$.}
+	
+	\tcc{Compute sizes of grid cells}
+	Let $\vec{s}_{cell} = \vec{0}_D$ \;
+	\For{$d = 1$ \To $D$}{
+		Let $H_d$ be the projection of H onto $\vec{e}_d$, where $\vec{e}_d$ is the $d^{th}$ column of the identity matrix $I_d$ \;
+		$\vec{s}_{cell}[d] \leftarrow \min(H_d) - \max(H_d)$ \;
+	}
+	
+	\tcc{Compute set of all grid indices}
+	$indices \leftarrow \{-1, 1, 2, \dots, g\}^D$ \;
+
+	$M \leftarrow \emptyset$ \;
+	\For{$\vec{i} \in indices$}{
+		\tcc{Consider the lower-left vertex of each cell (generalized to higher dimensions).}
+		\If{$||\vec{s}_{cell} \odot \vec{i} - \frac{1}{2}\vec{s}_{cell}||_2 \leq r_c$}{
+			$M.add(\vec{i})$ \;
+			\tcc{Also add the same cell mirrored around each possible combination of axes. Note that (-1, -1) is the target cell, and that some neighbours are added mutliple times.}
+			\For{$\vec{v} \in \{1, -1\}^D$}{
+				$M.add(\vec{v} \odot \vec{i})$ \;
+			}
+		}
+	}
+	\Return $M$ \;	
+\end{algorithm}
+
+Note that, in implementation, $M$ can be a tensor $T \in \{0, 1\}^D$ instead of a set. $T$ has $g$ indices for each of its $D$ dimensions (i.e. $T$ has the same shape as the grid in which $H$ can be subdivided). For every grid position $\vec{i}$ included in $M$, we would set $T[i] = 1$, and 0 for the positions not present in $M$. This would make it faster to apply a mask using an optimized linear algebra library, but does not change runtime or memory complexity. 
+\clearpage
+
+The following lemma proves the correctness of \textsc{ComputeMask}. In particular, it shows that after translating the center of the 'mask' to a cell with indices $\vec{j}$, that the mask contains the neighbour cells of $\vec{i}$ that are within a distance $r_c$.
+\begin{lemma}
+	Let $H \subseteq \mathbb{R}^D$ be a hyperrectangle. 
+	Let $G = \{\vec{j} \; : \: \vec{j} \in \{1, 2, \dots, g\}^D\}$ be a set of grid indices of the regular grid that subdivides $H$ into smaller hyperrectangles, with $g$ grid-cell indices per dimension. 
+	Let $0 < r_c \in \mathbb{R}$ be a positive radius. 
+	Let $\vec{l}_{H}$ be a vector storing the length of $H$ along each dimension.
+	Then for all cell indices $\vec{j} \in G$, we have that $\left( \textsc{ComputeMask}(H, g, r_c) + \vec{j} - 1 \right) \cap G$ is the set of exactly all indices of all grid cells that have a minimum Euclidean distance of $r_c$ or shorter to the cell indexed by $\vec{j}$.
+	\label{lemma:compute_mask}
+\end{lemma}
+\begin{proof}
+	Assume any such $H$, $D$, $G$, $g$ and $r_c$ as described in the premise of the lemma. 
+	Take any arbitrary $\vec{j} \in G$. Let $R_i \subseteq H$ be the grid cell (a hyperrectangle) indexed by $\vec{j}$. Let $M = \left( \textsc{ComputeMask}(H, g, r_c) + \vec{j} - 1 \right) \cap G$. 
+	We now need to show that both:
+	\begin{itemize}
+		\item $M$ does not contain the indices of any grid cell whose minimum Euclidean distance to a point in $R_i$ is greater or than $r_c$.
+		\item There does not exist a $\vec{p} \in G \setminus M$ such that $\vec{p}$ indices a grid cell at a minimum Euclidean distance of $r_c$ or smaller to any point in $R_i$.
+	\end{itemize}
+
+	For contradiction, assume the negation of (1). So there exist a $\vec{p} \in G$ such that $\vec{p}$ indexes a grid cell $R_p$ such that the minimum Euclidean distance from any point in $R_p$ to any point in $R_i$ is larger than $r_c$. Let $\vec{p}' = \vec{p} - \vec{j} + 1$. Then we must have, by definition of $M$ and $\vec{p}$, that $\vec{p}' \in \textsc{ComputeMask}(H, g, r_c)$. 
+	
+	Refer to Algorithm \ref{alg:compute_mask}. In line 7, all indices in $indices$ are iterated. Note that $indices = G$. Let $\vec{p}''$ be the image of $\vec{p}'$ mirrored in such a way around the axes that all its values are non-negative. Then one run of the loop will have $\vec{p}'' = \vec{i}$. Let $R_p''$ be the grid cell corresponding to $R_p$. Note that by the properties of translating $\vec{p}$ to $\vec{p}'$ and mirroring the latter to $\vec{p}''$, $R_p''$ has the same minimum distance to the origin as $R_p$ to the closest point in $R_i$. Hence this distance is greater than $r_c$. But then the comparison in line 8 fails, and no mirrored version (around $0, 1, \dots$ or $D$ axes) of $\vec{p}''$ will be added to $M$. As no other point in $indices$ can be mirrored to become $\vec{p}'$, we can conclude that $\vec{p}'$ was not returned by the algorithm and hence not in $\textsc{ComputeMask}(H, g, r_c)$. This is a contradiction, hence the negation of (1) is false. Thus (1) holds.
+	
+	Case (2) can be proven by the same reasoning, when one replaces 'greater than $r_c$' by 'smaller or to $r_c$' and removes 'not' from 'not in $M$/$\textsc{ComputeMask}(H, g, r_c)$'.
+\end{proof}
+
+\newpage
+
+\begin{algorithm}[h]
+	\label{alg:DistributedNenwin}
+	\caption{\\\textsc{DistributedNenwin}\textnormal{\texttt{(all\_particles, attraction\_function, $P$, $T$, $B$, $\Delta t$, $r_c$)}}}
+	\newcommand{\dataStyle}[1]{\textbf{\texttt{#1}}}
+	\SetAlgoLined
+	\SetKwSty{texttt}
+	\SetDataSty{dataStyle}
+	% Setup variables
+	\SetKwData{particles}{all\_particles}
+	\SetKwData{nodes}{nodes}
+	\SetKwData{node}{Node}
+	\SetKwData{grav}{attraction\_function}
+	\SetKwData{eaters}{eater\_nodes}
+	\SetKwData{emitters}{emitter\_nodes}
+	\SetKwData{To}{to}
+	\SetKwFor{parallel}{for (}{) do in parallel}{}
+	% Input and output
+	\KwIn{
+		\particles: A set of \textsc{Nenwin} particles.\newline
+		\grav: A function: $\mathbb{R}^3 \rightarrow \mathbb{R}$ that maps the masses of two particles plus their distance to an attraction force.\newline
+		$P \in \mathbb{N}_+$: number of parallel processes used. \newline
+		$T \in \mathbb{N}_+$: number of simulated timesteps. \newline
+		$B \in \mathbb{N}_+$: number of box-indices per dimension. Determines the total number of boxes used. \newline
+		$\Delta t \in \mathbb{R}_+$: time passed between consecutive timesteps. \newline
+		$r_c \in \mathbb{R}_+$: distance at which no interactions between a pair of particles are computed. 
+	}
+	\KwOut{\texttt{None}}
+	
+
+	\For{$t = 1$ \To $T$}{
+		$grid, \vec{l}_{tot} \leftarrow \textsc{PutParticlesInBoxes}(\particles, B)$ \;
+		Let $H$ be the hyperrectangle, located at the origin, with edge lentghs $\vec{l}_{tot}$ \;
+		$M \leftarrow \textsc{ComputeMask}(H, g, r_c)$ \;
+		$clusters \leftarrow \emptyset$
+		
+		\For{$\vec{i} \in \{1, 2, \dots, B\}^D$}{
+			$particles \leftarrow grid[*\vec{i}]$ \;
+			$neighbours \leftarrow \{grid[\vec{j}] \; : \; \vec{j} = \vec{m} + \vec{i} - 1,  \vec{m} \in M\}$ \;
+			$neighbours \leftarrow neighbours\cap \particles$ \;
+			\tcc{Note that $particles$ is a subset of $neighbours$.}
+			$clusters.add\left((particles, neighbours)\right)$ \;
+		}
+		
+		Divide $clusters$ into $P$ disjoined subsets $C = \{C_1, C_2, \dots, C_p\}$ \;
+	
+		\parallel{$c \in C$}{
+			\For{$(particles, neighbours) \in c$}{
+				\textsc{UpdateForces}$(particles)$ \;
+				\textsc{UpdateMovement}$(particles,\; neighbours, \; \Delta t)$ \;
+			}
+		}
+		\parallel{$c \in C$}{
+			\For{$(particles, neighbours) \in c$}{
+				\textsc{EatMarbles}$(particles)$ \;
+				\textsc{EmitMarbles}$(particles)$ \;
+			}
+		}
+		\tcc{The last operations may have added or removed particles.}
+		$\particles \leftarrow \{p \; : \; p \in \{c[1] \; : \; c \in C\}\}$ \;
+	}
+\end{algorithm}
+
+\clearpage
